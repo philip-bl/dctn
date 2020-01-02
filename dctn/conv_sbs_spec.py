@@ -4,27 +4,35 @@ from typing import *
 
 
 @attrs(auto_attribs=True, frozen=True)
+class Pos2D:
+    h: int
+    w: int
+
+
+@attrs(auto_attribs=True, frozen=True)
 class SBSSpecCore:
-    position: Tuple[int, int]
+    position: Pos2D
     out_quantum_dim_size: int
 
 
 @attrs(auto_attribs=True, frozen=True)
 class SBSCoreShape:
     out_quantum_dim_size: int
-    bond_1_size: int
-    bond_2_size: int
+    bond_left_size: int
+    bond_right_size: int
     in_num_channels: int
     in_quantum_dim_size: int
 
     def as_tuple(self) -> Tuple[int, ...]:
-        return (self.out_quantum_dim_size, self.bond_1_size, self.bond_2_size) + (
-            self.in_quantum_dim_size,
-        ) * self.in_num_channels
+        return (
+            self.out_quantum_dim_size,
+            self.bond_left_size,
+            self.bond_right_size,
+        ) + (self.in_quantum_dim_size,) * self.in_num_channels
 
     @property
     def dimensions_names(self) -> Tuple[str, ...]:
-        return ("out_quantum", "bond_1", "bond_2") + tuple(
+        return ("out_quantum", "bond_left", "bond_right") + tuple(
             f"in_quantum_{i}" for i in range(self.in_num_channels)
         )
 
@@ -35,6 +43,11 @@ class SBSSpecString:
     bond_sizes: Tuple[int, ...] = attrib()
     in_num_channels: int = attrib()
     in_quantum_dim_size: int = attrib(default=2)
+
+    @cores.validator
+    def _check_positions(self, attribute, cores_value) -> None:
+        if not self.min_height_pos <= 0 <= self.max_height_pos or not self.min_width_pos <= 0 <= self.max_width_pos:
+            raise ValueError(f"Positions of cores are invalid")
 
     @bond_sizes.validator
     def _check_matching_lengths(self, attribute, bond_sizes_value) -> None:
@@ -51,14 +64,30 @@ class SBSSpecString:
         return tuple(
             SBSCoreShape(
                 core.out_quantum_dim_size,
-                bond_1_size,
-                bond_2_size,
+                bond_left_size,
+                bond_right_size,
                 self.in_num_channels,
                 self.in_quantum_dim_size,
             )
-            for (core, bond_1_size, bond_2_size) in zip(
+            for (core, bond_left_size, bond_right_size) in zip(
                 self.cores,
                 self.bond_sizes,
                 chain(islice(self.bond_sizes, 1, None), (self.bond_sizes[0],)),
             )
         )
+
+    @property
+    def min_height_pos(self) -> int:
+        return min(core.position.h for core in self.cores)
+
+    @property
+    def max_height_pos(self) -> int:
+        return max(core.position.h for core in self.cores)
+
+    @property
+    def min_width_pos(self) -> int:
+        return min(core.position.w for core in self.cores)
+
+    @property
+    def max_width_pos(self) -> int:
+        return max(core.position.w for core in self.cores)
