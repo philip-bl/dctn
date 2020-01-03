@@ -8,6 +8,8 @@ import torch.nn.functional as F
 
 import opt_einsum as oe
 
+import einops
+
 from .conv_sbs_spec import SBSSpecString
 from .digits_to_words import d2w, w2d
 
@@ -17,7 +19,10 @@ class ConvSBS(nn.Module):
         super().__init__()
         self.spec = spec
         self.cores = nn.ParameterList(
-            (nn.Parameter(torch.randn(*shape.as_tuple())) for shape in self.spec.shapes)
+            (
+                nn.Parameter(torch.randn(*shape.as_tuple()))
+                for shape in self.spec.shapes
+            )
         )
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
@@ -86,21 +91,20 @@ class ConvSBS(nn.Module):
     def forward(
         self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
     ) -> Tuple[torch.Tensor, ...]:
+        """If passing a tensor, the very first dimension MUST be channels."""
         if isinstance(channels, torch.Tensor):
-            channels = tuple(channels.align_to("channel", ...))
+            channels = tuple(channels)
         # now channels is a tuple of tensors, each tensor corresponding to a channel
-        batch_size = channels[0].size("batch")
-        height = channels[0].size("height")
-        width = channels[0].size("width")
+        # TODO I've started removing the usage of named tensors everywhere,
+        # stopped here
+        batch_size, height, width = channels[0].shape[:3]
         if (
             self._first_stage_einsum_exprs is None
             or self._second_stage_einsum_expr is None
         ):
             self.gen_einsum_exprs(batch_size, height, width)
         contracted_with_cores_separately = tuple(
-            einsum_expr(
-                core, *(channel.rename(None) for channel in channels), backend="torch"
-            )
+            einsum_expr(core, *(channel for channel in channels), backend="torch")
             for i, (core, einsum_expr) in enumerate(
                 zip(self.cores, self._first_stage_einsum_exprs)
             )
@@ -127,7 +131,8 @@ class ConvSBS(nn.Module):
                     ),
                     max(pos.h - self.spec.min_height_pos, 0),
                 ],
-                value=float("nan"),
+                value=1.0
+                # value=float("nan"),
             )
             for i, (intermediate, pos) in enumerate(
                 zip(
@@ -138,38 +143,53 @@ class ConvSBS(nn.Module):
         )
 
         # now we do the second stage
-        print("Second stage einsum expr:", self._second_stage_einsum_expr, sep="\n")
-        padded_result = (
-            self._second_stage_einsum_expr(*padded)
-            .rename(*(d2w(name) for name in self._second_stage_result_dimensions_names))
-            .flatten(
-                [
-                    d2w(name)
-                    for name in self._second_stage_result_dimensions_names
-                    if "quantum" in name
-                ],
-                "quantum",
-            )
+        # padded_result = (
+        #     self._second_stage_einsum_expr(*padded)
+        #     .rename(*(d2w(name) for name in self._second_stage_result_dimensions_names))
+        #     .flatten(
+        #         [
+        #             d2w(name)
+        #             for name in self._second_stage_result_dimensions_names
+        #             if "quantum" in name
+        #         ],
+        #         "quantum",
+        #     )
+        # )
+        padded_result = einops.rearrange(
+            self._second_stage_einsum_expr(*padded),
+            "b {0} h w -> b ({0}) h w".format(
+                " ".join((f"q{i}" for i in range(len(self.cores))))
+            ),
         )
 
-        
         # the good region is the region without NaNs
-        good_region_height_limits = (self.spec.max_height_pos
-                    - self.spec.min_height_pos , -(
-                        self.spec.max_height_pos - self.spec.min_height_pos))
-        good_region_width_limits = (self.spec.max_width_pos
-                    - self.spec.min_width_pos , -(
-                        self.spec.max_width_pos - self.spec.min_width_pos
-                    ))
-        assert torch.all(torch.isnan(padded_result[:, :, :good_region_height_limits[0]]))
-        assert torch.all(torch.isnan(padded_result[:, :, good_region_height_limits[1]:]))
-        assert torch.all(torch.isnan(padded_result[:, :, :, :good_region_width_limits[0]]))
-        assert torch.all(torch.isnan(padded_result[:, :, :, good_region_width_limits[1]:]))
+        good_region_height_limits = (
+            self.spec.max_height_pos - self.spec.min_height_pos,
+            padded_result.shape[-2]
+            - (self.spec.max_height_pos - self.spec.min_height_pos),
+        )
+        good_region_width_limits = (
+            self.spec.max_width_pos - self.spec.min_width_pos,
+            padded_result.shape[-1]
+            - (self.spec.max_width_pos - self.spec.min_width_pos),
+        )
+        # assert torch.all(
+        #     torch.isnan(padded_result[:, :, : good_region_height_limits[0]])
+        # )
+        # assert torch.all(
+        #     torch.isnan(padded_result[:, :, good_region_height_limits[1] :])
+        # )
+        # assert torch.all(
+        #     torch.isnan(padded_result[:, :, :, : good_region_width_limits[0]])
+        # )
+        # assert torch.all(
+        #     torch.isnan(padded_result[:, :, :, good_region_width_limits[1] :])
+        # )
         result = padded_result[
-                    :,
-                    :,
-                    good_region_height_limits[0]:good_region_height_limits[1],
-                    good_region_width_limits[0]:good_region_width_limits[1]
-                ]
-        assert torch.all(torch.isfinite(result.rename(None)))
+            :,
+            :,
+            good_region_height_limits[0] : good_region_height_limits[1],
+            good_region_width_limits[0] : good_region_width_limits[1],
+        ]
+        # assert torch.all(torch.isfinite(result))
         return result
