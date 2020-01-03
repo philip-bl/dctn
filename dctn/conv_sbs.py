@@ -162,7 +162,7 @@ class ConvSBS(nn.Module):
             ),
         )
 
-        # the good region is the region without NaNs
+        # the good region is the region where padded value has no effect
         good_region_height_limits = (
             self.spec.max_height_pos - self.spec.min_height_pos,
             padded_result.shape[-2]
