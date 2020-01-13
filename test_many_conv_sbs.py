@@ -71,6 +71,13 @@ from torch.optim import SGD
 from torch.autograd import detect_anomaly
 from torch import onnx
 
-result = model(images)
-# each tensor in result has shape batch × quantum × height × width
-# oops, it should be batch height width quantum I guess
+optimizer = SGD(model.parameters(), lr=1e-5)
+
+with detect_anomaly():
+    for i in range(500):
+        y = model(images)
+        loss = torch.mean((y - 0.3)**2)
+        print(loss)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
