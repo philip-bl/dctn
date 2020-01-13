@@ -43,10 +43,10 @@ from torch import onnx
 # RuntimeError: Unsupported prim::Constant kind: `s`. Send a bug report.
 # I can use the master branch of pytorch. It seems there are problems with onnx adding padding of const size
 
-optimizer = SGD(string.parameters(), lr=3.0)
+optimizer = SGD(string.parameters(), lr=10.0)
 
 with detect_anomaly():
-    for i in range(50):
+    for i in range(500):
         y = string(channels)
         loss = torch.mean((y - 0.1)**2)
         print(loss)
