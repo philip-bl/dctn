@@ -1,4 +1,6 @@
 from itertools import chain
+import functools
+import operator
 
 from typing import *
 
@@ -10,7 +12,7 @@ import opt_einsum as oe
 
 import einops
 
-from .conv_sbs_spec import SBSSpecString
+from .conv_sbs_spec import SBSSpecString, SBSSpecCore
 from .digits_to_words import d2w, w2d
 
 
@@ -19,10 +21,7 @@ class ConvSBS(nn.Module):
         super().__init__()
         self.spec = spec
         self.cores = nn.ParameterList(
-            (
-                nn.Parameter(torch.randn(*shape.as_tuple()))
-                for shape in self.spec.shapes
-            )
+            (nn.Parameter(torch.randn(*shape.as_tuple())) for shape in self.spec.shapes)
         )
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
@@ -90,13 +89,11 @@ class ConvSBS(nn.Module):
 
     def forward(
         self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
-    ) -> Tuple[torch.Tensor, ...]:
+    ) -> torch.Tensor:
         """If passing a tensor, the very first dimension MUST be channels."""
         if isinstance(channels, torch.Tensor):
             channels = tuple(channels)
         # now channels is a tuple of tensors, each tensor corresponding to a channel
-        # TODO I've started removing the usage of named tensors everywhere,
-        # stopped here
         batch_size, height, width = channels[0].shape[:3]
         if (
             self._first_stage_einsum_exprs is None
@@ -143,18 +140,6 @@ class ConvSBS(nn.Module):
         )
 
         # now we do the second stage
-        # padded_result = (
-        #     self._second_stage_einsum_expr(*padded)
-        #     .rename(*(d2w(name) for name in self._second_stage_result_dimensions_names))
-        #     .flatten(
-        #         [
-        #             d2w(name)
-        #             for name in self._second_stage_result_dimensions_names
-        #             if "quantum" in name
-        #         ],
-        #         "quantum",
-        #     )
-        # )
         padded_result = einops.rearrange(
             self._second_stage_einsum_expr(*padded),
             "b {0} h w -> b ({0}) h w".format(
@@ -193,3 +178,42 @@ class ConvSBS(nn.Module):
         ]
         # assert torch.all(torch.isfinite(result))
         return result
+
+
+class ManyConvSBS(nn.Module):
+    def __init__(
+        self,
+        in_num_channels: int,
+        in_quantum_dim_size: int,
+        bond_dim_size: int,
+        trace_edge: bool,
+        cores_specs: Tuple[SBSSpecCore, ...],
+    ):
+        super().__init__()
+        output_quantum_dim_sizes = tuple(
+            functools.reduce(
+                operator.mul, (core.out_quantum_dim_size for core in cores_spec)
+            )
+            for cores_spec in cores_specs
+        )
+        assert all(
+            size == output_quantum_dim_sizes[0] for size in output_quantum_dim_sizes[1:]
+        )
+
+        strings_specs = tuple(
+            SBSSpecString(
+                cores_spec,
+                (bond_dim_size if trace_edge else 1,)
+                + (bond_dim_size,) * (len(cores_spec) - 1),
+                in_num_channels,
+                in_quantum_dim_size,
+            )
+            for cores_spec in cores_specs
+        )
+
+        self.strings = nn.ModuleList([ConvSBS(spec) for spec in strings_specs])
+
+    def forward(
+        self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
+    ) -> Tuple[torch.Tensor, ...]:
+        return tuple(module(channels) for module in self.strings)
