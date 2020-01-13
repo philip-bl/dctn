@@ -223,7 +223,7 @@ def main(
         )
         for dataset_ in (train_dataset, val_dataset)
     )
-    model = DCTNMnistModel(5, 6, False)
+    model = DCTNMnistModel(2, 2, False)
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     prepare_batch_for_trainer = make_standard_prepare_batch_with_events(device)
