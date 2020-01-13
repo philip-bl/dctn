@@ -1,3 +1,4 @@
+import math
 import logging
 from functools import partial
 
@@ -18,6 +19,7 @@ from ignite.metrics import Loss, Accuracy
 from ignite.engine import Events
 from ignite.contrib.handlers.param_scheduler import LRScheduler
 
+import einops
 from einops.layers.torch import Reduce as EinopsReduce
 
 from libcrap import shuffled
@@ -39,15 +41,16 @@ from libcrap.torch.training import (
     add_logging_input_images,
 )
 
+from dctn.conv_sbs import ManyConvSBS
+from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
+
 logger = logging.getLogger()
 click_log.basic_config(logger)
 
 MNIST_DATASET_SIZE = 60000
 NUM_LABELS = 10
 
-MNIST_TRANSFORM = transforms.Compose(
-    (transforms.Pad(2), transforms.ToTensor(), transforms.Normalize((0.1,), (0.2752,)))
-)
+MNIST_TRANSFORM = transforms.ToTensor()
 
 
 h = 32
@@ -91,9 +94,85 @@ class DummyModel(nn.Sequential):
         )
 
 
+def batch_to_quantum(x: torch.Tensor) -> torch.Tensor:
+    batch = einops.rearrange(x, "b () h w -> b h w")
+    batch_quantum = torch.stack((torch.sin(batch), torch.cos(batch)), dim=3)
+    assert batch_quantum.shape == (*batch.shape, 2)  # b h w 2
+    return batch_quantum
+
+
 class DCTNMnistModel(nn.Module):
-    def __init__(self):
-        raise NotImplementedError()
+    def __init__(self, num_sbs_layers: int, bond_dim_size: int, trace_edge: bool):
+        super().__init__()
+        assert num_sbs_layers >= 2
+        cores_specs = (
+            (
+                SBSSpecCore(Pos2D(-1, -1), 1),
+                SBSSpecCore(Pos2D(-1, 0), 1),
+                SBSSpecCore(Pos2D(-1, 1), 1),
+                SBSSpecCore(Pos2D(0, 1), 1),
+                SBSSpecCore(Pos2D(0, 0), 2),
+                SBSSpecCore(Pos2D(0, -1), 1),
+                SBSSpecCore(Pos2D(1, -1), 1),
+                SBSSpecCore(Pos2D(1, 0), 1),
+                SBSSpecCore(Pos2D(1, 1), 1),
+            ),
+            (
+                SBSSpecCore(Pos2D(-1, -1), 1),
+                SBSSpecCore(Pos2D(0, -1), 1),
+                SBSSpecCore(Pos2D(1, -1), 1),
+                SBSSpecCore(Pos2D(1, 0), 1),
+                SBSSpecCore(Pos2D(0, 0), 2),
+                SBSSpecCore(Pos2D(-1, 0), 1),
+                SBSSpecCore(Pos2D(-1, 1), 1),
+                SBSSpecCore(Pos2D(0, 1), 1),
+                SBSSpecCore(Pos2D(1, 1), 1),
+            ),
+        )
+        final_string_cores_spec = (
+            SBSSpecCore(Pos2D(-1, -1), 1),
+            SBSSpecCore(Pos2D(-1, 0), 1),
+            SBSSpecCore(Pos2D(-1, 1), 1),
+            SBSSpecCore(Pos2D(0, 1), 1),
+            SBSSpecCore(Pos2D(0, 0), NUM_LABELS),
+            SBSSpecCore(Pos2D(0, -1), 1),
+            SBSSpecCore(Pos2D(1, -1), 1),
+            SBSSpecCore(Pos2D(1, 0), 1),
+            SBSSpecCore(Pos2D(1, 1), 1),
+        )
+        self.conv_sbses = nn.Sequential(
+            ManyConvSBS(
+                in_num_channels=1,
+                in_quantum_dim_size=2,
+                bond_dim_size=bond_dim_size,
+                trace_edge=trace_edge,
+                cores_specs=cores_specs,
+            ),
+            *(
+                ManyConvSBS(
+                    in_num_channels=2,
+                    in_quantum_dim_size=2,
+                    bond_dim_size=bond_dim_size,
+                    trace_edge=trace_edge,
+                    cores_specs=cores_specs,
+                )
+                for i in range(num_sbs_layers - 2)
+            ),
+            ManyConvSBS(
+                in_num_channels=2,
+                in_quantum_dim_size=2,
+                bond_dim_size=bond_dim_size,
+                trace_edge=trace_edge,
+                cores_specs=(final_string_cores_spec,),
+            ),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        intermediate = (batch_to_quantum(x),)
+        for conv_sbs in self.conv_sbses:
+            intermediate = conv_sbs(intermediate)
+        (result,) = intermediate
+        return einops.reduce(result, "b h w l -> b l", "mean")
 
 
 @click.command()
@@ -144,10 +223,8 @@ def main(
         )
         for dataset_ in (train_dataset, val_dataset)
     )
-    model = DummyModel()
-    optimizer = torch.optim.SGD(
-        model.parameters(), lr=learning_rate, momentum=0.95, weight_decay=0.0005
-    )
+    model = DCTNMnistModel(5, 6, False)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     prepare_batch_for_trainer = make_standard_prepare_batch_with_events(device)
     trainer = setup_trainer(
