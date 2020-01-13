@@ -30,9 +30,9 @@ class ConvSBS(nn.Module):
     def _second_stage_result_dimensions_names(self) -> Tuple[str, ...]:
         return (
             "batch",
-            *(f"out_quantum_{i}" for i in range(len(self.cores))),
             "height",
             "width",
+            *(f"out_quantum_{i}" for i in range(len(self.cores))),
         )
 
     def gen_einsum_exprs(self, batch_size: int, height: int, width: int) -> None:
@@ -142,41 +142,28 @@ class ConvSBS(nn.Module):
         # now we do the second stage
         padded_result = einops.rearrange(
             self._second_stage_einsum_expr(*padded),
-            "b {0} h w -> b ({0}) h w".format(
+            "b h w {0} -> b h w ({0})".format(
                 " ".join((f"q{i}" for i in range(len(self.cores))))
             ),
         )
-
+        # TODO in test_conv_sbs change everything to b h w q
         # the good region is the region where padded value has no effect
         good_region_height_limits = (
             self.spec.max_height_pos - self.spec.min_height_pos,
-            padded_result.shape[-2]
+            padded_result.shape[1]
             - (self.spec.max_height_pos - self.spec.min_height_pos),
         )
         good_region_width_limits = (
             self.spec.max_width_pos - self.spec.min_width_pos,
-            padded_result.shape[-1]
+            padded_result.shape[2]
             - (self.spec.max_width_pos - self.spec.min_width_pos),
         )
-        # assert torch.all(
-        #     torch.isnan(padded_result[:, :, : good_region_height_limits[0]])
-        # )
-        # assert torch.all(
-        #     torch.isnan(padded_result[:, :, good_region_height_limits[1] :])
-        # )
-        # assert torch.all(
-        #     torch.isnan(padded_result[:, :, :, : good_region_width_limits[0]])
-        # )
-        # assert torch.all(
-        #     torch.isnan(padded_result[:, :, :, good_region_width_limits[1] :])
-        # )
         result = padded_result[
-            :,
             :,
             good_region_height_limits[0] : good_region_height_limits[1],
             good_region_width_limits[0] : good_region_width_limits[1],
+            :
         ]
-        # assert torch.all(torch.isfinite(result))
         return result
 
 
