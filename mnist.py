@@ -181,6 +181,11 @@ class DCTNMnistModel(nn.Module):
 @click_models_dir_option()
 @click_tensorboard_log_dir_option()
 @click.option(
+    "--init-load-file",
+    type=click.Path(exists=True, dir_okay=False),
+    help="At the beginning instead of random init load DCTN from file",
+)
+@click.option(
     "--train-dataset-size",
     "-t",
     type=click.IntRange(1, MNIST_DATASET_SIZE),
@@ -188,10 +193,14 @@ class DCTNMnistModel(nn.Module):
 )
 @click.option("--learning-rate", "-r", type=float, default=1e-2)
 @click.option("--batch-size", "-b", type=int, default=100)
+@click.option("--early-stopping-patience-num-epochs", type=int)
+@click.option("--warmup-num-epochs", "-w", type=int, default=40)
+@click.option("--warmup-initial-multiplier", type=float, default=1e-20)
 @click.option("--shuffle-pixels", is_flag=True)
 @click_seed_and_device_options(default_device="cpu")
 def main(
     dataset_root,
+    init_load_file,
     train_dataset_size,
     tb_log_dir,
     models_dir,
@@ -199,6 +208,9 @@ def main(
     batch_size,
     device,
     seed,
+    early_stopping_patience_num_epochs,
+    warmup_num_epochs,
+    warmup_initial_multiplier,
     shuffle_pixels,
 ):
     if not shuffle_pixels:
@@ -224,6 +236,8 @@ def main(
         for dataset_ in (train_dataset, val_dataset)
     )
     model = DCTNMnistModel(2, 2, False)
+    if init_load_file:
+        model.load_state_dict(torch.load(init_load_file, map_location=device))
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     prepare_batch_for_trainer = make_standard_prepare_batch_with_events(device)
@@ -234,8 +248,17 @@ def main(
         device=device,
         prepare_batch=prepare_batch_for_trainer,
     )
+
     scheduler = LRScheduler(
-        torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.8547)
+        torch.optim.lr_scheduler.LambdaLR(
+            optimizer,
+            lambda epoch: (
+                warmup_initial_multiplier
+                ** ((warmup_num_epochs - epoch) / warmup_num_epochs)
+                if epoch < warmup_num_epochs
+                else 1.0
+            ),
+        )
     )
     trainer.add_event_handler(Events.EPOCH_STARTED, scheduler)
     metrics = {"cross_entropy_loss": Loss(tnnf.cross_entropy), "accuracy": Accuracy()}
@@ -255,9 +278,13 @@ def main(
         objects_to_save={"model": model},
         model=model,
     )
-    add_early_stopping(
-        trainer, val_evaluator, "cross_entropy_loss", patience_num_evaluations=25
-    )
+    if early_stopping_patience_num_epochs is not None:
+        add_early_stopping(
+            trainer,
+            val_evaluator,
+            "cross_entropy_loss",
+            patience_num_evaluations=early_stopping_patience_num_epochs,
+        )
     with setup_tensorboard_logger(
         tb_log_dir, trainer, metrics.keys(), {"val": val_evaluator}, model=model
     ) as tb_logger:
@@ -270,7 +297,7 @@ def main(
             prepare_batch_for_val_evaluator,
             another_engine=trainer,
         )
-        trainer.run(train_loader, max_epochs=100)
+        trainer.run(train_loader, max_epochs=1000)
 
 
 if __name__ == "__main__":
