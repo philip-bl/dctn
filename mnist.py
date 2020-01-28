@@ -18,6 +18,7 @@ from torch.optim.lr_scheduler import StepLR
 from ignite.metrics import Loss, Accuracy
 from ignite.engine import Events
 from ignite.contrib.handlers.param_scheduler import LRScheduler
+from ignite.contrib.handlers.tensorboard_logger import OptimizerParamsHandler
 
 import einops
 from einops.layers.torch import Reduce as EinopsReduce
@@ -175,6 +176,17 @@ class DCTNMnistModel(nn.Module):
         return einops.reduce(result, "b h w l -> b l", "mean")
 
 
+def add_optimizer_params_logging(
+    optimizer: torch.optim.Optimizer, tb_logger: TensorboardLogger, engine: Engine
+) -> None:
+    for parameter_name in optimizer.defaults.keys():
+        tb_logger.attach(
+            engine,
+            log_handler=OptimizerParamsHandler(optimizer, parameter_name),
+            event_name=Events.ITERATION_STARTED,
+        )
+
+
 @click.command()
 @click_log.simple_verbosity_option(logger)
 @click_dataset_root_option()
@@ -297,6 +309,7 @@ def main(
             prepare_batch_for_val_evaluator,
             another_engine=trainer,
         )
+        add_optimizer_params_logging(optimizer, tb_logger, trainer)
         trainer.run(train_loader, max_epochs=1000)
 
 
