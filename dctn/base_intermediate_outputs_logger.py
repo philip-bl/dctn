@@ -1,4 +1,5 @@
 import enum
+from functools import partial
 
 from typing import *
 
@@ -52,12 +53,12 @@ class SimpleIntermediateOutputsLogger:
         self.tag_prefix = None
         self.step = None
 
-        def hook(module, input_, output) -> None:
+        def hook(module_name, module, input_, output) -> None:
             if self.enabled:
-                for logger_name, record_type, logger_transform in scalar_loggers:
+                for logger_name, record_type, logger_transform in loggers:
                     if record_type == RecordType.SCALAR:
                         writer.add_scalar(
-                            f"{self.tag_prefix}/{logger_name}",
+                            f"{self.tag_prefix}_{logger_name}/{module_name}",
                             logger_transform(output),
                             self.step,
                         )
@@ -65,7 +66,7 @@ class SimpleIntermediateOutputsLogger:
                         assert "This should never happen"
 
         self._hooks_handles = tuple(
-            module.register_forward_hook(hook)
+            module.register_forward_hook(partial(hook, module_name))
             for (module_name, module) in model.named_modules()
             if module_filter(module_name, module)
         )
