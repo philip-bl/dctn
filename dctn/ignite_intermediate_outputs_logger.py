@@ -1,5 +1,8 @@
 from typing import *
 
+import torch.nn as nn
+from torch.utils.tensorboard import SummaryWriter
+
 from ignite.contrib.handlers import CustomPeriodicEvent
 
 from .base_intermediate_outputs_logger import (
@@ -26,11 +29,11 @@ def create_every_n_iters_intermediate_outputs_logger(
     cpe = CustomPeriodicEvent(n_iterations=every_n_iters)
     cpe.attach(engine)
 
-    @trainer.on(getattr(cpe.Events, f"ITERATIONS_{every_n_iters}_STARTED"))
+    @engine.on(getattr(cpe.Events, f"ITERATIONS_{every_n_iters}_STARTED"))
     def enable(engine) -> None:
         siol.enabled = True
         siol.step = engine.state.iteration
 
-    @trainer.on(getattr(cpe.Events, f"ITERATIONS_{every_n_iters}_COMPLETED"))
+    @engine.on(getattr(cpe.Events, f"ITERATIONS_{every_n_iters}_COMPLETED"))
     def disable(engine) -> None:
         siol.enabled = False
