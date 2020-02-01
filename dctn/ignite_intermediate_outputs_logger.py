@@ -3,6 +3,7 @@ from typing import *
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 
+from ignite.engine import Events
 from ignite.contrib.handlers import CustomPeriodicEvent
 
 from .base_intermediate_outputs_logger import (
@@ -34,6 +35,6 @@ def create_every_n_iters_intermediate_outputs_logger(
         siol.enabled = True
         siol.step = engine.state.iteration
 
-    @engine.on(getattr(cpe.Events, f"ITERATIONS_{every_n_iters}_COMPLETED"))
+    @engine.on(Events.ITERATION_COMPLETED)
     def disable(engine) -> None:
         siol.enabled = False
