@@ -1,4 +1,3 @@
-from abc import ABC
 import enum
 
 from typing import *
@@ -34,9 +33,9 @@ log_dumb_min_of_abs: LoggerTransformType = (
 
 class SimpleIntermediateOutputsLogger:
     """How to use:
-    1. Initialize - it will attach forward hooks
-    2. When you want the logging to actually happen, set tag_prefix, step and enabled
-    3. After you've done the forward you wanted to log set enabled=False"""
+    1 Initialize - it will attach forward hooks
+    2 When you want the logging to actually happen, set tag_prefix, step and enabled
+    3 After you've done the forward you wanted to log set enabled=False"""
 
     def __init__(
         self,
