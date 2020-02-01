@@ -316,7 +316,7 @@ def main(
         add_optimizer_params_logging(optimizer, tb_logger, trainer)
         is_string = lambda _, module: isinstance(module, ConvSBS)
         create_every_n_iters_intermediate_outputs_logger(
-            model, tb_logger.writer, is_string, trainer, "train", 20
+            model, tb_logger.writer, is_string, trainer, "train", every_n_iters=20
         )
         trainer.run(train_loader, max_epochs=1000)
 
