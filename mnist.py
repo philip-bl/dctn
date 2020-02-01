@@ -16,9 +16,12 @@ from torch.utils.data import DataLoader, random_split
 from torch.optim.lr_scheduler import StepLR
 
 from ignite.metrics import Loss, Accuracy
-from ignite.engine import Events
+from ignite.engine import Events, Engine
 from ignite.contrib.handlers.param_scheduler import LRScheduler
-from ignite.contrib.handlers.tensorboard_logger import OptimizerParamsHandler
+from ignite.contrib.handlers.tensorboard_logger import (
+    OptimizerParamsHandler,
+    TensorboardLogger,
+)
 
 import einops
 from einops.layers.torch import Reduce as EinopsReduce
