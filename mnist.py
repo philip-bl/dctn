@@ -45,8 +45,9 @@ from libcrap.torch.training import (
     add_logging_input_images,
 )
 
-from dctn.conv_sbs import ManyConvSBS
+from dctn.conv_sbs import ManyConvSBS, ConvSBS
 from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
+from dctn.ignite_intermediate_outputs_logger import create_every_n_iters_intermediate_outputs_logger
 
 logger = logging.getLogger()
 click_log.basic_config(logger)
@@ -313,6 +314,10 @@ def main(
             another_engine=trainer,
         )
         add_optimizer_params_logging(optimizer, tb_logger, trainer)
+        is_string = lambda _, module: isinstance(module, ConvSBS)
+        create_every_n_iters_intermediate_outputs_logger(
+            model, tb_logger.writer, is_string, trainer, "train", 20
+        )
         trainer.run(train_loader, max_epochs=1000)
 
 
