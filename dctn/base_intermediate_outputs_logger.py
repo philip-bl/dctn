@@ -32,6 +32,11 @@ log_dumb_min_of_abs: LoggerTransformType = (
     RecordType.SCALAR,
     lambda x: x.abs().min(),
 )
+log_logits_as_probabilities: LoggerTransformType = (
+    "logits_as_probabilities",
+    RecordType.HISTOGRAM,
+    F.softmax,
+)
 
 
 class SimpleIntermediateOutputsLogger:
