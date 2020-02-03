@@ -19,7 +19,7 @@ from .base_intermediate_outputs_logger import (
 def create_every_n_iters_intermediate_outputs_logger(
     model: nn.Module,
     writer: SummaryWriter,
-    module_filter: Callable[[nn.Module], bool],
+    module_filter: Callable[[str, nn.Module], bool],
     engine,
     tag_prefix,  # e.g. train or val
     every_n_iters: int = 1,
