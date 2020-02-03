@@ -47,7 +47,15 @@ from libcrap.torch.training import (
 
 from dctn.conv_sbs import ManyConvSBS, ConvSBS
 from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
-from dctn.ignite_intermediate_outputs_logger import create_every_n_iters_intermediate_outputs_logger
+from dctn.base_intermediate_outputs_logger import (
+    log_dumb_mean_of_abs,
+    log_dumb_max_of_abs,
+    log_dumb_min_of_abs,
+    log_logits_as_probabilities,
+)
+from dctn.ignite_intermediate_outputs_logger import (
+    create_every_n_iters_intermediate_outputs_logger,
+)
 
 logger = logging.getLogger()
 click_log.basic_config(logger)
@@ -317,6 +325,20 @@ def main(
         is_string = lambda _, module: isinstance(module, ConvSBS)
         create_every_n_iters_intermediate_outputs_logger(
             model, tb_logger.writer, is_string, trainer, "train", every_n_iters=20
+        )
+        create_every_n_iters_intermediate_outputs_logger(
+            model,
+            tb_logger.writer,
+            lambda _, module: module is model,
+            trainer,
+            "train_outputs_of_the_whole_model",
+            every_n_iters=20,
+            loggers=(
+                log_dumb_mean_of_abs,
+                log_dumb_max_of_abs,
+                log_dumb_min_of_abs,
+                log_logits_as_probabilities,
+            ),
         )
         trainer.run(train_loader, max_epochs=1000)
 
