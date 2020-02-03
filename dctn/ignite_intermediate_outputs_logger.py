@@ -26,7 +26,7 @@ def create_every_n_iters_intermediate_outputs_logger(
     loggers=(log_dumb_mean_of_abs, log_dumb_min_of_abs, log_dumb_max_of_abs),
 ) -> None:
     siol = SimpleIntermediateOutputsLogger(model, writer, module_filter, loggers)
-    siol.tag_prefix = tag_prefix
+    siol.tag_prefix = f"{tag_prefix}_intermediate_output"
     cpe = CustomPeriodicEvent(n_iterations=every_n_iters)
     cpe.attach(engine)
 
