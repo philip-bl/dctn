@@ -21,7 +21,7 @@ class ConvSBS(nn.Module):
         super().__init__()
         self.spec = spec
         self.cores = nn.ParameterList(
-            (nn.Parameter(torch.randn(*shape.as_tuple())) for shape in self.spec.shapes)
+            (nn.Parameter(0.1 * torch.randn(*shape.as_tuple())) for shape in self.spec.shapes)
         )
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
