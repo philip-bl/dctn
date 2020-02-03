@@ -37,6 +37,9 @@ log_logits_as_probabilities: LoggerTransformType = (
     RecordType.HISTOGRAM,
     partial(F.softmax, dim=1),
 )
+log_max: LoggerTransformType = ("max", RecordType.SCALAR, torch.max)
+log_mean: LoggerTransformType = ("mean", RecordType.SCALAR, torch.mean)
+log_min: LoggerTransformType = ("min", RecordType.SCALAR, torch.min)
 
 
 class SimpleIntermediateOutputsLogger:
