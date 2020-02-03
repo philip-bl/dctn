@@ -35,7 +35,7 @@ log_dumb_min_of_abs: LoggerTransformType = (
 log_logits_as_probabilities: LoggerTransformType = (
     "logits_as_probabilities",
     RecordType.HISTOGRAM,
-    F.softmax,
+    partial(F.softmax, dim=1),
 )
 
 
