@@ -5,11 +5,13 @@ from typing import *
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
 
 class RecordType(enum.Enum):
     SCALAR = enum.auto()
+    HISTOGRAM = enum.auto()
 
 
 LoggerTransformType = Tuple[str, RecordType, Callable[[torch.Tensor], torch.Tensor]]
@@ -56,12 +58,13 @@ class SimpleIntermediateOutputsLogger:
         def hook(module_name, module, input_, output) -> None:
             if self.enabled:
                 for logger_name, record_type, logger_transform in loggers:
+                    tag = f"{self.tag_prefix}_{logger_name}/{module_name}"
                     if record_type == RecordType.SCALAR:
                         writer.add_scalar(
-                            f"{self.tag_prefix}_{logger_name}/{module_name}",
-                            logger_transform(output),
-                            self.step,
+                            tag, logger_transform(output), self.step,
                         )
+                    elif record_type == RecordType.HISTOGRAM:
+                        writer.add_histogram(tag, logger_transform(output), self.step)
                     else:
                         assert "This should never happen"
 
