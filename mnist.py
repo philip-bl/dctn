@@ -214,6 +214,7 @@ def add_optimizer_params_logging(
 )
 @click.option("--learning-rate", "-r", type=float, default=1e-2)
 @click.option("--batch-size", "-b", type=int, default=100)
+@click.option("--epochs", type=int, default=5000)
 @click.option("--early-stopping-patience-num-epochs", type=int)
 @click.option("--warmup-num-epochs", "-w", type=int, default=40)
 @click.option("--warmup-initial-multiplier", type=float, default=1e-20)
@@ -227,6 +228,7 @@ def main(
     models_dir,
     learning_rate,
     batch_size,
+    epochs,
     device,
     seed,
     early_stopping_patience_num_epochs,
@@ -334,7 +336,7 @@ def main(
                 log_logits_as_probabilities, log_min, log_max, log_mean
             ),
         )
-        trainer.run(train_loader, max_epochs=1000)
+        trainer.run(train_loader, max_epochs=epochs)
 
 
 if __name__ == "__main__":
