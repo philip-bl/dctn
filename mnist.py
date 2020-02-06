@@ -45,10 +45,18 @@ from libcrap.torch.training import (
     add_logging_input_images,
 )
 
-from dctn.conv_sbs import ManyConvSBS, ConvSBS
+from dctn.conv_sbs import (
+    ManyConvSBS,
+    ConvSBS,
+    DumbNormalInitialization,
+    KhrulkovNormalInitialization,
+)
 from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
 from dctn.base_intermediate_outputs_logger import (
-    log_logits_as_probabilities, log_max, log_min, log_mean
+    log_logits_as_probabilities,
+    log_max,
+    log_min,
+    log_mean,
 )
 from dctn.ignite_intermediate_outputs_logger import (
     create_every_n_iters_intermediate_outputs_logger,
@@ -112,7 +120,13 @@ def batch_to_quantum(x: torch.Tensor) -> torch.Tensor:
 
 
 class DCTNMnistModel(nn.Module):
-    def __init__(self, num_sbs_layers: int, bond_dim_size: int, trace_edge: bool):
+    def __init__(
+        self,
+        num_sbs_layers: int,
+        bond_dim_size: int,
+        trace_edge: bool,
+        initialization: Union[DumbNormalInitialization, KhrulkovNormalInitialization],
+    ):
         super().__init__()
         assert num_sbs_layers >= 2
         cores_specs = (
@@ -157,6 +171,7 @@ class DCTNMnistModel(nn.Module):
                 bond_dim_size=bond_dim_size,
                 trace_edge=trace_edge,
                 cores_specs=cores_specs,
+                initializations=(initialization,) * len(cores_specs),
             ),
             *(
                 ManyConvSBS(
@@ -165,6 +180,7 @@ class DCTNMnistModel(nn.Module):
                     bond_dim_size=bond_dim_size,
                     trace_edge=trace_edge,
                     cores_specs=cores_specs,
+                    initializations=(initialization,) * len(cores_specs),
                 )
                 for i in range(num_sbs_layers - 2)
             ),
@@ -174,6 +190,7 @@ class DCTNMnistModel(nn.Module):
                 bond_dim_size=bond_dim_size,
                 trace_edge=trace_edge,
                 cores_specs=(final_string_cores_spec,),
+                initializations=(initialization,),
             ),
         )
 
@@ -332,9 +349,7 @@ def main(
             trainer,
             "train_outputs_of_the_whole_model",
             every_n_iters=20,
-            loggers=(
-                log_logits_as_probabilities, log_min, log_max, log_mean
-            ),
+            loggers=(log_logits_as_probabilities, log_min, log_max, log_mean),
         )
         trainer.run(train_loader, max_epochs=epochs)
 
