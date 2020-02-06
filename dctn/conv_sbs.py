@@ -31,11 +31,13 @@ class ConvSBS(nn.Module):
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
 
-    def init_cores_normal(
-        self, var_of_elements_of_matrix: Optional[float] = None
+    def init_khrulkov_normal(
+        self, std_of_elements_of_matrix: Optional[float] = None
     ) -> None:
         logger = logging.getLogger(f"{__name__}.{self.init_cores_normal.__qualname__}")
-        if var_of_elements_of_matrix is None:
+        if std_of_elements_of_matrix is not None:
+            var_of_elements_of_matrix = std_of_elements_of_matrix ** 2
+        else:
             # See Tensorized Embedding Layers for Efficient Model Compression by Khrulkov
             # Section "Initialization"
             matrix_num_columns = self.spec.in_quantum_dim_size ** (
