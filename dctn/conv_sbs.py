@@ -62,7 +62,7 @@ class ConvSBS(nn.Module):
     def init_khrulkov_normal(
         self, std_of_elements_of_matrix: Optional[float] = None
     ) -> None:
-        logger = logging.getLogger(f"{__name__}.{self.init_cores_normal.__qualname__}")
+        logger = logging.getLogger(f"{__name__}.{self.init_khrulkov_normal.__qualname__}")
         if std_of_elements_of_matrix is not None:
             var_of_elements_of_matrix = std_of_elements_of_matrix ** 2
         else:
