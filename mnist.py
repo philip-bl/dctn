@@ -231,6 +231,17 @@ def add_optimizer_params_logging(
 )
 @click.option("--learning-rate", "-r", type=float, default=1e-2)
 @click.option("--batch-size", "-b", type=int, default=100)
+@click.option(
+    "--initialization",
+    type=str,
+    default="dumb-normal",
+    help="Either dumb-normal or khrulkov-normal",
+)
+@click.option(
+    "--initialization-std",
+    type=float,
+    help="For dumb-normal this sets std of each core of each sbs core; for khrulkov-normal this sets std of each sbs whole tensor",
+)
 @click.option("--epochs", type=int, default=5000)
 @click.option("--early-stopping-patience-num-epochs", type=int)
 @click.option("--warmup-num-epochs", "-w", type=int, default=40)
@@ -245,6 +256,8 @@ def main(
     models_dir,
     learning_rate,
     batch_size,
+    initialization,
+    initialization_std,
     epochs,
     device,
     seed,
@@ -275,7 +288,14 @@ def main(
         )
         for dataset_ in (train_dataset, val_dataset)
     )
-    model = DCTNMnistModel(2, 2, False)
+    if initialization == "dumb-normal":
+        assert initialization_std is not None
+        init = DumbNormalInitialization(initialization_std)
+    elif initialization == "khrulkov-normal":
+        init = KhrulkovNormalInitialization(initialization_std)
+    else:
+        raise ValueError(f"Invalid initialization value: {initialization}")
+    model = DCTNMnistModel(2, 2, False, init)
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
