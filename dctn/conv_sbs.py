@@ -236,8 +236,14 @@ class ManyConvSBS(nn.Module):
         bond_dim_size: int,
         trace_edge: bool,
         cores_specs: Tuple[SBSSpecCore, ...],
+        initializations: Optional[
+            Tuple[Union[DumbNormalInitialization, KhrulkovNormalInitialization], ...]
+        ] = None,
     ):
+        """If initializations is None, default initialization of ConvSBS is used."""
         super().__init__()
+        if initializations is not None:
+            assert len(initializations) == len(cores_specs)
 
         strings_specs = tuple(
             SBSSpecString(
@@ -257,7 +263,15 @@ class ManyConvSBS(nn.Module):
             size == output_quantum_dim_sizes[0] for size in output_quantum_dim_sizes[1:]
         )
 
-        self.strings = nn.ModuleList([ConvSBS(spec) for spec in strings_specs])
+        if initializations is None:
+            self.strings = nn.ModuleList([ConvSBS(spec) for spec in strings_specs])
+        else:
+            self.strings = nn.ModuleList(
+                [
+                    ConvSBS(spec, initialization)
+                    for (spec, initialization) in zip(strings_specs, initializations)
+                ]
+            )
 
     def forward(
         self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
