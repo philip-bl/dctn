@@ -2,7 +2,7 @@ import math
 import logging
 from functools import partial
 
-from typing import Sequence, Any, Iterable, Optional, List
+from typing import *
 
 import click
 import click_log
