@@ -1,6 +1,8 @@
 from itertools import chain
 import functools
 import operator
+import logging
+import math
 
 from typing import *
 
@@ -21,10 +23,39 @@ class ConvSBS(nn.Module):
         super().__init__()
         self.spec = spec
         self.cores = nn.ParameterList(
-            (nn.Parameter(0.9 * torch.randn(*shape.as_tuple())) for shape in self.spec.shapes)
+            (
+                nn.Parameter(0.9 * torch.randn(*shape.as_tuple()))
+                for shape in self.spec.shapes
+            )
         )
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
+
+    def init_cores_normal(
+        self, var_of_elements_of_matrix: Optional[float] = None
+    ) -> None:
+        logger = logging.getLogger(f"{__name__}.{self.init_cores_normal.__qualname__}")
+        if var_of_elements_of_matrix is None:
+            # See Tensorized Embedding Layers for Efficient Model Compression by Khrulkov
+            # Section "Initialization"
+            matrix_num_columns = self.spec.in_quantum_dim_size ** (
+                self.spec.in_num_channels * len(self.spec.cores)
+            )
+            matrix_num_rows = self.spec.out_total_quantum_dim_size
+            var_of_elements_of_matrix = 2 / (matrix_num_columns + matrix_num_rows)
+            logger.info(
+                f"matrix_num_columns = {matrix_num_columns}, matrix_num_rows = {matrix_num_rows}, var_of_elements_of_matrix = {var_of_elements_of_matrix}"
+            )
+
+        prod_of_ranks = functools.reduce(operator.mul, self.spec.bond_sizes)
+        var_of_cores_elements = var_of_elements_of_matrix ** (
+            1 / len(self.cores)
+        ) / prod_of_ranks ** (1 / len(self.cores))
+        logger.info(
+            f"bond_sizes = {self.spec.bond_sizes}, prod_of_ranks = {prod_of_ranks}, var_of_cores_elements = {var_of_cores_elements}"
+        )
+        for core in self.cores:
+            torch.nn.init.normal_(core, std=math.sqrt(var_of_cores_elements))
 
     @property
     def _second_stage_result_dimensions_names(self) -> Tuple[str, ...]:
@@ -162,7 +193,7 @@ class ConvSBS(nn.Module):
             :,
             good_region_height_limits[0] : good_region_height_limits[1],
             good_region_width_limits[0] : good_region_width_limits[1],
-            :
+            :,
         ]
         return result
 
@@ -189,11 +220,12 @@ class ManyConvSBS(nn.Module):
             for cores_spec in cores_specs
         )
 
-        output_quantum_dim_sizes = tuple(string_spec.out_total_quantum_dim_size for string_spec in strings_specs)
+        output_quantum_dim_sizes = tuple(
+            string_spec.out_total_quantum_dim_size for string_spec in strings_specs
+        )
         assert all(
             size == output_quantum_dim_sizes[0] for size in output_quantum_dim_sizes[1:]
         )
-
 
         self.strings = nn.ModuleList([ConvSBS(spec) for spec in strings_specs])
 
