@@ -234,8 +234,7 @@ def add_optimizer_params_logging(
 @click.option(
     "--initialization",
     type=str,
-    default="dumb-normal",
-    help="Either dumb-normal or khrulkov-normal",
+    help="Either dumb-normal or khrulkov-normal"
 )
 @click.option(
     "--initialization-std",
