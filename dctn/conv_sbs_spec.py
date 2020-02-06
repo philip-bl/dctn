@@ -1,3 +1,5 @@
+import functools
+import operator
 from itertools import chain, islice
 from attr import attrs, attrib, evolve
 from typing import *
@@ -91,3 +93,9 @@ class SBSSpecString:
     @property
     def max_width_pos(self) -> int:
         return max(core.position.w for core in self.cores)
+
+    @property
+    def out_total_quantum_dim_size(self) -> int:
+        return functools.reduce(
+            operator.mul, (core.out_quantum_dim_size for core in self.cores), 1
+        )

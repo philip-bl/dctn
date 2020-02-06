@@ -177,15 +177,6 @@ class ManyConvSBS(nn.Module):
         cores_specs: Tuple[SBSSpecCore, ...],
     ):
         super().__init__()
-        output_quantum_dim_sizes = tuple(
-            functools.reduce(
-                operator.mul, (core.out_quantum_dim_size for core in cores_spec)
-            )
-            for cores_spec in cores_specs
-        )
-        assert all(
-            size == output_quantum_dim_sizes[0] for size in output_quantum_dim_sizes[1:]
-        )
 
         strings_specs = tuple(
             SBSSpecString(
@@ -197,6 +188,12 @@ class ManyConvSBS(nn.Module):
             )
             for cores_spec in cores_specs
         )
+
+        output_quantum_dim_sizes = tuple(string_spec.out_total_quantum_dim_size for string_spec in strings_specs)
+        assert all(
+            size == output_quantum_dim_sizes[0] for size in output_quantum_dim_sizes[1:]
+        )
+
 
         self.strings = nn.ModuleList([ConvSBS(spec) for spec in strings_specs])
 
