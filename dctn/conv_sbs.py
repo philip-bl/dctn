@@ -1,3 +1,4 @@
+from attr import attrs, attrib
 from itertools import chain
 import functools
 import operator
@@ -17,17 +18,44 @@ import einops
 from .conv_sbs_spec import SBSSpecString, SBSSpecCore
 from .digits_to_words import d2w, w2d
 
+# here goes types of initialization of ConvSBS
+
+
+@attrs(auto_attribs=True, frozen=True)
+class DumbNormalInitialization:
+    std_of_elements_of_cores: float
+
+
+@attrs(auto_attribs=True, frozen=True)
+class KhrulkovNormalInitialization:
+    std_of_elements_of_matrix: Optional[float]
+
 
 class ConvSBS(nn.Module):
-    def __init__(self, spec: SBSSpecString):
+    def __init__(
+        self,
+        spec: SBSSpecString,
+        initialization: Union[
+            DumbNormalInitialization, KhrulkovNormalInitialization
+        ] = DumbNormalInitialization(0.9),
+    ):
         super().__init__()
         self.spec = spec
         self.cores = nn.ParameterList(
             (
-                nn.Parameter(0.9 * torch.randn(*shape.as_tuple()))
+                nn.Parameter(
+                    (
+                        initialization.std_of_elements_of_cores
+                        if isinstance(initialization, DumbNormalInitialization)
+                        else float("nan")
+                    )
+                    * torch.randn(*shape.as_tuple())
+                )
                 for shape in self.spec.shapes
             )
         )
+        if isinstance(initialization, KhrulkovNormalInitialization):
+            self.init_khrulkov_normal(initialization.std_of_elements_of_matrix)
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
 
