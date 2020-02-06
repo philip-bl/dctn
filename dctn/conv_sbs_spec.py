@@ -48,7 +48,10 @@ class SBSSpecString:
 
     @cores.validator
     def _check_positions(self, attribute, cores_value) -> None:
-        if not self.min_height_pos <= 0 <= self.max_height_pos or not self.min_width_pos <= 0 <= self.max_width_pos:
+        if (
+            not self.min_height_pos <= 0 <= self.max_height_pos
+            or not self.min_width_pos <= 0 <= self.max_width_pos
+        ):
             raise ValueError(f"Positions of cores are invalid")
 
     @bond_sizes.validator
