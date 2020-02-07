@@ -130,3 +130,16 @@ expression."""
         """Returns dimensions names of all cores. These can be used in an einsum expression.
 The only names shared by cores will be bonds."""
         return tuple(self.get_dim_names(i) for i in range(len(self)))
+
+    def get_all_dim_names_add_suffix_to_bonds(
+        self, suffix: str
+    ) -> Tuple[Tuple[str, ...], ...]:
+        """Returns all_dim_names, but add suffix to each bond dimension.
+This is used for calculating squared frobenius norm of the TT tensor."""
+        return tuple(
+            tuple(
+                name + suffix if name.startswith("bond_") else name
+                for name in core_dim_names
+            )
+            for core_dim_names in self.all_dim_names
+        )

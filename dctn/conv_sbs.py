@@ -58,6 +58,7 @@ class ConvSBS(nn.Module):
             self.init_khrulkov_normal(initialization.std_of_elements_of_matrix)
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
+
         self._sum_einsum_expr = oe.contract_expression(
             *chain.from_iterable(
                 (shape, dim_names)
@@ -68,6 +69,28 @@ class ConvSBS(nn.Module):
         )
         logger = logging.getLogger(f"{__name__}.{self.__init__.__qualname__}")
         logger.info(f"sum_einsum_expr = {self._sum_einsum_expr}")
+
+        # generate the einsum expression for calculating squared frobenius norm
+        # the code below joins all dimensions (of two copies of the tt network)
+        # except for bond dimensions
+        self._squared_fro_norm_einsum_expr = oe.contract_expression(
+            *chain.from_iterable(
+                (shape, dim_names)
+                for shape, dim_names in zip(
+                    self.spec.shapes,
+                    self.spec.get_all_dim_names_add_suffix_to_bonds("_a"),
+                )
+            ),
+            *chain.from_iterable(
+                (shape, dim_names)
+                for shape, dim_names in zip(
+                    self.spec.shapes,
+                    self.spec.get_all_dim_names_add_suffix_to_bonds("_b"),
+                )
+            ),
+            (),  # the result is a scalar
+            optimize="auto",
+        )
 
     def init_khrulkov_normal(
         self, std_of_elements_of_matrix: Optional[float] = None
@@ -169,6 +192,14 @@ class ConvSBS(nn.Module):
     def mean(self) -> torch.Tensor:
         """Returns the mean of all elements of the TT tensor."""
         return self.sum() / float(self.spec.nelement)
+
+    def squared_fro_norm(self) -> torch.Tensor:
+        """Returns the squared Frobenius norm of the TT tensor."""
+        return self._squared_fro_norm_einsum_expr(*self.cores, *self.cores)
+
+    def fro_norm(self) -> torch.Tensor:
+        """Returns the Frobenius norm of the TT tensor."""
+        return self.squared_fro_norm() ** 0.5
 
     def forward(
         self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
