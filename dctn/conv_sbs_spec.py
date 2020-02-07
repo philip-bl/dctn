@@ -122,7 +122,7 @@ expression."""
             f"out_quantum_{i}",
             "bond_{i}",
             f"bond_{i+1 if i < len(self)-1 else 0}",
-            *(f"channel_{c}_{i}" for c in range(self.in_num_channels)),
+            *(f"in_quantum_{c}_{i}" for c in range(self.in_num_channels)),
         )
 
     @property
