@@ -164,7 +164,7 @@ class ConvSBS(nn.Module):
 
     def sum(self) -> torch.Tensor:
         """Returns the sum of all elements of the TT tensor."""
-        return self._sum_einsum_expr(self.cores)
+        return self._sum_einsum_expr(*self.cores)
 
     def mean(self) -> torch.Tensor:
         """Returns the mean of all elements of the TT tensor."""
