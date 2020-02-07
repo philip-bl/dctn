@@ -137,14 +137,16 @@ class ConvSBS(nn.Module):
                     ),
                     (
                         "batch",
-                        f"out_quantum_{i}",
-                        d2w(f"bond_{i}"),
-                        d2w(f"bond_{i+1 if i < len(self.cores)-1 else 0}"),
+                        *parameters_core_dim_names[
+                            :3
+                        ],  # out_quantum_i, bond_i, bond_(i+1 or 0)
                         "height",
                         "width",
                     ),
                 )
-                for i, shape in enumerate(self.spec.shapes)
+                for parameters_core_dim_names, shape in zip(
+                    self.spec.all_dim_names, self.spec.shapes
+                )
             ),
             self._second_stage_result_dimensions_names,
             optimize="auto",
