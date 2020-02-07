@@ -58,7 +58,7 @@ class ConvSBS(nn.Module):
             self.init_khrulkov_normal(initialization.std_of_elements_of_matrix)
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
-        self._mean_einsum_expr = oe.contract_expression(
+        self._sum_einsum_expr = oe.contract_expression(
             *chain.from_iterable(
                 (shape, dim_names)
                 for shape, dim_names in zip(self.spec.shapes, self.spec.all_dim_names)
@@ -66,12 +66,8 @@ class ConvSBS(nn.Module):
             (),  # the result is a scalar - we contract out all dimensions
             optimize="auto",
         )
-        logger = logging.getLogger(
-            f"{__name__}.{self.__init__.__qualname__}"
-        )
-        logger.info(f"_mean_einsum_expr = {self._mean_einsum_expr}")
-
-
+        logger = logging.getLogger(f"{__name__}.{self.__init__.__qualname__}")
+        logger.info(f"sum_einsum_expr = {self._sum_einsum_expr}")
 
     def init_khrulkov_normal(
         self, std_of_elements_of_matrix: Optional[float] = None
@@ -168,7 +164,7 @@ class ConvSBS(nn.Module):
 
     def sum(self) -> torch.Tensor:
         """Returns the sum of all elements of the TT tensor."""
-        return self._mean_einsum_expr(self.cores)
+        return self._sum_einsum_expr(self.cores)
 
     def mean(self) -> torch.Tensor:
         """Returns the mean of all elements of the TT tensor."""
