@@ -38,6 +38,10 @@ class SBSCoreShape:
             f"in_quantum_{i}" for i in range(self.in_num_channels)
         )
 
+    @property
+    def total_dangling_dimensions_size(self) -> int:
+        return in_quantum_dim_size ** in_num_channels * out_quantum_dim_size
+
 
 @attrs(frozen=True)
 class SBSSpecString:
