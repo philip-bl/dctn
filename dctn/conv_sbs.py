@@ -92,6 +92,15 @@ class ConvSBS(nn.Module):
             optimize="auto",
         )
 
+        self._as_explicit_tensor_einsum_expr = oe.contract_expression(
+            *chain.from_iterable(
+                (shape, dim_names)
+                for shape, dim_names in zip(self.spec.shapes, self.spec.all_dim_names)
+            ),
+            self.spec.all_dangling_dim_names
+            optimize="auto"
+        )
+
     def init_khrulkov_normal(
         self, std_of_elements_of_matrix: Optional[float] = None
     ) -> None:
@@ -212,6 +221,11 @@ Applies Bessel's correction iff unbiased is True."""
             - 2 * sum / divisor * mean
             + self.spec.nelement / divisor * mean ** 2
         )
+
+    def as_explicit_tensor(self) -> torch.Tensor:
+        """Returns the TT tensor as just one large multidimensional array.
+        Dimensions will be ordered as self.spec.all_dangling_dim_names."""
+        return self._as_explicit_tensor_einsum_expr(self.cores)
 
     def forward(
         self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
