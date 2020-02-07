@@ -106,3 +106,20 @@ class SBSSpecString:
         return functools.reduce(
             operator.mul, (core.out_quantum_dim_size for core in self.cores), 1
         )
+
+    def get_dim_names(self, core_index: int) -> Tuple[str, ...]:
+        """Returns dims names of core number core_index. These can be used in an einsum
+expression."""
+
+        return (
+            f"out_quantum_{i}",
+            "bond_{i}",
+            f"bond_{i+1 if i < len(self)-1 else 0}",
+            *(f"channel_{c}_{i}" for c in range(self.in_num_channels)),
+        )
+
+    @property
+    def all_dim_names(self) -> Tuple[Tuple[str, ...], ...]:
+        """Returns dimensions names of all cores. These can be used in an einsum expression.
+The only names shared by cores will be bonds."""
+        return tuple(self.get_dim_names(i) for i in range(len(self)))
