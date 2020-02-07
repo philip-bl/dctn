@@ -107,6 +107,13 @@ class SBSSpecString:
             operator.mul, (core.out_quantum_dim_size for core in self.cores), 1
         )
 
+    @property
+    def nelement(self) -> int:
+        """Returns the total number of elements in the TT tensor."""
+        return functools.reduce(
+            operator.mul, (core.total_dangling_dimensions_size for core in self.cores)
+        )
+
     def get_dim_names(self, core_index: int) -> Tuple[str, ...]:
         """Returns dims names of core number core_index. These can be used in an einsum
 expression."""
