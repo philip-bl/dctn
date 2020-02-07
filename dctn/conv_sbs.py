@@ -66,6 +66,12 @@ class ConvSBS(nn.Module):
             (),  # the result is a scalar - we contract out all dimensions
             optimize="auto",
         )
+        logger = logging.getLogger(
+            f"{__name__}.{self.__init__.__qualname__}"
+        )
+        logger.info(f"_mean_einsum_expr = {self._mean_einsum_expr}")
+
+
 
     def init_khrulkov_normal(
         self, std_of_elements_of_matrix: Optional[float] = None
