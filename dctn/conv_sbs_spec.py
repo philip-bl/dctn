@@ -40,7 +40,9 @@ class SBSCoreShape:
 
     @property
     def total_dangling_dimensions_size(self) -> int:
-        return in_quantum_dim_size ** in_num_channels * out_quantum_dim_size
+        return (
+            self.in_quantum_dim_size ** self.in_num_channels * self.out_quantum_dim_size
+        )
 
 
 @attrs(frozen=True)
@@ -111,7 +113,7 @@ class SBSSpecString:
     def nelement(self) -> int:
         """Returns the total number of elements in the TT tensor."""
         return functools.reduce(
-            operator.mul, (core.total_dangling_dimensions_size for core in self.cores)
+            operator.mul, (core.total_dangling_dimensions_size for core in self.shapes)
         )
 
     def get_dim_names(self, core_index: int) -> Tuple[str, ...]:

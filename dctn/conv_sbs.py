@@ -61,7 +61,7 @@ class ConvSBS(nn.Module):
 
         self._sum_einsum_expr = oe.contract_expression(
             *chain.from_iterable(
-                (shape, dim_names)
+                (shape.as_tuple(), dim_names)
                 for shape, dim_names in zip(self.spec.shapes, self.spec.all_dim_names)
             ),
             (),  # the result is a scalar - we contract out all dimensions
@@ -75,14 +75,14 @@ class ConvSBS(nn.Module):
         # except for bond dimensions
         self._squared_fro_norm_einsum_expr = oe.contract_expression(
             *chain.from_iterable(
-                (shape, dim_names)
+                (shape.as_tuple(), dim_names)
                 for shape, dim_names in zip(
                     self.spec.shapes,
                     self.spec.get_all_dim_names_add_suffix_to_bonds("_a"),
                 )
             ),
             *chain.from_iterable(
-                (shape, dim_names)
+                (shape.as_tuple(), dim_names)
                 for shape, dim_names in zip(
                     self.spec.shapes,
                     self.spec.get_all_dim_names_add_suffix_to_bonds("_b"),
@@ -94,7 +94,7 @@ class ConvSBS(nn.Module):
 
         self._as_explicit_tensor_einsum_expr = oe.contract_expression(
             *chain.from_iterable(
-                (shape, dim_names)
+                (shape.as_tuple(), dim_names)
                 for shape, dim_names in zip(self.spec.shapes, self.spec.all_dim_names)
             ),
             self.spec.all_dangling_dim_names,
