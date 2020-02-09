@@ -97,8 +97,8 @@ class ConvSBS(nn.Module):
                 (shape, dim_names)
                 for shape, dim_names in zip(self.spec.shapes, self.spec.all_dim_names)
             ),
-            self.spec.all_dangling_dim_names
-            optimize="auto"
+            self.spec.all_dangling_dim_names,
+            optimize="auto",
         )
 
     def init_khrulkov_normal(
