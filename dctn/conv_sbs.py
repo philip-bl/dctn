@@ -196,7 +196,7 @@ class ConvSBS(nn.Module):
 
     def sum(self) -> torch.Tensor:
         """Returns the sum of all elements of the TT tensor."""
-        return self._sum_einsum_expr(*self.cores)
+        return self._sum_einsum_expr(*self.cores, backend="torch")
 
     def mean(self) -> torch.Tensor:
         """Returns the mean of all elements of the TT tensor."""
@@ -204,7 +204,7 @@ class ConvSBS(nn.Module):
 
     def squared_fro_norm(self) -> torch.Tensor:
         """Returns the squared Frobenius norm of the TT tensor."""
-        return self._squared_fro_norm_einsum_expr(*self.cores, *self.cores)
+        return self._squared_fro_norm_einsum_expr(*self.cores, *self.cores, backend="torch")
 
     def fro_norm(self) -> torch.Tensor:
         """Returns the Frobenius norm of the TT tensor."""
@@ -225,7 +225,7 @@ Applies Bessel's correction iff unbiased is True."""
     def as_explicit_tensor(self) -> torch.Tensor:
         """Returns the TT tensor as just one large multidimensional array.
         Dimensions will be ordered as self.spec.all_dangling_dim_names."""
-        return self._as_explicit_tensor_einsum_expr(self.cores)
+        return self._as_explicit_tensor_einsum_expr(self.cores, backend="torch")
 
     def forward(
         self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
