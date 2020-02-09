@@ -119,10 +119,10 @@ class SBSSpecString:
 expression."""
 
         return (
-            f"out_quantum_{i}",
-            "bond_{i}",
-            f"bond_{i+1 if i < len(self)-1 else 0}",
-            *(f"in_quantum_{c}_{i}" for c in range(self.in_num_channels)),
+            f"out_quantum_{core_index}",
+            "bond_{core_index}",
+            f"bond_{core_index+1 if core_index < len(self)-1 else 0}",
+            *(f"in_quantum_{c}_{core_index}" for c in range(self.in_num_channels)),
         )
 
     @property
