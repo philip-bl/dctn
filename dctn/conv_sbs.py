@@ -225,7 +225,7 @@ Applies Bessel's correction iff unbiased is True."""
     def as_explicit_tensor(self) -> torch.Tensor:
         """Returns the TT tensor as just one large multidimensional array.
         Dimensions will be ordered as self.spec.all_dangling_dim_names."""
-        return self._as_explicit_tensor_einsum_expr(self.cores, backend="torch")
+        return self._as_explicit_tensor_einsum_expr(*self.cores, backend="torch")
 
     def forward(
         self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
