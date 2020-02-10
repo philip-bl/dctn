@@ -113,9 +113,14 @@ class DummyModel(nn.Sequential):
         )
 
 
-def batch_to_quantum(x: torch.Tensor) -> torch.Tensor:
+def batch_to_quantum(x: torch.Tensor, cos_sin_squared) -> torch.Tensor:
     batch = einops.rearrange(x, "b () h w -> b h w")
-    batch_quantum = torch.stack((torch.sin(batch), torch.cos(batch)), dim=3)
+    if not cos_sin_squared:
+        batch_quantum = torch.stack((torch.sin(batch), torch.cos(batch)), dim=3)
+    else:
+        batch_quantum = torch.stack(
+            (torch.sin(batch) ** 2, torch.cos(batch) ** 2), dim=3
+        )
     assert batch_quantum.shape == (*batch.shape, 2)  # b h w 2
     return batch_quantum
 
@@ -127,9 +132,11 @@ class DCTNMnistModel(nn.Module):
         bond_dim_size: int,
         trace_edge: bool,
         initialization: Union[DumbNormalInitialization, KhrulkovNormalInitialization],
+        preprocess_cos_sin_squared: bool,
     ):
         super().__init__()
         assert num_sbs_layers >= 2
+        self.preprocess_cos_sin_squared = preprocess_cos_sin_squared
         cores_specs = (
             (
                 SBSSpecCore(Pos2D(-1, -1), 1),
@@ -196,7 +203,7 @@ class DCTNMnistModel(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        intermediate = (batch_to_quantum(x),)
+        intermediate = (batch_to_quantum(x, self.preprocess_cos_sin_squared),)
         for conv_sbs in self.conv_sbses:
             intermediate = conv_sbs(intermediate)
         (result,) = intermediate
@@ -233,9 +240,7 @@ def add_optimizer_params_logging(
 @click.option("--learning-rate", "-r", type=float, default=1e-2)
 @click.option("--batch-size", "-b", type=int, default=100)
 @click.option(
-    "--initialization",
-    type=str,
-    help="Either dumb-normal or khrulkov-normal"
+    "--initialization", type=str, help="Either dumb-normal or khrulkov-normal"
 )
 @click.option(
     "--initialization-std",
@@ -246,6 +251,7 @@ def add_optimizer_params_logging(
 @click.option("--early-stopping-patience-num-epochs", type=int)
 @click.option("--warmup-num-epochs", "-w", type=int, default=40)
 @click.option("--warmup-initial-multiplier", type=float, default=1e-20)
+@click.option("--preprocess-cos-sin-squared", is_flag=True)
 @click.option("--shuffle-pixels", is_flag=True)
 @click_seed_and_device_options(default_device="cpu")
 def main(
@@ -264,6 +270,7 @@ def main(
     early_stopping_patience_num_epochs,
     warmup_num_epochs,
     warmup_initial_multiplier,
+    preprocess_cos_sin_squared,
     shuffle_pixels,
 ):
     if not shuffle_pixels:
@@ -295,7 +302,7 @@ def main(
         init = KhrulkovNormalInitialization(initialization_std)
     else:
         raise ValueError(f"Invalid initialization value: {initialization}")
-    model = DCTNMnistModel(2, 2, False, init)
+    model = DCTNMnistModel(2, 2, False, init, preprocess_cos_sin_squared)
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
