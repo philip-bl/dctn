@@ -61,6 +61,7 @@ from dctn.base_intermediate_outputs_logger import (
 from dctn.ignite_intermediate_outputs_logger import (
     create_every_n_iters_intermediate_outputs_logger,
 )
+from dctn.conv_sbs_statistics_logging import add_conv_sbs_tt_tensor_statistics_logging
 
 logger = logging.getLogger()
 click_log.basic_config(logger)
@@ -353,6 +354,7 @@ def main(
         create_every_n_iters_intermediate_outputs_logger(
             model, tb_logger.writer, is_string, trainer, "train", every_n_iters=20
         )
+        add_conv_sbs_tt_tensor_statistics_logging(model, tb_logger.writer, trainer, 20)
         create_every_n_iters_intermediate_outputs_logger(
             model,
             tb_logger.writer,
