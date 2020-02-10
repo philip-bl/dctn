@@ -3,7 +3,7 @@ import pytest
 import torch
 
 from dctn.conv_sbs_spec import SBSSpecCore, SBSSpecString, Pos2D
-from dctn.conv_sbs import ConvSBS
+from dctn.conv_sbs import ConvSBS, KhrulkovNormalInitialization
 
 
 @pytest.mark.parametrize(
