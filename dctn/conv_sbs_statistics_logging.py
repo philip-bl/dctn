@@ -12,10 +12,9 @@ def add_conv_sbs_tt_tensor_statistics_logging(
 ) -> None:
     """Adds logging of mean and std of the tt tensor of ConvSBS to tensorboard. Of the actual
     TT tensor, not of some dumb array."""
-    event = getattr(
-        CustomPeriodicEvent(n_iterations=every_n_iters).Events,
-        f"ITERATIONS_{every_n_iters}_STARTED",
-    )
+    cpe = CustomPeriodicEvent(n_iterations=every_n_iters)
+    cpe.attach(trainer)
+    event = getattr(cpe.Events, f"ITERATIONS_{every_n_iters}_STARTED",)
     for module_name, module in model.named_modules():
         if isinstance(module, ConvSBS):
 
