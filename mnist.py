@@ -348,14 +348,6 @@ def main(
         tb_log_dir, trainer, metrics.keys(), {"val": val_evaluator}, model=model
     ) as tb_logger:
         add_weights_and_grads_logging(trainer, tb_logger, model)
-        add_logging_input_images(tb_logger, trainer, "train", prepare_batch_for_trainer)
-        add_logging_input_images(
-            tb_logger,
-            val_evaluator,
-            "val",
-            prepare_batch_for_val_evaluator,
-            another_engine=trainer,
-        )
         add_optimizer_params_logging(optimizer, tb_logger, trainer)
         is_string = lambda _, module: isinstance(module, ConvSBS)
         create_every_n_iters_intermediate_outputs_logger(
