@@ -277,8 +277,10 @@ def main(
         transform = MNIST_TRANSFORM
     else:
         print("Pixel shuffling is enabled")
+        shuffled_pixels_indices = tuple(shuffled(range(h * w)))
+        logger.info(f"hash of shuffled_pixels_indices: {hash(shuffled_pixels_indices)}")
         pixel_shuffle_transform = transforms.Lambda(
-            partial(permute_pixels, shuffled(range(h * w)))
+            partial(permute_pixels, shuffled_pixels_indices)
         )
         transform = transforms.Compose((MNIST_TRANSFORM, pixel_shuffle_transform))
     dataset = MNIST(dataset_root, train=True, download=True, transform=transform)
@@ -286,6 +288,7 @@ def main(
     train_dataset, val_dataset = random_split(
         dataset, (train_dataset_size, MNIST_DATASET_SIZE - train_dataset_size)
     )
+    logger.info(f"hash of dataset split: {hash(tuple(val_dataset.indices))}")
     train_loader, val_loader = (
         DataLoader(
             dataset_,
