@@ -17,6 +17,7 @@ from torch.optim.lr_scheduler import StepLR
 
 from ignite.metrics import Loss, Accuracy
 from ignite.engine import Events, Engine
+from ignite.handlers import ModelCheckpoint
 from ignite.contrib.handlers.param_scheduler import LRScheduler
 from ignite.contrib.handlers.tensorboard_logger import (
     OptimizerParamsHandler,
@@ -36,6 +37,7 @@ from libcrap.torch.click import (
 )
 from libcrap.torch.training import (
     add_checkpointing,
+    add_checkpointing_of_last_models,
     add_early_stopping,
     add_weights_and_grads_logging,
     setup_trainer,
@@ -43,6 +45,7 @@ from libcrap.torch.training import (
     setup_tensorboard_logger,
     make_standard_prepare_batch_with_events,
     add_logging_input_images,
+    get_model_name,
 )
 
 from dctn.conv_sbs import (
@@ -349,6 +352,14 @@ def main(
         val_evaluator,
         objects_to_save={"model": model},
         model=model,
+    )
+    add_checkpointing_of_last_models(
+        models_dir,
+        val_evaluator,
+        {"model": model},
+        model,
+        num_checkpoints=10,
+        save_interval=20,
     )
     if early_stopping_patience_num_epochs is not None:
         add_early_stopping(
