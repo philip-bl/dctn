@@ -238,6 +238,7 @@ def add_optimizer_params_logging(
     default=58000,
 )
 @click.option("--learning-rate", "-r", type=float, default=1e-2)
+@click.option("--momentum", type=float, default=0.0)
 @click.option("--batch-size", "-b", type=int, default=100)
 @click.option(
     "--initialization", type=str, help="Either dumb-normal or khrulkov-normal"
@@ -261,6 +262,7 @@ def main(
     tb_log_dir,
     models_dir,
     learning_rate,
+    momentum,
     batch_size,
     initialization,
     initialization_std,
@@ -308,7 +310,7 @@ def main(
     model = DCTNMnistModel(2, 2, False, init, preprocess_cos_sin_squared)
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
     prepare_batch_for_trainer = make_standard_prepare_batch_with_events(device)
     trainer = setup_trainer(
