@@ -57,9 +57,13 @@ from dctn.conv_sbs import (
 from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
 from dctn.base_intermediate_outputs_logger import (
     log_logits_as_probabilities,
-    log_max,
-    log_min,
-    log_mean,
+    log_dumb_mean_of_abs,
+    log_dumb_min_of_abs,
+    log_dumb_max_of_abs,
+    log_dumb_max,
+    log_dumb_min,
+    log_dumb_mean,
+    log_dumb_std,
 )
 from dctn.ignite_intermediate_outputs_logger import (
     create_every_n_iters_intermediate_outputs_logger,
@@ -375,7 +379,19 @@ def main(
         add_optimizer_params_logging(optimizer, tb_logger, trainer)
         is_string = lambda _, module: isinstance(module, ConvSBS)
         create_every_n_iters_intermediate_outputs_logger(
-            model, tb_logger.writer, is_string, trainer, "train", every_n_iters=20
+            model,
+            tb_logger.writer,
+            is_string,
+            trainer,
+            "train",
+            every_n_iters=20,
+            loggers=(
+                log_dumb_mean_of_abs,
+                log_dumb_min_of_abs,
+                log_dumb_max_of_abs,
+                log_dumb_mean,
+                log_dumb_std,
+            ),
         )
         add_conv_sbs_tt_tensor_statistics_logging(model, tb_logger.writer, trainer, 20)
         create_every_n_iters_intermediate_outputs_logger(
@@ -385,7 +401,13 @@ def main(
             trainer,
             "train_outputs_of_the_whole_model",
             every_n_iters=20,
-            loggers=(log_logits_as_probabilities, log_min, log_max, log_mean),
+            loggers=(
+                log_logits_as_probabilities,
+                log_dumb_min,
+                log_dumb_max,
+                log_dumb_mean,
+                log_dumb_std,
+            ),
         )
         trainer.run(train_loader, max_epochs=epochs)
 
