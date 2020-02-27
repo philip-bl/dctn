@@ -1,6 +1,9 @@
 """This module provides functions for working with rank-one (not to confuse with order-one tensors aka vectors)
 tensors. A rank-one tensor is a tensor representable as tensor product of vectors."""
 
+import functools
+import operator
+
 from typing import *
 
 from attr import attrs, attrib
@@ -43,12 +46,14 @@ class RankOneTensorsBatch:
     @property
     def ncoordinates(self) -> int:
         """Returns the number of elements (aka coordinates) in one tensor. NOT IN THE WHOLE BATCH."""
-        return self.array.shape[factors_dim] * self.array.shape[coordinates_dim]
+        return (
+            self.array.shape[self.factors_dim] * self.array.shape[self.coordinates_dim]
+        )
 
     @property
     def ntensors(self) -> int:
         """Returns the number of tensors in the batch."""
-        return functools.reduce(operator.multiply, self.batch_shape)
+        return functools.reduce(operator.mul, self.batch_shape)
 
     def sum_per_tensor(self) -> torch.Tensor:
         """Returns, for each tensor in the batch, the sum of the elements of the tensor."""
@@ -68,7 +73,7 @@ class RankOneTensorsBatch:
 
     def mean_per_tensor(self) -> torch.Tensor:
         """Returns, for each tensor in the batch, the mean of the elements of the tensor."""
-        return self.sum() / self.ncoordinates()
+        return self.sum_per_tensor() / self.ncoordinates
 
     def mean_over_batch(self) -> torch.Tensor:
         """Returns the mean of the elements of all tensors in the batch."""
