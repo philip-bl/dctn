@@ -82,7 +82,7 @@ class RankOneTensorsBatch:
     def squared_fro_norm_per_tensor(self) -> torch.Tensor:
         """For each tensor in the batch, returns its squared Frobenius norm."""
         result = torch.prod(
-            torch.norm(self.array, dim=self.coordinates_dim, keepdim=True),
+            torch.norm(self.array, dim=self.coordinates_dim, keepdim=True)**2,
             dim=self.factors_dim,
             keepdim=True,
         )
