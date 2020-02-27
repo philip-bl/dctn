@@ -120,7 +120,7 @@ class DummyModel(nn.Sequential):
         )
 
 
-def batch_to_quantum(x: torch.Tensor, cos_sin_squared) -> torch.Tensor:
+def batch_to_quantum(x: torch.Tensor, cos_sin_squared: bool) -> torch.Tensor:
     batch = einops.rearrange(x, "b () h w -> b h w")
     if not cos_sin_squared:
         batch_quantum = torch.stack((torch.sin(batch), torch.cos(batch)), dim=3)
