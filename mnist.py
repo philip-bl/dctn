@@ -69,6 +69,7 @@ from dctn.ignite_intermediate_outputs_logger import (
     create_every_n_iters_intermediate_outputs_logger,
 )
 from dctn.conv_sbs_statistics_logging import add_conv_sbs_tt_tensor_statistics_logging
+from dctn.rank_one_tensor import RankOneTensorsBatch
 
 logger = logging.getLogger()
 click_log.basic_config(logger)
@@ -130,6 +131,27 @@ def batch_to_quantum(x: torch.Tensor, cos_sin_squared: bool) -> torch.Tensor:
         )
     assert batch_quantum.shape == (*batch.shape, 2)  # b h w 2
     return batch_quantum
+
+
+def calc_std_of_coordinates_of_windows(
+    batch: torch.Tensor, kernel_size: Union[int, Tuple[int, int]], cos_sin_squared: bool
+) -> torch.Tensor:
+    """Assuming batch is a batch of MNIST images, i.e. an array of shape B×1×28×28,
+    transform all windows (of size kernel_size × kernel_size) of all images into rank-1 tensors and calculate
+    std of coordinates of these tensors."""
+    unfolded = tnnf.unfold(batch, kernel_size=kernel_size)
+    if not cos_sin_squared:
+        unfolded_quantum = torch.stack(
+            (torch.sin(unfolded), torch.cos(unfolded)), dim=3
+        )
+    else:
+        unfolded_quantum = torch.stack(
+            (torch.sin(unfolded) ** 2, torch.cos(unfolded) ** 2), dim=3
+        )
+    # unfolded_quantum has shape B × kernel_size^2 × number_of_windows_in_an_image × 2
+    return RankOneTensorsBatch(
+        unfolded_quantum, factors_dim=1, coordinates_dim=3
+    ).std_over_batch()
 
 
 class DCTNMnistModel(nn.Module):
