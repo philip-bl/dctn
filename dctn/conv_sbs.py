@@ -210,9 +210,9 @@ class ConvSBS(nn.Module):
         """Returns the Frobenius norm of the TT tensor."""
         return self.squared_fro_norm() ** 0.5
 
-    def var(self, unbiased=True) -> torch.Tensor:
+    def var(self, unbiased:bool=True) -> torch.Tensor:
         """Returns the empiric variance of the TT tensor.
-Applies Bessel's correction iff unbiased is True."""
+        Applies Bessel's correction iff unbiased is True."""
         sum = self.sum()
         mean = sum / self.spec.nelement
         divisor = self.spec.nelement - 1 if unbiased else self.spec.nelement
