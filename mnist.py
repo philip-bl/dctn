@@ -244,6 +244,8 @@ def add_optimizer_params_logging(
     type=click.IntRange(1, MNIST_DATASET_SIZE),
     default=58000,
 )
+@click.option("--num-sbs-layers", type=click.IntRange(2, 10 ** 6), default=2)
+@click.option("--bond-dim-size", type=click.IntRange(1, 10 ** 6), default=2)
 @click.option("--learning-rate", "-r", type=float, default=1e-2)
 @click.option("--momentum", type=float, default=0.0)
 @click.option("--batch-size", "-b", type=int, default=100)
@@ -266,6 +268,8 @@ def main(
     dataset_root,
     init_load_file,
     train_dataset_size,
+    num_sbs_layers,
+    bond_dim_size,
     tb_log_dir,
     models_dir,
     learning_rate,
@@ -314,7 +318,9 @@ def main(
         init = KhrulkovNormalInitialization(initialization_std)
     else:
         raise ValueError(f"Invalid initialization value: {initialization}")
-    model = DCTNMnistModel(2, 2, False, init, preprocess_cos_sin_squared)
+    model = DCTNMnistModel(
+        num_sbs_layers, bond_dim_size, False, init, preprocess_cos_sin_squared
+    )
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
