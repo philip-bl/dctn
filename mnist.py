@@ -356,15 +356,16 @@ def main(
     if not make_input_window_std_one:
         input_multiplier = 1.0
     else:
+        kernel_size = 3
         window_std = calc_std_of_coordinates_of_windows(
             next(
                 iter(DataLoader(dataset, batch_size=MNIST_DATASET_SIZE, shuffle=False))
             )[0],
-            kernel_size=3,
+            kernel_size=kernel_size,
             cos_sin_squared=preprocess_cos_sin_squared,
         ).item()
         logger.info(f"window_std = {window_std}")
-        input_multiplier = 1.0 / window_std
+        input_multiplier = (1.0 / window_std) ** (1 / kernel_size**2)
     logger.info(f"input_multiplier = {input_multiplier}")
     model = DCTNMnistModel(
         num_sbs_layers,
