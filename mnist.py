@@ -121,7 +121,9 @@ class DummyModel(nn.Sequential):
         )
 
 
-def batch_to_quantum(x: torch.Tensor, cos_sin_squared: bool) -> torch.Tensor:
+def batch_to_quantum(
+    x: torch.Tensor, cos_sin_squared: bool, multiplier: float
+) -> torch.Tensor:
     batch = einops.rearrange(x, "b () h w -> b h w")
     if not cos_sin_squared:
         batch_quantum = torch.stack((torch.sin(batch), torch.cos(batch)), dim=3)
@@ -130,7 +132,7 @@ def batch_to_quantum(x: torch.Tensor, cos_sin_squared: bool) -> torch.Tensor:
             (torch.sin(batch) ** 2, torch.cos(batch) ** 2), dim=3
         )
     assert batch_quantum.shape == (*batch.shape, 2)  # b h w 2
-    return batch_quantum
+    return batch_quantum * multiplier
 
 
 def calc_std_of_coordinates_of_windows(
@@ -162,10 +164,12 @@ class DCTNMnistModel(nn.Module):
         trace_edge: bool,
         initialization: Union[DumbNormalInitialization, KhrulkovNormalInitialization],
         preprocess_cos_sin_squared: bool,
+        input_multiplier: float,
     ):
         super().__init__()
         assert num_sbs_layers >= 2
         self.preprocess_cos_sin_squared = preprocess_cos_sin_squared
+        self.input_multiplier = input_multiplier
         cores_specs = (
             (
                 SBSSpecCore(Pos2D(-1, -1), 1),
@@ -232,7 +236,9 @@ class DCTNMnistModel(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        intermediate = (batch_to_quantum(x, self.preprocess_cos_sin_squared),)
+        intermediate = (
+            batch_to_quantum(x, self.preprocess_cos_sin_squared, self.input_multiplier),
+        )
         for conv_sbs in self.conv_sbses:
             intermediate = conv_sbs(intermediate)
         (result,) = intermediate
@@ -284,6 +290,12 @@ def add_optimizer_params_logging(
 @click.option("--warmup-num-epochs", "-w", type=int, default=40)
 @click.option("--warmup-initial-multiplier", type=float, default=1e-20)
 @click.option("--preprocess-cos-sin-squared", is_flag=True)
+@click.option(
+    "--make-input-window-std-one",
+    is_flag=True,
+    help="""Iff true, the input (in quantum form) will be multiplied by the constant which
+makes the std of coordinates of tensors representing input windows equal to 1""",
+)
 @click.option("--shuffle-pixels", is_flag=True)
 @click_seed_and_device_options(default_device="cpu")
 def main(
@@ -306,6 +318,7 @@ def main(
     warmup_num_epochs,
     warmup_initial_multiplier,
     preprocess_cos_sin_squared,
+    make_input_window_std_one,
     shuffle_pixels,
 ):
     if not shuffle_pixels:
@@ -340,8 +353,26 @@ def main(
         init = KhrulkovNormalInitialization(initialization_std)
     else:
         raise ValueError(f"Invalid initialization value: {initialization}")
+    if not make_input_window_std_one:
+        input_multiplier = 1.0
+    else:
+        window_std = calc_std_of_coordinates_of_windows(
+            next(
+                iter(DataLoader(dataset, batch_size=MNIST_DATASET_SIZE, shuffle=False))
+            )[0],
+            kernel_size=3,
+            cos_sin_squared=preprocess_cos_sin_squared,
+        ).item()
+        logger.info(f"window_std = {window_std}")
+        input_multiplier = 1.0 / window_std
+    logger.info(f"input_multiplier = {input_multiplier}")
     model = DCTNMnistModel(
-        num_sbs_layers, bond_dim_size, False, init, preprocess_cos_sin_squared
+        num_sbs_layers,
+        bond_dim_size,
+        False,
+        init,
+        preprocess_cos_sin_squared,
+        input_multiplier,
     )
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
