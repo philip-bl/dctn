@@ -32,8 +32,14 @@ def test_basic_methods() -> None:
 
     assert x.squared_fro_norm_per_tensor().shape == (2, 1)
     assert torch.allclose(
-        x.squared_fro_norm_per_tensor(), torch.Tensor([[8.0623], [50.0]])
+        x.squared_fro_norm_per_tensor(), torch.Tensor([[65.], [2500.]])
     )
 
     assert x.squared_fro_norm_over_batch().ndim == 0
-    assert torch.allclose(x.squared_fro_norm_over_batch(), torch.tensor(58.0623))
+    assert torch.allclose(x.squared_fro_norm_over_batch(), torch.tensor(2565.))
+
+    assert x.var_over_batch().ndim == 0
+    assert torch.allclose(x.var_over_batch(), torch.tensor(211.9821))
+
+    assert x.std_over_batch().ndim == 0
+    assert torch.allclose(x.std_over_batch(), torch.tensor(14.5596))
