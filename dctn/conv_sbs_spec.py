@@ -1,7 +1,7 @@
 import functools
 import operator
 from itertools import chain, islice
-from attr import attrs, attrib, evolve
+from attr import attrs, attrib
 from typing import *
 
 
