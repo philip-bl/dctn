@@ -275,7 +275,7 @@ def add_quantum_inputs_statistics_logging(
             writer.add_scalar(
                 tag_prefix + "std_of_coordinates_of_windows",
                 calc_std_of_coordinates_of_windows(
-                    batch, kernel_size=3, cos_sin_squared=model.cos_sin_squared
+                    batch, kernel_size=3, cos_sin_squared=model.preprocess_cos_sin_squared
                 ),
             )
 
