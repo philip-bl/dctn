@@ -56,11 +56,7 @@ class SimpleIntermediateOutputsLogger:
         model: nn.Module,
         writer: SummaryWriter,
         module_filter: Callable[[str, nn.Module], bool],
-        loggers: Tuple[LoggerTransformType, ...] = (
-            log_dumb_mean_of_abs,
-            log_dumb_min_of_abs,
-            log_dumb_max_of_abs,
-        ),
+        loggers: Tuple[LoggerTransformType, ...],
         use_input: bool
     ):
         self.enabled = False
