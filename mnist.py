@@ -326,7 +326,6 @@ makes the std of coordinates of tensors representing input windows equal to 1"""
 @click.option(
     "--rmsprop-alpha",
     type=click.FloatRange(0.0, 1.0),
-    default=0.95,
     help="The running square average is calculated as α*prev_running_avg + (1-α)*new_value",
 )
 @click.option("--weight-decay", type=float, default=0.0)
