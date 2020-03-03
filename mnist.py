@@ -7,6 +7,8 @@ from typing import *
 import click
 import click_log
 
+from attr import attrs, attrib
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as tnnf
@@ -14,6 +16,7 @@ from torchvision.datasets.mnist import MNIST
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, random_split
 from torch.optim.lr_scheduler import StepLR
+from torch.utils.tensorboard import SummaryWriter
 
 from ignite.metrics import Loss, Accuracy
 from ignite.engine import Events, Engine
@@ -165,6 +168,7 @@ class DCTNMnistModel(nn.Module):
         initialization: Union[DumbNormalInitialization, KhrulkovNormalInitialization],
         preprocess_cos_sin_squared: bool,
         input_multiplier: float,
+        after_batch_to_quantum_callback: Callable[[torch.Tensor], None] = None,
     ):
         super().__init__()
         assert num_sbs_layers >= 2
@@ -234,11 +238,15 @@ class DCTNMnistModel(nn.Module):
                 initializations=(initialization,),
             ),
         )
+        self.after_batch_to_quantum_callback = after_batch_to_quantum_callback
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        intermediate = (
-            batch_to_quantum(x, self.preprocess_cos_sin_squared, self.input_multiplier),
+        quantumized = batch_to_quantum(
+            x, self.preprocess_cos_sin_squared, self.input_multiplier
         )
+        if self.after_batch_to_quantum_callback is not None:
+            self.after_batch_to_quantum_callback(intermediate[0])
+        intermediate = (quantumized,)
         for conv_sbs in self.conv_sbses:
             intermediate = conv_sbs(intermediate)
         (result,) = intermediate
@@ -254,6 +262,24 @@ def add_optimizer_params_logging(
             log_handler=OptimizerParamsHandler(optimizer, parameter_name),
             event_name=Events.ITERATION_STARTED,
         )
+
+
+def add_quantum_inputs_statistics_logging(
+    model: DCTNMnistModel, trainer: Engine, writer: SummaryWriter, every_n_iters: int
+) -> None:
+    def callback(batch: torch.Tensor) -> None:
+        if trainer.state.iteration % every_n_iters == 1:
+            tag_prefix = "train_input/"
+            writer.add_scalar(tag_prefix + "dumb_mean", torch.mean(batch))
+            writer.add_scalar(tag_prefix + "dumb_std", torch.std(batch))
+            writer.add_scalar(
+                tag_prefix + "std_of_coordinates_of_windows",
+                calc_std_of_coordinates_of_windows(
+                    batch, kernel_size=3, cos_sin_squared=model.cos_sin_squared
+                ),
+            )
+
+    model.after_batch_to_quantum_callback = callback
 
 
 @click.command()
@@ -497,6 +523,7 @@ def main(
                 log_dumb_std,
             ),
         )
+        add_quantum_inputs_statistics_logging(model, trainer, tb_logger.writer, 20)
         trainer.run(train_loader, max_epochs=epochs)
 
 
