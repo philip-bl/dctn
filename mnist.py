@@ -530,7 +530,7 @@ def main(
                         calc_std_of_coordinates_of_windows,
                         kernel_size=3,
                         cos_sin_squared=cos_sin_squared,
-                        multiplier=multiplier,
+                        multiplier=input_multiplier,
                     ),
                 ),
             ),
