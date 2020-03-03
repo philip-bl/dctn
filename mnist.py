@@ -245,7 +245,7 @@ class DCTNMnistModel(nn.Module):
             x, self.preprocess_cos_sin_squared, self.input_multiplier
         )
         if self.after_batch_to_quantum_callback is not None:
-            self.after_batch_to_quantum_callback(intermediate[0])
+            self.after_batch_to_quantum_callback(quantumized)
         intermediate = (quantumized,)
         for conv_sbs in self.conv_sbses:
             intermediate = conv_sbs(intermediate)
