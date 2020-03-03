@@ -47,7 +47,9 @@ class SimpleIntermediateOutputsLogger:
     """How to use:
     1 Initialize - it will attach forward hooks
     2 When you want the logging to actually happen, set tag_prefix, step and enabled
-    3 After you've done the forward you wanted to log set enabled=False"""
+    3 After you've done the forward you wanted to log set enabled=False.
+
+    If use_input, instead of processing the output, processes the input."""
 
     def __init__(
         self,
@@ -59,6 +61,7 @@ class SimpleIntermediateOutputsLogger:
             log_dumb_min_of_abs,
             log_dumb_max_of_abs,
         ),
+        use_input: bool = False,
     ):
         self.enabled = False
         self.tag_prefix = None
@@ -68,12 +71,18 @@ class SimpleIntermediateOutputsLogger:
             if self.enabled:
                 for logger_name, record_type, logger_transform in loggers:
                     tag = f"{self.tag_prefix}_{logger_name}/{module_name}"
+                    if not use_input:
+                        object_ = output
+                    else:
+                        assert isinstance(input_, tuple)
+                        assert len(input_) == 1
+                        object_ = input_[0]
                     if record_type == RecordType.SCALAR:
                         writer.add_scalar(
-                            tag, logger_transform(output), self.step,
+                            tag, logger_transform(object_), self.step,
                         )
                     elif record_type == RecordType.HISTOGRAM:
-                        writer.add_histogram(tag, logger_transform(output), self.step)
+                        writer.add_histogram(tag, logger_transform(object_), self.step)
                     else:
                         assert "This should never happen"
 
