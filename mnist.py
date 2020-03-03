@@ -273,8 +273,8 @@ def add_quantum_inputs_statistics_logging(
     def callback(batch: torch.Tensor) -> None:
         if trainer.state.iteration % every_n_iters == 1:
             tag_prefix = "train_input/"
-            writer.add_scalar(tag_prefix + "dumb_mean", torch.mean(batch))
-            writer.add_scalar(tag_prefix + "dumb_std", torch.std(batch))
+            writer.add_scalar(tag_prefix + "dumb_mean", torch.mean(batch), trainer.state.iteration)
+            writer.add_scalar(tag_prefix + "dumb_std", torch.std(batch), trainer.state.iteration)
 
     model.after_batch_to_quantum_callback = callback
 
