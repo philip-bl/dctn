@@ -140,19 +140,23 @@ def batch_to_quantum(
 
 
 def calc_std_of_coordinates_of_windows(
-    batch: torch.Tensor, kernel_size: Union[int, Tuple[int, int]], cos_sin_squared: bool
+    batch: torch.Tensor,
+    kernel_size: Union[int, Tuple[int, int]],
+    cos_sin_squared: bool,
+    multiplier: float = 1.0,
 ) -> torch.Tensor:
     """Assuming batch is a batch of MNIST images, i.e. an array of shape B×1×28×28,
     transform all windows (of size kernel_size × kernel_size) of all images into rank-1 tensors and calculate
     std of coordinates of these tensors."""
     unfolded = tnnf.unfold(batch, kernel_size=kernel_size)
     if not cos_sin_squared:
-        unfolded_quantum = torch.stack(
-            (torch.sin(unfolded), torch.cos(unfolded)), dim=3
+        unfolded_quantum = (
+            torch.stack((torch.sin(unfolded), torch.cos(unfolded)), dim=3) * multiplier
         )
     else:
-        unfolded_quantum = torch.stack(
-            (torch.sin(unfolded) ** 2, torch.cos(unfolded) ** 2), dim=3
+        unfolded_quantum = (
+            torch.stack((torch.sin(unfolded) ** 2, torch.cos(unfolded) ** 2), dim=3)
+            * multiplier
         )
     # unfolded_quantum has shape B × kernel_size^2 × number_of_windows_in_an_image × 2
     return RankOneTensorsBatch(
@@ -526,6 +530,7 @@ def main(
                         calc_std_of_coordinates_of_windows,
                         kernel_size=3,
                         cos_sin_squared=cos_sin_squared,
+                        multiplier=multiplier,
                     ),
                 ),
             ),
