@@ -59,6 +59,7 @@ from dctn.conv_sbs import (
 )
 from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
 from dctn.base_intermediate_outputs_logger import (
+    RecordType,
     log_logits_as_probabilities,
     log_dumb_mean_of_abs,
     log_dumb_min_of_abs,
@@ -517,10 +518,16 @@ def main(
             trainer,
             "train_input",
             20,
-            loggers=partial(
-                calc_std_of_coordinates_of_windows,
-                kernel_size=3,
-                cos_sin_squared=cos_sin_squared,
+            loggers=(
+                (
+                    "std_of_coordinates_of_windows",
+                    RecordType.SCALAR,
+                    partial(
+                        calc_std_of_coordinates_of_windows,
+                        kernel_size=3,
+                        cos_sin_squared=cos_sin_squared,
+                    ),
+                ),
             ),
         )
         trainer.run(train_loader, max_epochs=epochs)
