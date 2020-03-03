@@ -296,6 +296,14 @@ def add_optimizer_params_logging(
     help="""Iff true, the input (in quantum form) will be multiplied by the constant which
 makes the std of coordinates of tensors representing input windows equal to 1""",
 )
+@click.option("--optimizer-type", type=str, help="Either sgd or rmsprop")
+@click.option(
+    "--rmsprop-alpha",
+    type=click.FloatRange(0.0, 1.0),
+    default=0.95,
+    help="The running square average is calculated as α*prev_running_avg + (1-α)*new_value",
+)
+@click.option("--weight-decay", type=float, default=0.0)
 @click.option("--shuffle-pixels", is_flag=True)
 @click_seed_and_device_options(default_device="cpu")
 def main(
@@ -319,6 +327,9 @@ def main(
     warmup_initial_multiplier,
     preprocess_cos_sin_squared,
     make_input_window_std_one,
+    optimizer_type,
+    rmsprop_alpha,
+    weight_decay,
     shuffle_pixels,
 ):
     if not shuffle_pixels:
@@ -365,7 +376,7 @@ def main(
             cos_sin_squared=preprocess_cos_sin_squared,
         ).item()
         logger.info(f"window_std = {window_std}")
-        input_multiplier = (1.0 / window_std) ** (1 / kernel_size**2)
+        input_multiplier = (1.0 / window_std) ** (1 / kernel_size ** 2)
     logger.info(f"input_multiplier = {input_multiplier}")
     model = DCTNMnistModel(
         num_sbs_layers,
@@ -377,7 +388,24 @@ def main(
     )
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+    assert rmsprop_alpha is None or optimizer_type == "rmsprop"
+    if optimizer_type == "sgd":
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=learning_rate,
+            momentum=momentum,
+            weight_decay=weight_decay,
+        )
+    elif optimizer_type == "rmsprop":
+        optimizer = torch.optim.RMSprop(
+            model.parameters(),
+            lr=learning_rate,
+            momentum=momentum,
+            alpha=rmsprop_alpha,
+            weight_decay=weight_decay,
+        )
+    else:
+        raise ValueError("Invalid optimizer_type: {optimizer_type}")
 
     prepare_batch_for_trainer = make_standard_prepare_batch_with_events(device)
     trainer = setup_trainer(
