@@ -61,7 +61,7 @@ class SimpleIntermediateOutputsLogger:
             log_dumb_min_of_abs,
             log_dumb_max_of_abs,
         ),
-        use_input: bool = False,
+        use_input: bool
     ):
         self.enabled = False
         self.tag_prefix = None
