@@ -529,6 +529,7 @@ def main(
                     ),
                 ),
             ),
+            use_input=True,
         )
         trainer.run(train_loader, max_epochs=epochs)
 
