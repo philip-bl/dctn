@@ -272,12 +272,6 @@ def add_quantum_inputs_statistics_logging(
             tag_prefix = "train_input/"
             writer.add_scalar(tag_prefix + "dumb_mean", torch.mean(batch))
             writer.add_scalar(tag_prefix + "dumb_std", torch.std(batch))
-            writer.add_scalar(
-                tag_prefix + "std_of_coordinates_of_windows",
-                calc_std_of_coordinates_of_windows(
-                    batch, kernel_size=3, cos_sin_squared=model.preprocess_cos_sin_squared
-                ),
-            )
 
     model.after_batch_to_quantum_callback = callback
 
@@ -523,6 +517,19 @@ def main(
             ),
         )
         add_quantum_inputs_statistics_logging(model, trainer, tb_logger.writer, 20)
+        create_every_n_iters_intermediate_outputs_logger(
+            model,
+            tb_logger.writer,
+            lambda _, module: module is model,
+            trainer,
+            "train_input",
+            20,
+            loggers=partial(
+                calc_std_of_coordinates_of_windows,
+                kernel_size=3,
+                cos_sin_squared=cos_sin_squared,
+            ),
+        )
         trainer.run(train_loader, max_epochs=epochs)
 
 
