@@ -166,13 +166,13 @@ class DCTNMnistModel(nn.Module):
         bond_dim_size: int,
         trace_edge: bool,
         initialization: Union[DumbNormalInitialization, KhrulkovNormalInitialization],
-        preprocess_cos_sin_squared: bool,
+        cos_sin_squared: bool,
         input_multiplier: float,
         after_batch_to_quantum_callback: Callable[[torch.Tensor], None] = None,
     ):
         super().__init__()
         assert num_sbs_layers >= 2
-        self.preprocess_cos_sin_squared = preprocess_cos_sin_squared
+        self.cos_sin_squared = cos_sin_squared
         self.input_multiplier = input_multiplier
         cores_specs = (
             (
@@ -241,9 +241,7 @@ class DCTNMnistModel(nn.Module):
         self.after_batch_to_quantum_callback = after_batch_to_quantum_callback
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        quantumized = batch_to_quantum(
-            x, self.preprocess_cos_sin_squared, self.input_multiplier
-        )
+        quantumized = batch_to_quantum(x, self.cos_sin_squared, self.input_multiplier)
         if self.after_batch_to_quantum_callback is not None:
             self.after_batch_to_quantum_callback(quantumized)
         intermediate = (quantumized,)
@@ -309,7 +307,7 @@ def add_quantum_inputs_statistics_logging(
 @click.option("--early-stopping-patience-num-epochs", type=int)
 @click.option("--warmup-num-epochs", "-w", type=int, default=40)
 @click.option("--warmup-initial-multiplier", type=float, default=1e-20)
-@click.option("--preprocess-cos-sin-squared", is_flag=True)
+@click.option("--cos-sin-squared", is_flag=True)
 @click.option(
     "--make-input-window-std-one",
     is_flag=True,
@@ -344,7 +342,7 @@ def main(
     early_stopping_patience_num_epochs,
     warmup_num_epochs,
     warmup_initial_multiplier,
-    preprocess_cos_sin_squared,
+    cos_sin_squared,
     make_input_window_std_one,
     optimizer_type,
     rmsprop_alpha,
@@ -392,18 +390,13 @@ def main(
                 iter(DataLoader(dataset, batch_size=MNIST_DATASET_SIZE, shuffle=False))
             )[0],
             kernel_size=kernel_size,
-            cos_sin_squared=preprocess_cos_sin_squared,
+            cos_sin_squared=cos_sin_squared,
         ).item()
         logger.info(f"window_std = {window_std}")
         input_multiplier = (1.0 / window_std) ** (1 / kernel_size ** 2)
     logger.info(f"input_multiplier = {input_multiplier}")
     model = DCTNMnistModel(
-        num_sbs_layers,
-        bond_dim_size,
-        False,
-        init,
-        preprocess_cos_sin_squared,
-        input_multiplier,
+        num_sbs_layers, bond_dim_size, False, init, cos_sin_squared, input_multiplier,
     )
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
