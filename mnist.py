@@ -339,7 +339,7 @@ def add_quantum_inputs_statistics_logging(
     type=float,
     help="For dumb-normal this sets std of each core of each sbs core; for khrulkov-normal this sets std of each sbs whole tensor",
 )
-@click.option("--scale-layers-using-batch", is_flag=True)
+@click.option("--scale-layers-using-batch", type=int, help="Pass batch size for scaling here.")
 @click.option("--epochs", type=int, default=5000)
 @click.option("--early-stopping-patience-num-epochs", type=int)
 @click.option("--warmup-num-epochs", "-w", type=int, default=40)
@@ -441,10 +441,10 @@ def main(
     )
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
-    elif scale_layers_using_batch:
+    elif scale_layers_using_batch is not None:
         model.scale_layers_using_batch(
             next(
-                iter(DataLoader(dataset, batch_size=MNIST_DATASET_SIZE, shuffle=False))
+                iter(DataLoader(dataset, batch_size=scale_layers_using_batch, shuffle=True))
             )[0]
         )
         logger.info("Done model.scale_layers_using_batch")
