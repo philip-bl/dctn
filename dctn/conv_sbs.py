@@ -31,15 +31,22 @@ class KhrulkovNormalInitialization:
     std_of_elements_of_matrix: Optional[float]
 
 
+class NormalPreservingOutputStdInitialization:
+    pass
+
+
 class ConvSBS(nn.Module):
     def __init__(
         self,
         spec: SBSSpecString,
         initialization: Union[
-            DumbNormalInitialization, KhrulkovNormalInitialization
+            DumbNormalInitialization,
+            KhrulkovNormalInitialization,
+            NormalPreservingOutputStdInitialization,
         ] = DumbNormalInitialization(0.9),
     ):
         super().__init__()
+        logger = logging.getLogger(f"{__name__}.{self.__init__.__qualname__}")
         self.spec = spec
         self.cores = nn.ParameterList(
             (
@@ -56,6 +63,9 @@ class ConvSBS(nn.Module):
         )
         if isinstance(initialization, KhrulkovNormalInitialization):
             self.init_khrulkov_normal(initialization.std_of_elements_of_matrix)
+        elif isinstance(initialization, NormalPreservingOutputStdInitialization):
+            logger.info("Using normal preserving output std initialization")
+            self.init_normal_preserving_output_std()
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
 
@@ -67,7 +77,6 @@ class ConvSBS(nn.Module):
             (),  # the result is a scalar - we contract out all dimensions
             optimize="auto",
         )
-        logger = logging.getLogger(f"{__name__}.{self.__init__.__qualname__}")
         logger.info(f"sum_einsum_expr = {self._sum_einsum_expr}")
 
         # generate the einsum expression for calculating squared frobenius norm
@@ -329,7 +338,14 @@ class ManyConvSBS(nn.Module):
         trace_edge: bool,
         cores_specs: Tuple[SBSSpecCore, ...],
         initializations: Optional[
-            Tuple[Union[DumbNormalInitialization, KhrulkovNormalInitialization], ...]
+            Tuple[
+                Union[
+                    DumbNormalInitialization,
+                    KhrulkovNormalInitialization,
+                    NormalPreservingOutputStdInitialization,
+                ],
+                ...,
+            ]
         ] = None,
     ):
         """If initializations is None, default initialization of ConvSBS is used."""
