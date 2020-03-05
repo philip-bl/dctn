@@ -333,15 +333,12 @@ class ConvSBS(nn.Module):
         ]
         return result
 
-    def __imul__(self, scalar: float):
-        """ConvSBS is a tensor network. This method performs *= operator by multiplying this tensor network
-        by scalar."""
+    def multiply_by_scalar(self, scalar: float):
+        """ConvSBS is a tensor network. This method multiplies this tensor network
+        by scalar inplace."""
         for core in self.cores:
             core *= scalar ** (1 / len(self.cores))
         return self
-
-    def __idiv__(self, scalar: float):
-        return self.__imul__(scalar ** -1)
 
 
 class ManyConvSBS(nn.Module):
