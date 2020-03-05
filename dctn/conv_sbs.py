@@ -136,6 +136,12 @@ class ConvSBS(nn.Module):
         for core in self.cores:
             torch.nn.init.normal_(core, std=math.sqrt(var_of_cores_elements))
 
+    def init_normal_preserving_output_std(self) -> None:
+        """Initializes each component of each core with i.i.d. normal distribution with zero mean and such
+        variance, that if an input of this layer (i.e. a rank-one "window" tensor) has i.i.d. coordinates with
+        mean μ and std σ, then each coordinate of the output of this layer will have std √(σ^2+μ^2)."""
+        self.init_khrulkov_normal(self.tt_matrix_num_columns ** -0.5)
+
     @property
     def _second_stage_result_dimensions_names(self) -> Tuple[str, ...]:
         return (
