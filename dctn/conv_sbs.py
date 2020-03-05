@@ -295,8 +295,8 @@ class ConvSBS(nn.Module):
                     ),
                     max(pos.h - self.spec.min_height_pos, 0),
                 ],
-                value=1.0
-                # value=float("nan"),
+                # value=1.0
+                value=float("nan"),
             )
             for i, (intermediate, pos) in enumerate(
                 zip(
@@ -337,7 +337,7 @@ class ConvSBS(nn.Module):
         """ConvSBS is a tensor network. This method multiplies this tensor network
         by scalar inplace."""
         for core in self.cores:
-            core *= scalar ** (1 / len(self.cores))
+            core.data *= scalar ** (1 / len(self.cores))
         return self
 
 
