@@ -215,13 +215,15 @@ class ConvSBS(nn.Module):
 
     def squared_fro_norm(self) -> torch.Tensor:
         """Returns the squared Frobenius norm of the TT tensor."""
-        return self._squared_fro_norm_einsum_expr(*self.cores, *self.cores, backend="torch")
+        return self._squared_fro_norm_einsum_expr(
+            *self.cores, *self.cores, backend="torch"
+        )
 
     def fro_norm(self) -> torch.Tensor:
         """Returns the Frobenius norm of the TT tensor."""
         return self.squared_fro_norm() ** 0.5
 
-    def var(self, unbiased:bool=True) -> torch.Tensor:
+    def var(self, unbiased: bool = True) -> torch.Tensor:
         """Returns the empiric variance of the TT tensor.
         Applies Bessel's correction iff unbiased is True."""
         sum = self.sum()
