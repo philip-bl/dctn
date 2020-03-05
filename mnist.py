@@ -260,6 +260,26 @@ class DCTNMnistModel(nn.Module):
         (result,) = intermediate
         return einops.reduce(result, "b h w l -> b l", "mean")
 
+    def scale_layers_using_batch(self, x: torch.Tensor) -> None:
+        with torch.no_grad():
+            quantumized = batch_to_quantum(
+                x, self.cos_sin_squared, self.input_multiplier
+            )
+            intermediate_after_rescaling = (quantumized,)
+            for conv_sbs in self.conv_sbses:
+                intermediate_before_rescaling = conv_sbs(intermediate_after_rescaling)
+                for (string, tensor) in zip(
+                    conv_sbs.strings, intermediate_before_rescaling
+                ):
+                    std = tensor.std().item()
+                    string /= std
+                    logger.info(f"Divided a ConvSBS by {std}")
+                intermediate_after_rescaling = conv_sbs(intermediate_after_rescaling)
+                for tensor in intermediate_after_rescaling:
+                    assert torch.allclose(tensor.std(), torch.tensor(1.0))
+            (result,) = intermediate_after_rescaling
+            return einops.reduce(result, "b h w l -> b l", "mean")
+
 
 def add_optimizer_params_logging(
     optimizer: torch.optim.Optimizer, tb_logger: TensorboardLogger, engine: Engine
@@ -310,13 +330,16 @@ def add_quantum_inputs_statistics_logging(
 @click.option("--momentum", type=float, default=0.0)
 @click.option("--batch-size", "-b", type=int, default=100)
 @click.option(
-    "--initialization", type=str, help="One of: dumb-normal, khrulkov-normal, normal-preserving-output-std"
+    "--initialization",
+    type=str,
+    help="One of: dumb-normal, khrulkov-normal, normal-preserving-output-std",
 )
 @click.option(
     "--initialization-std",
     type=float,
     help="For dumb-normal this sets std of each core of each sbs core; for khrulkov-normal this sets std of each sbs whole tensor",
 )
+@click.option("--scale-layers-using-batch", is_flag=True)
 @click.option("--epochs", type=int, default=5000)
 @click.option("--early-stopping-patience-num-epochs", type=int)
 @click.option("--warmup-num-epochs", "-w", type=int, default=40)
@@ -350,6 +373,7 @@ def main(
     batch_size,
     initialization,
     initialization_std,
+    scale_layers_using_batch,
     epochs,
     device,
     seed,
@@ -417,6 +441,13 @@ def main(
     )
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
+    elif scale_layers_using_batch:
+        model.scale_layers_using_batch(
+            next(
+                iter(DataLoader(dataset, batch_size=MNIST_DATASET_SIZE, shuffle=False))
+            )[0]
+        )
+        logger.info("Done model.scale_layers_using_batch")
     assert rmsprop_alpha is None or optimizer_type == "rmsprop"
     if optimizer_type == "sgd":
         optimizer = torch.optim.SGD(
