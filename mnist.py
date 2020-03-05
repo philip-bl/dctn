@@ -56,6 +56,7 @@ from dctn.conv_sbs import (
     ConvSBS,
     DumbNormalInitialization,
     KhrulkovNormalInitialization,
+    NormalPreservingOutputStdInitialization,
 )
 from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
 from dctn.base_intermediate_outputs_logger import (
@@ -170,7 +171,11 @@ class DCTNMnistModel(nn.Module):
         num_sbs_layers: int,
         bond_dim_size: int,
         trace_edge: bool,
-        initialization: Union[DumbNormalInitialization, KhrulkovNormalInitialization],
+        initialization: Union[
+            DumbNormalInitialization,
+            KhrulkovNormalInitialization,
+            NormalPreservingOutputStdInitialization,
+        ],
         cos_sin_squared: bool,
         input_multiplier: float,
         after_batch_to_quantum_callback: Callable[[torch.Tensor], None] = None,
@@ -273,8 +278,12 @@ def add_quantum_inputs_statistics_logging(
     def callback(batch: torch.Tensor) -> None:
         if trainer.state.iteration % every_n_iters == 1:
             tag_prefix = "train_input/"
-            writer.add_scalar(tag_prefix + "dumb_mean", torch.mean(batch), trainer.state.iteration)
-            writer.add_scalar(tag_prefix + "dumb_std", torch.std(batch), trainer.state.iteration)
+            writer.add_scalar(
+                tag_prefix + "dumb_mean", torch.mean(batch), trainer.state.iteration
+            )
+            writer.add_scalar(
+                tag_prefix + "dumb_std", torch.std(batch), trainer.state.iteration
+            )
 
     model.after_batch_to_quantum_callback = callback
 
@@ -301,7 +310,7 @@ def add_quantum_inputs_statistics_logging(
 @click.option("--momentum", type=float, default=0.0)
 @click.option("--batch-size", "-b", type=int, default=100)
 @click.option(
-    "--initialization", type=str, help="Either dumb-normal or khrulkov-normal"
+    "--initialization", type=str, help="One of: dumb-normal, khrulkov-normal, normal-preserving-output-std"
 )
 @click.option(
     "--initialization-std",
@@ -384,6 +393,9 @@ def main(
         init = DumbNormalInitialization(initialization_std)
     elif initialization == "khrulkov-normal":
         init = KhrulkovNormalInitialization(initialization_std)
+    elif initialization == "normal-preserving-output-std":
+        assert initialization_std is None
+        init = NormalPreservingOutputStdInitialization()
     else:
         raise ValueError(f"Invalid initialization value: {initialization}")
     if not make_input_window_std_one:
