@@ -101,6 +101,12 @@ class ConvSBS(nn.Module):
             optimize="auto",
         )
 
+    @property
+    def tt_matrix_num_columns(self) -> Tuple[int, int]:
+        return self.spec.in_quantum_dim_size ** (
+            self.spec.in_num_channels * len(self.spec.cores)
+        )
+
     def init_khrulkov_normal(
         self, std_of_elements_of_matrix: Optional[float] = None
     ) -> None:
@@ -112,13 +118,12 @@ class ConvSBS(nn.Module):
         else:
             # See Tensorized Embedding Layers for Efficient Model Compression by Khrulkov
             # Section "Initialization"
-            matrix_num_columns = self.spec.in_quantum_dim_size ** (
-                self.spec.in_num_channels * len(self.spec.cores)
-            )
             matrix_num_rows = self.spec.out_total_quantum_dim_size
-            var_of_elements_of_matrix = 2 / (matrix_num_columns + matrix_num_rows)
+            var_of_elements_of_matrix = 2 / (
+                self.tt_matrix_num_columns + matrix_num_rows
+            )
             logger.info(
-                f"matrix_num_columns = {matrix_num_columns}, matrix_num_rows = {matrix_num_rows}, var_of_elements_of_matrix = {var_of_elements_of_matrix}"
+                f"tt_matrix_num_columns = {self.tt_matrix_num_columns}, matrix_num_rows = {matrix_num_rows}, var_of_elements_of_matrix = {var_of_elements_of_matrix}"
             )
 
         prod_of_ranks = functools.reduce(operator.mul, self.spec.bond_sizes)
