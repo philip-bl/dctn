@@ -268,15 +268,21 @@ class DCTNMnistModel(nn.Module):
             intermediate_after_rescaling = (quantumized,)
             for conv_sbs in self.conv_sbses:
                 intermediate_before_rescaling = conv_sbs(intermediate_after_rescaling)
+                scaled = True
                 for (string, tensor) in zip(
                     conv_sbs.strings, intermediate_before_rescaling
                 ):
                     std = tensor.std().item()
-                    string.multiply_by_scalar(std ** -1)
-                    logger.info(f"Divided a ConvSBS by {std}")
+                    if std != 0.0:
+                        string.multiply_by_scalar(std ** -1)
+                        logger.info(f"Divided a ConvSBS by {std}")
+                    else:
+                        logger.warning("std == 0.0, not scaling")
+                        scaled = False
                 intermediate_after_rescaling = conv_sbs(intermediate_after_rescaling)
-                for tensor in intermediate_after_rescaling:
-                    assert torch.allclose(tensor.std(), torch.tensor(1.0))
+                if scaled:
+                    for tensor in intermediate_after_rescaling:
+                        assert torch.allclose(tensor.std(), torch.tensor(1.0))
             (result,) = intermediate_after_rescaling
             return einops.reduce(result, "b h w l -> b l", "mean")
 
