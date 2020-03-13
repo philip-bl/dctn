@@ -57,6 +57,7 @@ from dctn.conv_sbs import (
     DumbNormalInitialization,
     KhrulkovNormalInitialization,
     NormalPreservingOutputStdInitialization,
+    MinRandomEyeInitialization
 )
 from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
 from dctn.base_intermediate_outputs_logger import (
@@ -176,6 +177,7 @@ class DCTNMnistModel(nn.Module):
             DumbNormalInitialization,
             KhrulkovNormalInitialization,
             NormalPreservingOutputStdInitialization,
+            MinRandomEyeInitialization
         ],
         cos_sin_squared: bool,
         input_multiplier: float,
@@ -339,12 +341,13 @@ def add_quantum_inputs_statistics_logging(
 @click.option(
     "--initialization",
     type=str,
-    help="One of: dumb-normal, khrulkov-normal, normal-preserving-output-std",
+    help="One of: dumb-normal, khrulkov-normal, normal-preserving-output-std, min-random-eye",
 )
 @click.option(
     "--initialization-std",
     type=float,
-    help="For dumb-normal this sets std of each core of each sbs core; for khrulkov-normal this sets std of each sbs whole tensor",
+    help="For dumb-normal this sets std of each core of each sbs core. "
+"For khrulkov-normal - std of each sbs as whole tensor; for min-random-eye - base_std.",
 )
 @click.option(
     "--scale-layers-using-batch", type=int, help="Pass batch size for scaling here."
@@ -429,6 +432,9 @@ def main(
     elif initialization == "normal-preserving-output-std":
         assert initialization_std is None
         init = NormalPreservingOutputStdInitialization()
+    elif initialization == "min-random-eye":
+        assert initialization_std is not None
+        init = MinRandomEyeInitialization(initialization_std)
     else:
         raise ValueError(f"Invalid initialization value: {initialization}")
     if not make_input_window_std_one:
