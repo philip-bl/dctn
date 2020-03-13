@@ -349,8 +349,7 @@ class ConvSBS(nn.Module):
                     ),
                     max(pos.h - self.spec.min_height_pos, 0),
                 ],
-                # value=1.0
-                value=float("nan"),
+                value=0.0
             )
             for i, (intermediate, pos) in enumerate(
                 zip(
