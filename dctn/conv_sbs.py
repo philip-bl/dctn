@@ -156,6 +156,52 @@ class ConvSBS(nn.Module):
         mean μ and std σ, then each coordinate of the output of this layer will have std √(σ^2+μ^2)."""
         self.init_khrulkov_normal(self.tt_matrix_num_columns ** -0.5)
 
+    def init_min_random_eye(self, base_std: float) -> None:
+        """Initializes by min_random_eye, but adjusts so that the layer's output has the same mean as
+        mean of an input's window. base_std will be multiplied by a factor depending on the input dimension
+        of a core to determine std of gaussian noise added to cores."""
+        assert self.spec.bond_sizes[0] == 1  # can't work with a tensor ring
+
+        # also can't work with different bond sizes
+        assert all(
+            bond_size == self.spec.bond_sizes[1]
+            for bond_size in self.spec.bond_sizes[1:]
+        )
+        bond_size = self.spec.bond_sizes[1]
+
+        # can't work with multiple cores having output dimensions
+        assert self.spec.out_total_quantum_dim_size == max(
+            shape.out_quantum_dim_size for shape in self.spec.shapes
+        )
+        out_dim_size = self.spec.out_total_quantum_dim_size
+
+        # first initialize all cores except for the first and the last
+        total_in_dim_size = self.spec.in_quantum_dim_size ** self.spec.in_num_channels
+        truncated_scaled_identity = torch.zeros(bond_size, bond_size)
+        truncated_scaled_identity[
+            : min(bond_size, out_dim_size), : min(bond_size, out_dim_size)
+        ] = (torch.eye(min(bond_size, out_dim_size)) / total_in_dim_size)
+        truncated_scaled_identity = einops.rearrange(
+            truncated_scaled_identity,
+            "l r -> () l r "
+            + " ".join(("()" for _ in range(self.spec.in_num_channels))),
+        )
+        for (core, shape) in zip(self.cores[1:-1], self.spec.shapes[1:-1]):
+            # shape is of type SBSSpecCore
+            # core has shape out×l×r×in1×in2×...×inN
+            nn.init.zeros_(core.data)
+            core.data += truncated_scaled_identity.expand_as(core)
+            core.data += torch.randn_like(core) * base_std / total_in_dim_size
+
+        # second initialize the first and the last cores
+        # cores[0] has shape 1×1×r×in1×in2×...×inN
+        # cores[-1] has shape 1×r×1×in1×in2×...×inN
+        for core in (self.cores[0], self.cores[-1]):
+            nn.init.zeros_(core.data)
+            core.data[0, 0, 0] = 1 / total_in_dim_size
+            assert torch.allclose(core.data.sum(), torch.tensor(1.0))
+            core.data += torch.randn_like(core) * base_std / total_in_dim_size
+
     @property
     def _second_stage_result_dimensions_names(self) -> Tuple[str, ...]:
         return (
