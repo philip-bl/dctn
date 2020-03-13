@@ -35,6 +35,11 @@ class NormalPreservingOutputStdInitialization:
     pass
 
 
+@attrs(auto_attribs=True, frozen=True)
+class MinRandomEyeInitialization:
+    base_std: float
+
+
 class ConvSBS(nn.Module):
     def __init__(
         self,
@@ -43,6 +48,7 @@ class ConvSBS(nn.Module):
             DumbNormalInitialization,
             KhrulkovNormalInitialization,
             NormalPreservingOutputStdInitialization,
+            MinRandomEyeInitialization,
         ] = DumbNormalInitialization(0.9),
     ):
         super().__init__()
@@ -66,6 +72,8 @@ class ConvSBS(nn.Module):
         elif isinstance(initialization, NormalPreservingOutputStdInitialization):
             logger.info("Using normal preserving output std initialization")
             self.init_normal_preserving_output_std()
+        elif isinstance(initialization, MinRandomEyeInitialization):
+            self.init_min_random_eye(initialization.base_std)
         self._first_stage_einsum_exprs = None
         self._second_stage_einsum_expr = None
 
