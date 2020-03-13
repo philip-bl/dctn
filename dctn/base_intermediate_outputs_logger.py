@@ -58,7 +58,7 @@ class SimpleIntermediateOutputsLogger:
         writer: SummaryWriter,
         module_filter: Callable[[str, nn.Module], bool],
         loggers: Tuple[LoggerTransformType, ...],
-        use_input: bool
+        use_input: bool,
     ):
         self.enabled = False
         self.tag_prefix = None
