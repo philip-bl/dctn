@@ -462,6 +462,12 @@ def main(
     model = DCTNMnistModel(
         num_sbs_layers, bond_dim_size, False, init, cos_sin_squared, input_multiplier,
     )
+    # with torch.autograd.detect_anomaly():
+    #     X, y = next(iter(train_loader))
+    #     logits = model(X)
+    #     loss = tnnf.cross_entropy(logits, y)
+    #     print(loss.item())
+    #     loss.backward()
     if init_load_file:
         model.load_state_dict(torch.load(init_load_file, map_location=device))
     elif scale_layers_using_batch is not None:
