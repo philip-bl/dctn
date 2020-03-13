@@ -409,6 +409,7 @@ class ManyConvSBS(nn.Module):
                     DumbNormalInitialization,
                     KhrulkovNormalInitialization,
                     NormalPreservingOutputStdInitialization,
+                    MinRandomEyeInitialization
                 ],
                 ...,
             ]
