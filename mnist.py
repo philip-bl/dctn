@@ -57,7 +57,7 @@ from dctn.conv_sbs import (
     DumbNormalInitialization,
     KhrulkovNormalInitialization,
     NormalPreservingOutputStdInitialization,
-    MinRandomEyeInitialization
+    MinRandomEyeInitialization,
 )
 from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
 from dctn.base_intermediate_outputs_logger import (
@@ -70,7 +70,7 @@ from dctn.base_intermediate_outputs_logger import (
     log_dumb_min,
     log_dumb_mean,
     log_dumb_std,
-    log_dumb_histogram
+    log_dumb_histogram,
 )
 from dctn.ignite_intermediate_outputs_logger import (
     create_every_n_iters_intermediate_outputs_logger,
@@ -177,7 +177,7 @@ class DCTNMnistModel(nn.Module):
             DumbNormalInitialization,
             KhrulkovNormalInitialization,
             NormalPreservingOutputStdInitialization,
-            MinRandomEyeInitialization
+            MinRandomEyeInitialization,
         ],
         cos_sin_squared: bool,
         input_multiplier: float,
@@ -347,7 +347,7 @@ def add_quantum_inputs_statistics_logging(
     "--initialization-std",
     type=float,
     help="For dumb-normal this sets std of each core of each sbs core. "
-"For khrulkov-normal - std of each sbs as whole tensor; for min-random-eye - base_std.",
+    "For khrulkov-normal - std of each sbs as whole tensor; for min-random-eye - base_std.",
 )
 @click.option(
     "--scale-layers-using-batch", type=int, help="Pass batch size for scaling here."
@@ -362,6 +362,12 @@ def add_quantum_inputs_statistics_logging(
     is_flag=True,
     help="""Iff true, the input (in quantum form) will be multiplied by the constant which
 makes the std of coordinates of tensors representing input windows equal to 1""",
+)
+@click.option(
+    "--input-multiplier",
+    type=float,
+    help="""By how much to multiply input after transforming it to rank-1 tensor. This
+argument can't be used together with --make-input-window-std-one.""",
 )
 @click.option("--optimizer-type", type=str, help="Either sgd or rmsprop")
 @click.option(
@@ -394,6 +400,7 @@ def main(
     warmup_initial_multiplier,
     cos_sin_squared,
     make_input_window_std_one,
+    input_multiplier,
     optimizer_type,
     rmsprop_alpha,
     weight_decay,
@@ -437,9 +444,8 @@ def main(
         init = MinRandomEyeInitialization(initialization_std)
     else:
         raise ValueError(f"Invalid initialization value: {initialization}")
-    if not make_input_window_std_one:
-        input_multiplier = 1.0
-    else:
+    assert not make_input_window_std_one or input_multiplier is None
+    if make_input_window_std_one:
         kernel_size = 3
         window_std = calc_std_of_coordinates_of_windows(
             next(
@@ -450,6 +456,8 @@ def main(
         ).item()
         logger.info(f"window_std = {window_std}")
         input_multiplier = (1.0 / window_std) ** (1 / kernel_size ** 2)
+    elif input_multiplier is None:
+        input_multiplier = 1.0
     logger.info(f"input_multiplier = {input_multiplier}")
     model = DCTNMnistModel(
         num_sbs_layers, bond_dim_size, False, init, cos_sin_squared, input_multiplier,
@@ -558,7 +566,7 @@ def main(
                 log_dumb_max_of_abs,
                 log_dumb_mean,
                 log_dumb_std,
-                log_dumb_histogram # maybe remove this later for performance's sake
+                log_dumb_histogram,  # maybe remove this later for performance's sake
             ),
         )
         add_conv_sbs_tt_tensor_statistics_logging(model, tb_logger.writer, trainer, 20)
