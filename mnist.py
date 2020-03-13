@@ -69,6 +69,7 @@ from dctn.base_intermediate_outputs_logger import (
     log_dumb_min,
     log_dumb_mean,
     log_dumb_std,
+    log_dumb_histogram
 )
 from dctn.ignite_intermediate_outputs_logger import (
     create_every_n_iters_intermediate_outputs_logger,
@@ -551,6 +552,7 @@ def main(
                 log_dumb_max_of_abs,
                 log_dumb_mean,
                 log_dumb_std,
+                log_dumb_histogram # maybe remove this later for performance's sake
             ),
         )
         add_conv_sbs_tt_tensor_statistics_logging(model, tb_logger.writer, trainer, 20)
