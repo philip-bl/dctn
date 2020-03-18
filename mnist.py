@@ -411,7 +411,7 @@ def main(
     else:
         print("Pixel shuffling is enabled")
         shuffled_pixels_indices = tuple(shuffled(range(h * w)))
-        logger.info(f"hash of shuffled_pixels_indices: {hash(shuffled_pixels_indices)}")
+        logger.info(f"{hash(shuffled_pixels_indices)=}")
         pixel_shuffle_transform = transforms.Lambda(
             partial(permute_pixels, shuffled_pixels_indices)
         )
@@ -421,7 +421,7 @@ def main(
     train_dataset, val_dataset = random_split(
         dataset, (train_dataset_size, MNIST_DATASET_SIZE - train_dataset_size)
     )
-    logger.info(f"hash of dataset split: {hash(tuple(val_dataset.indices))}")
+    logger.info(f"{hash(tuple(val_dataset.indices))=}")
     train_loader, val_loader = (
         DataLoader(
             dataset_,
@@ -443,7 +443,7 @@ def main(
         assert initialization_std is not None
         init = MinRandomEyeInitialization(initialization_std)
     else:
-        raise ValueError(f"Invalid initialization value: {initialization}")
+        raise ValueError(f"Invalid value: {initialization=}")
     assert not make_input_window_std_one or input_multiplier is None
     if make_input_window_std_one:
         kernel_size = 3
@@ -454,11 +454,11 @@ def main(
             kernel_size=kernel_size,
             cos_sin_squared=cos_sin_squared,
         ).item()
-        logger.info(f"window_std = {window_std}")
+        logger.info(f"{window_std=}")
         input_multiplier = (1.0 / window_std) ** (1 / kernel_size ** 2)
     elif input_multiplier is None:
         input_multiplier = 1.0
-    logger.info(f"input_multiplier = {input_multiplier}")
+    logger.info(f"{input_multiplier=}")
     model = DCTNMnistModel(
         num_sbs_layers, bond_dim_size, False, init, cos_sin_squared, input_multiplier,
     )

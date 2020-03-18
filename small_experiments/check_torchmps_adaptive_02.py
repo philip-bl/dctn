@@ -18,7 +18,7 @@ from torchmps import MPS
 torch.set_default_dtype(torch.float64)
 
 init_std = 1e-2
-print(f"init_std = {init_std:.1e}")
+print(f"{init_std=:.1e}")
 mpo = MPS(
     input_dim=9, output_dim=10, bond_dim=11, init_std=init_std, adaptive_mode=True
 ).train(False)
@@ -141,8 +141,8 @@ explicit_tensor_output = oe.contract(
 )
 assert torch.allclose(explicit_tensor_output, output)
 matrix = einops.rearrange(explicit_tensor, "out in0 in1 in2 in3 in4 in5 in6 in7 in8 -> out (in0 in1 in2 in3 in4 in5 in6 in7 in8)").numpy()
-print(f"condition number = {np.linalg.cond(matrix):.1e}")
-print(f"mean = {matrix.mean():.1e}, std = {matrix.std():.1e}")
+print(f"{np.linalg.cond(matrix)=:.1e}")
+print(f"{matrix.mean()=:.1e}, {matrix.std()=:.1e}")
 # for init_std=1e-1, cond is between 70    and 200,
 #                    mean is between 0.7   and 1.5
 #                    std  is between 0.1   and 0.5

@@ -85,7 +85,7 @@ class ConvSBS(nn.Module):
             (),  # the result is a scalar - we contract out all dimensions
             optimize="auto",
         )
-        logger.info(f"sum_einsum_expr = {self._sum_einsum_expr}")
+        logger.info(f"{self._sum_einsum_expr=}")
 
         # generate the einsum expression for calculating squared frobenius norm
         # the code below joins all dimensions (of two copies of the tt network)
@@ -118,7 +118,7 @@ class ConvSBS(nn.Module):
             optimize="auto",
         )
 
-        logger.info(f"resulting std of elements of matrix = {self.var()**0.5}")
+        logger.info(f"{self.var()**0.5=}")
 
     @property
     def tt_matrix_num_columns(self) -> Tuple[int, int]:
@@ -134,7 +134,7 @@ class ConvSBS(nn.Module):
         )
         if std_of_elements_of_matrix is not None:
             logger.info(
-                f"desired std_of_elements_of_matrix = {std_of_elements_of_matrix}"
+                f"desired {std_of_elements_of_matrix=}"
             )
             var_of_elements_of_matrix = std_of_elements_of_matrix ** 2
         else:
@@ -145,7 +145,7 @@ class ConvSBS(nn.Module):
                 self.tt_matrix_num_columns + matrix_num_rows
             )
             logger.info(
-                f"tt_matrix_num_columns = {self.tt_matrix_num_columns}, matrix_num_rows = {matrix_num_rows}, std_of_elements_of_matrix = {var_of_elements_of_matrix**0.5}"
+                f"{self.tt_matrix_num_columns=}, {matrix_num_rows=}, {var_of_elements_of_matrix**0.5=}"
             )
 
         prod_of_ranks = functools.reduce(operator.mul, self.spec.bond_sizes)
@@ -153,7 +153,7 @@ class ConvSBS(nn.Module):
             1 / len(self.cores)
         ) / prod_of_ranks ** (1 / len(self.cores))
         logger.info(
-            f"bond_sizes = {self.spec.bond_sizes}, prod_of_ranks = {prod_of_ranks}, var_of_cores_elements = {var_of_cores_elements}"
+            f"{self.spec.bond_sizes=}, {prod_of_ranks=}, {var_of_cores_elements=}"
         )
         for core in self.cores:
             torch.nn.init.normal_(core, std=math.sqrt(var_of_cores_elements))
