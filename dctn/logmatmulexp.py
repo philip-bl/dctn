@@ -19,4 +19,4 @@ def logmatmulexp_lowmem(log_A: torch.Tensor, log_B: torch.Tensor, /) -> torch.Te
 
     Given matrix log_A of shape ϴ×R and matrix log_B of shape R×I, calculates
     (log_A.exp() @ log_B.exp()).log() and its backward in a numerically stable way."""
-    return checkpoint(logmatmulexp, log_A, log_B)
+    return checkpoint(logmatmulexp, log_A, log_B, preserve_rng_state=False)
