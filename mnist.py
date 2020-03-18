@@ -275,8 +275,7 @@ class DCTNMnistModel(nn.Module):
                 for (string, tensor) in zip(
                     conv_sbs.strings, intermediate_before_rescaling
                 ):
-                    std = tensor.std().item()
-                    if std != 0.0:
+                    if (std := tensor.std().item()) != 0.0:
                         string.multiply_by_scalar(std ** -1)
                         logger.info(f"Divided a ConvSBS by {std}")
                     else:
