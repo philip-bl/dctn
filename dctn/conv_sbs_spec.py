@@ -116,7 +116,7 @@ class SBSSpecString:
             operator.mul, (core.total_dangling_dimensions_size for core in self.shapes)
         )
 
-    def get_dim_names(self, core_index: int) -> Tuple[str, ...]:
+    def get_dim_names(self, core_index: int, /) -> Tuple[str, ...]:
         """Returns dims names of core number core_index. These can be used in an einsum
 expression."""
 
@@ -134,7 +134,7 @@ The only names shared by cores will be bonds."""
         return tuple(self.get_dim_names(i) for i in range(len(self)))
 
     def get_all_dim_names_add_suffix_to_bonds(
-        self, suffix: str
+        self, suffix: str, /
     ) -> Tuple[Tuple[str, ...], ...]:
         """Returns all_dim_names, but add suffix to each bond dimension.
 This is used for calculating squared frobenius norm of the TT tensor."""

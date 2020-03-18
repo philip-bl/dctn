@@ -2,7 +2,7 @@ import torch
 from torch.utils.checkpoint import checkpoint
 
 
-def logmatmulexp(log_A: torch.Tensor, log_B: torch.Tensor) -> torch.Tensor:
+def logmatmulexp(log_A: torch.Tensor, log_B: torch.Tensor, /) -> torch.Tensor:
     """Given matrix log_A of shape ϴ×R and matrix log_B of shape R×I, calculates
     (log_A.exp() @ log_B.exp()).log() and its backward in a numerically stable way."""
     ϴ, R = log_A.shape
@@ -14,7 +14,7 @@ def logmatmulexp(log_A: torch.Tensor, log_B: torch.Tensor) -> torch.Tensor:
     return torch.logsumexp(log_pairwise_products, dim=1)
 
 
-def logmatmulexp_lowmem(log_A: torch.Tensor, log_B: torch.Tensor) -> torch.Tensor:
+def logmatmulexp_lowmem(log_A: torch.Tensor, log_B: torch.Tensor, /) -> torch.Tensor:
     """Same as logmatmulexp, but doesn't save a (ϴ, R, I)-shaped tensor for backward pass.
 
     Given matrix log_A of shape ϴ×R and matrix log_B of shape R×I, calculates

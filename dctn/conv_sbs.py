@@ -133,9 +133,7 @@ class ConvSBS(nn.Module):
             f"{__name__}.{self.init_khrulkov_normal.__qualname__}"
         )
         if std_of_elements_of_matrix is not None:
-            logger.info(
-                f"desired {std_of_elements_of_matrix=}"
-            )
+            logger.info(f"desired {std_of_elements_of_matrix=}")
             var_of_elements_of_matrix = std_of_elements_of_matrix ** 2
         else:
             # See Tensorized Embedding Layers for Efficient Model Compression by Khrulkov
@@ -309,7 +307,7 @@ class ConvSBS(nn.Module):
         return self._as_explicit_tensor_einsum_expr(*self.cores, backend="torch")
 
     def forward(
-        self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
+        self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]], /
     ) -> torch.Tensor:
         """If passing a tensor, the very first dimension MUST be channels."""
         if isinstance(channels, torch.Tensor):
@@ -349,7 +347,7 @@ class ConvSBS(nn.Module):
                     ),
                     max(pos.h - self.spec.min_height_pos, 0),
                 ],
-                value=0.0
+                value=0.0,
             )
             for i, (intermediate, pos) in enumerate(
                 zip(
@@ -386,7 +384,7 @@ class ConvSBS(nn.Module):
         ]
         return result
 
-    def multiply_by_scalar(self, scalar: float):
+    def multiply_by_scalar(self, scalar: float, /):
         """ConvSBS is a tensor network. This method multiplies this tensor network
         by scalar inplace."""
         for core in self.cores:
@@ -408,7 +406,7 @@ class ManyConvSBS(nn.Module):
                     DumbNormalInitialization,
                     KhrulkovNormalInitialization,
                     NormalPreservingOutputStdInitialization,
-                    MinRandomEyeInitialization
+                    MinRandomEyeInitialization,
                 ],
                 ...,
             ]
@@ -448,6 +446,6 @@ class ManyConvSBS(nn.Module):
             )
 
     def forward(
-        self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]]
+        self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]], /
     ) -> Tuple[torch.Tensor, ...]:
         return tuple(module(channels) for module in self.strings)
