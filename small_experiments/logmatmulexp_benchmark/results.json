@@ -1,0 +1,1082 @@
+[
+  {
+    "device": "Graphics Device",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0004322138335555792,
+    "forward_seconds_per_iteration": 7.714926265180111e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.011080719763413072,
+    "forward_seconds_per_iteration": 0.005506264781579375,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.016567833414301278,
+    "forward_seconds_per_iteration": 0.005479657258838415,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0003124054800719023,
+    "forward_seconds_per_iteration": 7.297360338270664e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.023408984337002038,
+    "forward_seconds_per_iteration": 0.012022816520184278,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.03529080697335303,
+    "forward_seconds_per_iteration": 0.011872375402599573,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.019173274114727974,
+    "forward_seconds_per_iteration": 0.004871276151388884,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.5173737924732268,
+    "forward_seconds_per_iteration": 0.303845151681453,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 256,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.8580349505599588,
+    "forward_seconds_per_iteration": 0.29648951324634254,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.001315055498853326,
+    "forward_seconds_per_iteration": 0.0006320267636328935,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.03165119503624737,
+    "forward_seconds_per_iteration": 0.01621159485541284,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.04759485720656812,
+    "forward_seconds_per_iteration": 0.015918010408058764,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0024449337646365167,
+    "forward_seconds_per_iteration": 0.0012269294168800115,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.05607982096262276,
+    "forward_seconds_per_iteration": 0.028412248799577357,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.08429001958109439,
+    "forward_seconds_per_iteration": 0.02820217166095972,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.009688512282446026,
+    "forward_seconds_per_iteration": 0.0022443013358861208,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.9137555322051049,
+    "forward_seconds_per_iteration": 0.5350857419334352,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 256,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 1.4837340621557087,
+    "forward_seconds_per_iteration": 0.5379961652588099,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0004855059552937746,
+    "forward_seconds_per_iteration": 7.891024462878704e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.004796540504321456,
+    "forward_seconds_per_iteration": 0.0024044075794517994,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.007162603996694088,
+    "forward_seconds_per_iteration": 0.0023748613614588978,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0004477210808545351,
+    "forward_seconds_per_iteration": 6.754398345947266e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.010074715055525303,
+    "forward_seconds_per_iteration": 0.005365714505314827,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.015166508024558425,
+    "forward_seconds_per_iteration": 0.005126647241413593,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0058613095618784425,
+    "forward_seconds_per_iteration": 0.004441886804997921,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.2231828850042075,
+    "forward_seconds_per_iteration": 0.12031024406664073,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 192,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.3125111820176244,
+    "forward_seconds_per_iteration": 0.14542050122283398,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.00048697590827941897,
+    "forward_seconds_per_iteration": 0.00024202190339565278,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.013384263161569834,
+    "forward_seconds_per_iteration": 0.0071428442653268575,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.020160813396796585,
+    "forward_seconds_per_iteration": 0.006744419224560261,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0010384623426944017,
+    "forward_seconds_per_iteration": 0.0005191616434603929,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.023685241658240555,
+    "forward_seconds_per_iteration": 0.012126714643090963,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.035552780739963055,
+    "forward_seconds_per_iteration": 0.011851371554657817,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.00510861687362194,
+    "forward_seconds_per_iteration": 0.002473767139017582,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.3816388855408877,
+    "forward_seconds_per_iteration": 0.20066102292388677,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 192,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.5814787068404257,
+    "forward_seconds_per_iteration": 0.2408014635555446,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.00047112959437072276,
+    "forward_seconds_per_iteration": 7.729136385023594e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0016764643974602222,
+    "forward_seconds_per_iteration": 0.0008153811562806368,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0030894675198942425,
+    "forward_seconds_per_iteration": 0.000848282277584076,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.00044121446087956427,
+    "forward_seconds_per_iteration": 7.712184451520443e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0031526276376098394,
+    "forward_seconds_per_iteration": 0.0016931488178670406,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.004703088318929076,
+    "forward_seconds_per_iteration": 0.0016078642010688782,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0005110917426645755,
+    "forward_seconds_per_iteration": 0.0002477206848561764,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.059916365202516315,
+    "forward_seconds_per_iteration": 0.03427774854004383,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 128,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.09452254865318536,
+    "forward_seconds_per_iteration": 0.03618529033847153,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0003553641214966774,
+    "forward_seconds_per_iteration": 0.0001160934567451477,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.004302087239921093,
+    "forward_seconds_per_iteration": 0.0023522766400128604,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.006252499343827367,
+    "forward_seconds_per_iteration": 0.0020703309774398803,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0004643313214182854,
+    "forward_seconds_per_iteration": 0.00021988081745803357,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.007231474919244647,
+    "forward_seconds_per_iteration": 0.003845055904239416,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.010760888997465372,
+    "forward_seconds_per_iteration": 0.003588069872930646,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0007033603359013796,
+    "forward_seconds_per_iteration": 0.0003255574405193329,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.10717402622103692,
+    "forward_seconds_per_iteration": 0.05821823712438345,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 128,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.16486609897576274,
+    "forward_seconds_per_iteration": 0.058351706499233845,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.00037621451541781426,
+    "forward_seconds_per_iteration": 7.977490313351154e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0017004206962883473,
+    "forward_seconds_per_iteration": 0.0007787562627345324,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0030490550585091114,
+    "forward_seconds_per_iteration": 0.0008564337249845266,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.000492070596665144,
+    "forward_seconds_per_iteration": 6.681461818516254e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0018063772842288018,
+    "forward_seconds_per_iteration": 0.0007625603768974542,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.003096102885901928,
+    "forward_seconds_per_iteration": 0.0008803142979741097,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0002702680788934231,
+    "forward_seconds_per_iteration": 0.00011926781386137008,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.004893244002014399,
+    "forward_seconds_per_iteration": 0.002908195275813341,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 64,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.009114386644214392,
+    "forward_seconds_per_iteration": 0.0031841139402240515,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.00031133717857301235,
+    "forward_seconds_per_iteration": 6.731091998517514e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0016442758683115244,
+    "forward_seconds_per_iteration": 0.0007732260227203369,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0028027936350554228,
+    "forward_seconds_per_iteration": 0.0008609932847321033,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0004631578549742699,
+    "forward_seconds_per_iteration": 6.969066336750984e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0015826244559139014,
+    "forward_seconds_per_iteration": 0.0008231669012457132,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0031925257854163646,
+    "forward_seconds_per_iteration": 0.0008414134848862886,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0002995949238538742,
+    "forward_seconds_per_iteration": 0.00014057683758437634,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.010601954022422432,
+    "forward_seconds_per_iteration": 0.005201537255197763,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 64,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.01685309692285955,
+    "forward_seconds_per_iteration": 0.005485640121623874,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0005163438338786363,
+    "forward_seconds_per_iteration": 9.387096390128135e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.014521142402663827,
+    "forward_seconds_per_iteration": 0.007245172746479511,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.021714961742982267,
+    "forward_seconds_per_iteration": 0.007165765296667815,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0005463475827127695,
+    "forward_seconds_per_iteration": 0.00013362257741391658,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.030692938743159176,
+    "forward_seconds_per_iteration": 0.01564550306648016,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.04613313248381019,
+    "forward_seconds_per_iteration": 0.015432306211441755,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0033318788837641477,
+    "forward_seconds_per_iteration": 0.0012915928941220046,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.6821112333144993,
+    "forward_seconds_per_iteration": 0.3797017415612936,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 280,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 1.0952112999837846,
+    "forward_seconds_per_iteration": 0.381888422742486,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0016073230374604463,
+    "forward_seconds_per_iteration": 0.0008016154542565346,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.041111117834225296,
+    "forward_seconds_per_iteration": 0.02078694585710764,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.06183144683949649,
+    "forward_seconds_per_iteration": 0.02063525464385748,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0029813234973698854,
+    "forward_seconds_per_iteration": 0.001649481300264597,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.07394754410721362,
+    "forward_seconds_per_iteration": 0.03708878183737397,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.11121319450438022,
+    "forward_seconds_per_iteration": 0.03714457291178405,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.005720795793458819,
+    "forward_seconds_per_iteration": 0.0022762731183320283,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 1.0605070096161215,
+    "forward_seconds_per_iteration": 0.6807813359424472,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 280,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 1.8208885391242802,
+    "forward_seconds_per_iteration": 0.685471229813993,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.00032458395697176456,
+    "forward_seconds_per_iteration": 7.741421461105347e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0024372960813343527,
+    "forward_seconds_per_iteration": 0.001218764688819647,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.003690583221614361,
+    "forward_seconds_per_iteration": 0.0012054765783250333,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.00041410554200410843,
+    "forward_seconds_per_iteration": 6.640629842877388e-05,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0050126066990196705,
+    "forward_seconds_per_iteration": 0.0026316668558865786,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.007447116440162062,
+    "forward_seconds_per_iteration": 0.0024953111819922924,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.0010251575335860253,
+    "forward_seconds_per_iteration": 0.000375392185524106,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.09898887299932539,
+    "forward_seconds_per_iteration": 0.05653708046302199,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 150,
+    "dtype": "torch.float32",
+    "forward_backward_seconds_per_iteration": 0.18640215889550746,
+    "forward_seconds_per_iteration": 0.057327626403421164,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0003869879338890314,
+    "forward_seconds_per_iteration": 0.0001929479371756315,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.006567629026249051,
+    "forward_seconds_per_iteration": 0.003561891941353679,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "Graphics Device",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.009896349059417844,
+    "forward_seconds_per_iteration": 0.0033186954166740178,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0006833225209265947,
+    "forward_seconds_per_iteration": 0.000338400574401021,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.011599217457696796,
+    "forward_seconds_per_iteration": 0.006026174053549767,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "GeForce GTX 1070",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.017260627765208484,
+    "forward_seconds_per_iteration": 0.00567716863937676,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.0017384783457964658,
+    "forward_seconds_per_iteration": 0.00080036167986691,
+    "func": "matmul",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.18451147394254805,
+    "forward_seconds_per_iteration": 0.10852066467516125,
+    "func": "logmatmulexp",
+    "num_iterations": 50,
+    "num_matrices": 6
+  },
+  {
+    "device": "cpu",
+    "dim_size": 150,
+    "dtype": "torch.float64",
+    "forward_backward_seconds_per_iteration": 0.2890723162610084,
+    "forward_seconds_per_iteration": 0.1059133186005056,
+    "func": "logmatmulexp_lowmem",
+    "num_iterations": 50,
+    "num_matrices": 6
+  }
+]
