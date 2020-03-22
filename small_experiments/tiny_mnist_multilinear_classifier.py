@@ -10,10 +10,11 @@ from torchvision.datasets.mnist import MNIST
 from torchvision.transforms import Compose, Resize, ToTensor, CenterCrop
 from torch.optim import Adam
 
-
 from einops import rearrange
 
 import opt_einsum as oe
+
+from libcrap.torch import set_random_seeds
 
 MNIST_TRANSFORM = Compose((CenterCrop((16, 16)), Resize(4, 4), ToTensor()))
 
@@ -23,6 +24,10 @@ device = torch.device("cuda")
 lr = 5e-3
 num_iters = 100000
 mov_avg_coeff = 0.99
+seed = 0
+make_not_nonnegative = True
+
+set_random_seeds(device, seed)
 
 X, y = next(
     iter(
@@ -41,6 +46,9 @@ X, y = next(
 X = rearrange(X, "b () h w -> (h w) b").to(device)
 y = y.to(device)
 X = torch.stack((torch.sin(X) ** 2, torch.cos(X) ** 2), dim=2)  # shape: 16×60000×2
+if make_not_nonnegative:
+    X -= 0.5
+    assert torch.allclose(X.mean(), torch.tensor(0.0, device=device))
 X_train = X[:, :train_size]
 y_train = y[:train_size]
 X_val = X[:, train_size:]
@@ -75,6 +83,7 @@ def score(X, y):
         start += batch_size
     return ce_loss / X.shape[1], correct / X.shape[1]
 
+
 ones = torch.ones(train_size, device=device)
 
 optimizer = Adam((W,), lr)
@@ -105,8 +114,6 @@ for i in range(num_iters):
         val_ce_loss, val_acc = score(X_val, y_val)
         print(f"       {val_ce_loss=}, {val_acc=}")
     optimizer.zero_grad()
-    # if W.grad is not None:
-    #     W.grad.zero_()
     train_ce_loss.backward()
     optimizer.step()
-    # W.data -= lr * W.grad
+
