@@ -25,9 +25,11 @@ lr = 5e-3
 num_iters = 100000
 mov_avg_coeff = 0.99
 seed = 0
-make_not_nonnegative = True
+make_not_nonnegative = False
+save_where = "/mnt/important/experiments/tiny_mnist_multilinear_classifier_adam_nonnegative.pth"
 
 set_random_seeds(device, seed)
+print(f"{seed=}")
 
 X, y = next(
     iter(
@@ -116,4 +118,4 @@ for i in range(num_iters):
     optimizer.zero_grad()
     train_ce_loss.backward()
     optimizer.step()
-
+torch.save(W, save_where)
