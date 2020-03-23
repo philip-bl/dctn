@@ -1,3 +1,4 @@
+# TODO refactor this file to use dctn/benchmark.py
 import os
 import itertools
 from functools import reduce
