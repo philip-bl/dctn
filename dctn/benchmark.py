@@ -1,3 +1,5 @@
+from timeit import timeit
+
 from typing import *
 
 import torch
