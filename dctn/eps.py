@@ -9,14 +9,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def eps2d(core: Tensor, input: Tensor) -> Tensor:
+def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
+    """For kernel_size=3, the order goes like this:
+    0 1 2
+    3 4 5
+    6 7 8"""
     num_channels, batch_size, height, width, in_size = input.shape
-    kernel_size = math.isqrt((core.ndim - 1) // num_channels)
-    assert core.shape[:-1] == tuple(
-        in_size for _ in range(kernel_size ** 2 * num_channels)
-    )
-    out_size = core.shape[-1]
-    first = True
     for (δh, δw) in itertools.product(range(kernel_size), range(kernel_size)):
         # product goes like (0, 0), (0, 1), (0, 2), (1, 0), ...
         height_slice = slice(
@@ -32,14 +30,26 @@ def eps2d(core: Tensor, input: Tensor) -> Tensor:
             else -unused_width_on_right,
         )
         for channel in range(num_channels):
-            input_core = input[channel, :, height_slice, width_slice]
-            if first:
-                intermediate = torch.einsum("bhwi,i...->bhw...", input_core, core)
-                first = False
-            else:
-                intermediate = torch.einsum(
-                    "bhwi,bhwi...->bhw...", input_core, intermediate
-                )
+            yield input[channel, :, height_slice, width_slice]
+
+
+def eps2d(core: Tensor, input: Tensor) -> Tensor:
+    num_channels, batch_size, height, width, in_size = input.shape
+    kernel_size = math.isqrt((core.ndim - 1) // num_channels)
+    assert core.shape[:-1] == tuple(
+        in_size for _ in range(kernel_size ** 2 * num_channels)
+    )
+    out_size = core.shape[-1]
+    aligned_input_cores = align(input, kernel_size)
+    first = True
+    for input_core in aligned_input_cores:
+        if first:
+            intermediate = torch.einsum("bhwi,i...->bhw...", input_core, core)
+            first = False
+        else:
+            intermediate = torch.einsum(
+                "bhwi,bhwi...->bhw...", input_core, intermediate
+            )
 
     assert intermediate.shape == (
         batch_size,
