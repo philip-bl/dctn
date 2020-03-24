@@ -8,6 +8,8 @@ from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
 
+import opt_einsum as oe
+
 
 def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
     """For kernel_size=3, the order goes like this:
@@ -33,7 +35,28 @@ def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
             yield input[channel, :, height_slice, width_slice]
 
 
-def eps2d(core: Tensor, input: Tensor) -> Tensor:
+def eps2d_oe(core: Tensor, input: Tensor, memory_limit, optimize="auto") -> Tensor:
+    num_channels, batch_size, height, width, in_size = input.shape
+    kernel_size = math.isqrt((core.ndim - 1) // num_channels)
+    assert core.shape[:-1] == tuple(
+        in_size for _ in range(kernel_size ** 2 * num_channels)
+    )
+    out_size = core.shape[-1]
+    aligned_input_cores = tuple(align(input, kernel_size))
+    return oe.contract(
+        *itertools.chain.from_iterable(
+            (input_core, ("batch", "height", "width", f"in{index}"))
+            for index, input_core in enumerate(aligned_input_cores)
+        ),
+        core,
+        tuple(f"in{index}" for index in range(len(aligned_input_cores))) + ("out",),
+        ("batch", "height", "width", "out"),
+        optimize=optimize,
+        memory_limit=memory_limit,
+    )
+
+
+def eps2d_simple(core: Tensor, input: Tensor) -> Tensor:
     num_channels, batch_size, height, width, in_size = input.shape
     kernel_size = math.isqrt((core.ndim - 1) // num_channels)
     assert core.shape[:-1] == tuple(
