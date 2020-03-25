@@ -35,7 +35,7 @@ def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
             yield input[channel, :, height_slice, width_slice]
 
 
-def align_via_padding(input: Tensor, kernel_size: int) -> Tuple[Tuple[Tensor, ...], slice, slice]:
+def align_via_padding(input: Tensor, kernel_size: int) -> Tuple[Iterable[Tensor], slice, slice]:
     """For kernel_size=3, the order goes like this:
     0 1 2
     3 4 5
@@ -44,16 +44,15 @@ def align_via_padding(input: Tensor, kernel_size: int) -> Tuple[Tuple[Tensor, ..
     Apart from the actual tensors, returns two slices: representing the good range of height and
     the good range of width."""
     num_channels, batch_size, height, width, in_size = input.shape
-    result = []
-    for (δh, δw) in itertools.product(range(kernel_size), range(kernel_size)):
-        # product goes like (0, 0), (0, 1), (0, 2), (1, 0), ...
-        pad_up = kernel_size - δh - 1
-        pad_down = kernel_size - 1 - pad_up
-        pad_left = kernel_size - δw - 1
-        pad_right = kernel_size - 1 - pad_left
-        for channel in range(num_channels):
-            result.append(F.pad(input[channel], (0, 0, pad_left, pad_right, pad_up, pad_down), mode="constant"))
-    return (tuple(result), slice(kernel_size - 1, height), slice(kernel_size - 1, width))
+    result = (
+        F.pad(input[channel],
+            (0, 0, pad_left := kernel_size-δw-1, kernel_size-1-pad_left,
+                   pad_up   := kernel_size-δh-1, kernel_size-1-pad_up),
+            mode="constant")
+        for (δh, δw, channel)
+        in itertools.product(range(kernel_size), range(kernel_size), range(num_channels))
+    )
+    return (result, slice(kernel_size - 1, height), slice(kernel_size - 1, width))
 
 
 def eps2d_oe(core: Tensor, input: Tensor) -> Tensor:
