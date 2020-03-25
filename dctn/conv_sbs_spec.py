@@ -64,7 +64,7 @@ class SBSSpecString:
     def _check_matching_lengths(self, attribute, bond_sizes_value) -> None:
         if len(bond_sizes_value) != len(self.cores):
             raise ValueError(
-                f"{len(bond_sizes_value)=}, it must be equal to {len(self.cores=)}"
+                f"{len(bond_sizes_value)=}, it must be equal to {len(self.cores)=}"
             )
 
     def __len__(self) -> int:
