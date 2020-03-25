@@ -106,3 +106,31 @@ def eps2d_simple(core: Tensor, input: Tensor) -> Tensor:
         out_size,
     )
     return intermediate
+
+
+def eps2d_oe_via_padding(core: Tensor, input: Tensor) -> Tensor:
+    num_channels, batch_size, height, width, in_size = input.shape
+    kernel_size = math.isqrt((core.ndim - 1) // num_channels)
+    assert core.shape[:-1] == tuple(
+        in_size for _ in range(kernel_size ** 2 * num_channels)
+    )
+    out_size = core.shape[-1]
+    aligned_input_cores, good_h_slice, good_w_slice = align_via_padding(input, kernel_size)
+    num_aligned_input_cores = kernel_size**2 * num_channels
+    contraction_path = (
+        tuple(range(input_part_0_len := math.ceil(num_aligned_input_cores / 2))),
+        tuple(range(num_aligned_input_cores - input_part_0_len)),
+        (0, 1),
+        (0, 1),
+    )
+    contracted = oe.contract(
+        *itertools.chain.from_iterable(
+            (input_core, ("batch", "height", "width", f"in{index}"))
+            for index, input_core in enumerate(aligned_input_cores)
+        ),
+        core,
+        tuple(f"in{index}" for index in range(num_aligned_input_cores)) + ("out",),
+        ("batch", "height", "width", "out"),
+        optimize=contraction_path,
+    )
+    return contracted[:, good_h_slice, good_w_slice]
