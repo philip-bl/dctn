@@ -6,7 +6,7 @@ from typing import *
 
 import torch
 
-from dctn.eps import eps2d_simple, eps2d_oe
+from dctn.eps import eps2d_oe, eps2d_oe_via_padding
 from dctn.benchmark import benchmark_torch
 
 
@@ -47,6 +47,24 @@ if __name__ == "__main__":
     print(
         benchmark_torch(
             eps2d_oe,
+            partial(
+                create_tensors,
+                batch_size=64,
+                num_channels=1,
+                height=28,
+                width=28,
+                kernel_size=4,
+                in_size=2,
+                out_size=2,
+            ),
+            torch.float64,
+            device,
+            num_iterations=1,
+        )
+    )
+    print(
+        benchmark_torch(
+            eps2d_oe_via_padding,
             partial(
                 create_tensors,
                 batch_size=64,
