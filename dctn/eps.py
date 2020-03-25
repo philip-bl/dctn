@@ -35,7 +35,7 @@ def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
             yield input[channel, :, height_slice, width_slice]
 
 
-def eps2d_oe(core: Tensor, input: Tensor, memory_limit, optimize="auto") -> Tensor:
+def eps2d_oe(core: Tensor, input: Tensor, optimize="auto") -> Tensor:
     num_channels, batch_size, height, width, in_size = input.shape
     kernel_size = math.isqrt((core.ndim - 1) // num_channels)
     assert core.shape[:-1] == tuple(
@@ -43,6 +43,24 @@ def eps2d_oe(core: Tensor, input: Tensor, memory_limit, optimize="auto") -> Tens
     )
     out_size = core.shape[-1]
     aligned_input_cores = tuple(align(input, kernel_size))
+    for aligned_input_core in aligned_input_cores:
+        print(f"{aligned_input_core.shape=}")
+    contraction_path = (
+        tuple(range(input_part_0_len := math.ceil(len(aligned_input_cores) / 2))),
+        tuple(range(len(aligned_input_cores) - input_part_0_len)),
+        (0, 1),
+        (0, 1),
+    )
+    print(oe.contract_path(
+        *itertools.chain.from_iterable(
+            (input_core, ("batch", "height", "width", f"in{index}"))
+            for index, input_core in enumerate(aligned_input_cores)
+        ),
+        core,
+        tuple(f"in{index}" for index in range(len(aligned_input_cores))) + ("out",),
+        ("batch", "height", "width", "out"),
+        optimize=contraction_path,
+    ))
     return oe.contract(
         *itertools.chain.from_iterable(
             (input_core, ("batch", "height", "width", f"in{index}"))
@@ -51,8 +69,7 @@ def eps2d_oe(core: Tensor, input: Tensor, memory_limit, optimize="auto") -> Tens
         core,
         tuple(f"in{index}" for index in range(len(aligned_input_cores))) + ("out",),
         ("batch", "height", "width", "out"),
-        optimize=optimize,
-        memory_limit=memory_limit,
+        optimize=contraction_path,
     )
 
 
