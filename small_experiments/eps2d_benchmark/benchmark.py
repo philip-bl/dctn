@@ -9,6 +9,7 @@ import torch
 from dctn.eps import eps2d_simple, eps2d_oe
 from dctn.benchmark import benchmark_torch
 
+
 def create_tensors(
     batch_size: int,
     num_channels: int,
@@ -20,18 +21,44 @@ def create_tensors(
     dtype,
     device,
 ) -> None:
-    input = torch.randn(
-        num_channels, batch_size, height, width, in_size, dtype=dtype, device=device
+    return (
+        torch.randn(
+            *(in_size for _ in range(kernel_size ** 2 * num_channels)),
+            out_size,
+            dtype=dtype,
+            device=device,
+            requires_grad=True
+        ),
+        torch.randn(
+            num_channels,
+            batch_size,
+            height,
+            width,
+            in_size,
+            dtype=dtype,
+            device=device,
+            requires_grad=True,
+        ),
     )
-    core = torch.randn(
-        *(in_size for _ in range(kernel_size ** 2 * num_channels)),
-        out_size,
-        dtype=dtype,
-        device=device
-    )
-    return core, input
 
 
 if __name__ == "__main__":
     device = torch.device("cuda")
-    print(benchmark_torch(partial(eps2d_oe, memory_limit=1e7), partial(create_tensors, batch_size=512, num_channels=1, height=28, width=28, kernel_size=4, in_size=2, out_size=2), torch.float64, device, num_iterations=100))
+    print(
+        benchmark_torch(
+            eps2d_oe,
+            partial(
+                create_tensors,
+                batch_size=64,
+                num_channels=1,
+                height=28,
+                width=28,
+                kernel_size=4,
+                in_size=2,
+                out_size=2,
+            ),
+            torch.float64,
+            device,
+            num_iterations=1,
+        )
+    )
