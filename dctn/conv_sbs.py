@@ -328,6 +328,8 @@ class ConvSBS(nn.Module):
         # for each i, contracted_with_cores_separately[i] is the result of contracting the ith
         # core with the input
 
+        # TODO, instead of this, use eps.align_via_padding
+
         # now we do padding:
         padded = tuple(
             F.pad(

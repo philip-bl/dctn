@@ -35,7 +35,28 @@ def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
             yield input[channel, :, height_slice, width_slice]
 
 
-def eps2d_oe(core: Tensor, input: Tensor, optimize="auto") -> Tensor:
+def align_via_padding(input: Tensor, kernel_size: int) -> Tuple[Tuple[Tensor, ...], slice, slice]:
+    """For kernel_size=3, the order goes like this:
+    0 1 2
+    3 4 5
+    6 7 8
+
+    Apart from the actual tensors, returns two slices: representing the good range of height and
+    the good range of width."""
+    num_channels, batch_size, height, width, in_size = input.shape
+    result = []
+    for (δh, δw) in itertools.product(range(kernel_size), range(kernel_size)):
+        # product goes like (0, 0), (0, 1), (0, 2), (1, 0), ...
+        pad_up = kernel_size - δh - 1
+        pad_down = kernel_size - 1 - pad_up
+        pad_left = kernel_size - δw - 1
+        pad_right = kernel_size - 1 - pad_left
+        for channel in range(num_channels):
+            result.append(F.pad(input[channel], (0, 0, pad_left, pad_right, pad_up, pad_down), mode="constant"))
+    return (tuple(result), slice(kernel_size - 1, height), slice(kernel_size - 1, width))
+
+
+def eps2d_oe(core: Tensor, input: Tensor) -> Tensor:
     num_channels, batch_size, height, width, in_size = input.shape
     kernel_size = math.isqrt((core.ndim - 1) // num_channels)
     assert core.shape[:-1] == tuple(
@@ -43,24 +64,12 @@ def eps2d_oe(core: Tensor, input: Tensor, optimize="auto") -> Tensor:
     )
     out_size = core.shape[-1]
     aligned_input_cores = tuple(align(input, kernel_size))
-    for aligned_input_core in aligned_input_cores:
-        print(f"{aligned_input_core.shape=}")
     contraction_path = (
         tuple(range(input_part_0_len := math.ceil(len(aligned_input_cores) / 2))),
         tuple(range(len(aligned_input_cores) - input_part_0_len)),
         (0, 1),
         (0, 1),
     )
-    print(oe.contract_path(
-        *itertools.chain.from_iterable(
-            (input_core, ("batch", "height", "width", f"in{index}"))
-            for index, input_core in enumerate(aligned_input_cores)
-        ),
-        core,
-        tuple(f"in{index}" for index in range(len(aligned_input_cores))) + ("out",),
-        ("batch", "height", "width", "out"),
-        optimize=contraction_path,
-    ))
     return oe.contract(
         *itertools.chain.from_iterable(
             (input_core, ("batch", "height", "width", f"in{index}"))
