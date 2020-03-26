@@ -35,7 +35,7 @@ def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
       yield input[channel, :, height_slice, width_slice]
 
 
-def eps_oe(core: Tensor, input: Tensor) -> Tensor:
+def eps(core: Tensor, input: Tensor) -> Tensor:
   num_channels, batch_size, height, width, in_size = input.shape
   kernel_size = math.isqrt((core.ndim - 1) // num_channels)
   assert core.shape[:-1] == tuple(
@@ -61,7 +61,7 @@ def eps_oe(core: Tensor, input: Tensor) -> Tensor:
   )
 
 
-def eps_simple(core: Tensor, input: Tensor) -> Tensor:
+def eps_one_by_one(core: Tensor, input: Tensor) -> Tensor:
   num_channels, batch_size, height, width, in_size = input.shape
   kernel_size = math.isqrt((core.ndim - 1) // num_channels)
   assert core.shape[:-1] == tuple(

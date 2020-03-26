@@ -6,7 +6,7 @@ from typing import *
 
 import torch
 
-from dctn.eps import eps_oe
+from dctn.eps import eps
 from dctn.benchmark import benchmark_torch
 
 
@@ -45,6 +45,6 @@ def create_tensors(
 if __name__ == "__main__":
   device = torch.device("cuda")
   print(benchmark_torch(
-    eps_oe, partial(create_tensors, batch_size=64, num_channels=1, height=28, width=28,
+    eps, partial(create_tensors, batch_size=64, num_channels=1, height=28, width=28,
       kernel_size=4, in_size=2, out_size=2),
     torch.float64, device, num_iterations=1))
