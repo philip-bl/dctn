@@ -86,3 +86,22 @@ def eps_one_by_one(core: Tensor, input: Tensor) -> Tensor:
     out_size,
   )
   return intermediate
+
+
+class EPS(nn.Module):
+  def __init__(self, kernel_size: int, in_num_channels: int, in_size: int, out_size: int):
+    super().__init__()
+    self.kernel_size = kernel_size
+    self.in_num_channels = in_num_channels
+    self.in_size = in_size
+    self.out_size = out_size
+    std = self.matrix_shape[1] ** -0.5 # preserves std during forward pass
+    self.core = nn.Parameter(
+      torch.randn(*(in_size,)*(kernel_size**2 * in_num_channels), out_size)*std)
+
+  @property
+  def matrix_shape(self) -> Tuple[int, int]:
+    return (self.out_size, self.in_size ** (self.kernel_size * self.in_num_channels))
+
+  def forward(self, input: Tensor) -> Tensor:
+    return eps(self.core, input)
