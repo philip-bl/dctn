@@ -16,7 +16,6 @@ import opt_einsum as oe
 import einops
 
 from .conv_sbs_spec import SBSSpecString, SBSSpecCore
-from .digits_to_words import d2w, w2d
 
 # here goes types of initialization of ConvSBS
 
