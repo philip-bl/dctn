@@ -6,7 +6,7 @@ from typing import *
 
 import torch
 
-from dctn.eps import eps2d_simple, eps2d_oe
+from dctn.eps import eps_simple, eps_oe
 
 
 torch.tensor(1.0, device="cuda")
@@ -45,11 +45,11 @@ def create_tensors(
 core, input = create_tensors(512, 1, 28, 28, 4, 2, 2, torch.float64, "cuda")
 
 # warm up
-result = eps2d_oe(core, input)
+result = eps_oe(core, input)
 ones = torch.ones_like(result)
 result.backward(ones)
 
 # actually do the thing
 for i in range(30):
-    result = eps2d_oe(core, input)
+    result = eps_oe(core, input)
     result.backward(ones)

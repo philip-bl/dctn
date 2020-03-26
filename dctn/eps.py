@@ -55,7 +55,7 @@ def align_via_padding(input: Tensor, kernel_size: int) -> Tuple[Iterable[Tensor]
     return (result, slice(kernel_size - 1, height), slice(kernel_size - 1, width))
 
 
-def eps2d_oe(core: Tensor, input: Tensor) -> Tensor:
+def eps_oe(core: Tensor, input: Tensor) -> Tensor:
     num_channels, batch_size, height, width, in_size = input.shape
     kernel_size = math.isqrt((core.ndim - 1) // num_channels)
     assert core.shape[:-1] == tuple(
@@ -81,7 +81,7 @@ def eps2d_oe(core: Tensor, input: Tensor) -> Tensor:
     )
 
 
-def eps2d_simple(core: Tensor, input: Tensor) -> Tensor:
+def eps_simple(core: Tensor, input: Tensor) -> Tensor:
     num_channels, batch_size, height, width, in_size = input.shape
     kernel_size = math.isqrt((core.ndim - 1) // num_channels)
     assert core.shape[:-1] == tuple(
@@ -108,7 +108,7 @@ def eps2d_simple(core: Tensor, input: Tensor) -> Tensor:
     return intermediate
 
 
-def eps2d_oe_via_padding(core: Tensor, input: Tensor) -> Tensor:
+def eps_oe_via_padding(core: Tensor, input: Tensor) -> Tensor:
     num_channels, batch_size, height, width, in_size = input.shape
     kernel_size = math.isqrt((core.ndim - 1) // num_channels)
     assert core.shape[:-1] == tuple(
