@@ -12,18 +12,18 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 MNIST_TRANSFORM = Compose((
-    CenterCrop((16, 16)),
-    Resize(4, 4),
-    ToTensor()
+  CenterCrop((16, 16)),
+  Resize(4, 4),
+  ToTensor()
 ))
 
 
 
 X, y = next(iter(DataLoader(MNIST(
-    "/mnt/hdd_1tb/datasets/mnist/dataset_source",
-    train=True,
-    download=False,
-    transform=MNIST_TRANSFORM,
+  "/mnt/hdd_1tb/datasets/mnist/dataset_source",
+  train=True,
+  download=False,
+  transform=MNIST_TRANSFORM,
 ), shuffle=True, batch_size=60000)))
 X = rearrange(X, "b () h w -> b (h w)").numpy()
 train_size = 50000

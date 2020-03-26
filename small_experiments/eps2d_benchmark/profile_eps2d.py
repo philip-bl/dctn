@@ -12,35 +12,35 @@ from dctn.eps import eps_simple, eps_oe
 torch.tensor(1.0, device="cuda")
 
 def create_tensors(
-    batch_size: int,
-    num_channels: int,
-    height: int,
-    width: int,
-    kernel_size: int,
-    in_size: int,
-    out_size: int,
-    dtype,
-    device,
+  batch_size: int,
+  num_channels: int,
+  height: int,
+  width: int,
+  kernel_size: int,
+  in_size: int,
+  out_size: int,
+  dtype,
+  device,
 ) -> None:
-    return (
-        torch.randn(
-            *(in_size for _ in range(kernel_size ** 2 * num_channels)),
-            out_size,
-            dtype=dtype,
-            device=device,
-            requires_grad=True
-        ),
-        torch.randn(
-            num_channels,
-            batch_size,
-            height,
-            width,
-            in_size,
-            dtype=dtype,
-            device=device,
-            requires_grad=True,
-        ),
-    )
+  return (
+    torch.randn(
+      *(in_size for _ in range(kernel_size ** 2 * num_channels)),
+      out_size,
+      dtype=dtype,
+      device=device,
+      requires_grad=True
+    ),
+    torch.randn(
+      num_channels,
+      batch_size,
+      height,
+      width,
+      in_size,
+      dtype=dtype,
+      device=device,
+      requires_grad=True,
+    ),
+  )
 
 core, input = create_tensors(512, 1, 28, 28, 4, 2, 2, torch.float64, "cuda")
 
@@ -51,5 +51,5 @@ result.backward(ones)
 
 # actually do the thing
 for i in range(30):
-    result = eps_oe(core, input)
-    result.backward(ones)
+  result = eps_oe(core, input)
+  result.backward(ones)
