@@ -6,7 +6,7 @@ from typing import *
 
 import torch
 
-from dctn.eps import eps_oe, eps_oe_via_padding
+from dctn.eps import eps_oe
 from dctn.benchmark import benchmark_torch
 
 
