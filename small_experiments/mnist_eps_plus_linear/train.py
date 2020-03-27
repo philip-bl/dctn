@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import Adam, SGD
-from torchvision.datasets import MNIST
+from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import ToTensor
 from torch.utils.data import DataLoader, Subset
 import pytorch_lightning as pl
@@ -30,19 +30,27 @@ class EPSPlusLinear(pl.LightningModule):
     intermediate = self.eps(concatenated)
     return self.linear(rearrange(intermediate, "b h w q -> b (h w q)"))
 
+  def prepare_data(self):
+    if self.hparams.dataset == "mnist":
+      self.dataset_creator = MNIST
+    elif self.hparams.dataset == "fashionmnist":
+      self.dataset_creator = FashionMNIST
+    else:
+      raise ValueError(f"{self.hparams.dataset=}")
+
   def train_dataloader(self):
     return DataLoader(
-      Subset(MNIST(self.hparams.dataset_root, transform=ToTensor()), range(50000)),
+      Subset(self.dataset_creator(self.hparams.dataset_root, transform=ToTensor()), range(50000)),
       batch_size=self.hparams.batch_size, shuffle=True, drop_last=True)
 
   def val_dataloader(self):
     return DataLoader(
-      Subset(MNIST(self.hparams.dataset_root, transform=ToTensor()), range(50000, 60000)),
+      Subset(self.dataset_creator(self.hparams.dataset_root, transform=ToTensor()), range(50000, 60000)),
       batch_size=self.hparams.batch_size)
 
   def test_dataloader(self):
     return DataLoader(
-      MNIST(self.hparams.dataset_root, train=False, transform=ToTensor()),
+      self.dataset_creator(self.hparams.dataset_root, train=False, transform=ToTensor()),
       batch_size=self.hparams.batch_size)
 
   def configure_optimizers(self):
@@ -89,6 +97,7 @@ class EPSPlusLinear(pl.LightningModule):
     parser.add_argument("--batch_size", type=int)
     parser.add_argument("--kernel_size", type=int)
     parser.add_argument("--out_size", type=int)
+    parser.add_argument("--dataset", type=str)
     parser.add_argument("--dataset_root", type=str)
     return parser
 
