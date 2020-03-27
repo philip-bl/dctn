@@ -40,6 +40,11 @@ class EPSPlusLinear(pl.LightningModule):
       Subset(MNIST(self.hparams.dataset_root, transform=ToTensor()), range(50000, 60000)),
       batch_size=self.hparams.batch_size)
 
+  def test_dataloader(self):
+    return DataLoader(
+      MNIST(self.hparams.dataset_root, train=False, transform=ToTensor()),
+      batch_size=self.hparams.batch_size)
+
   def configure_optimizers(self):
     return Adam(self.parameters(), lr=self.hparams.learning_rate)
 
@@ -59,13 +64,23 @@ class EPSPlusLinear(pl.LightningModule):
     num_correct = (torch.argmax(logits, dim=1) == y).float().sum()
     return {"loss": loss, "num_correct": num_correct, "batch_size": len(y)}
 
-  def validation_end(self, outputs):
-    loss = statistics.mean(record["loss"].item() for record in outputs)
-    num_correct = sum(record["num_correct"].item() for record in outputs)
+  def validation_epoch_end(self, outputs):
+    non_reduced_losses = (record["loss"].item() * record["batch_size"] for record in outputs)
     num_samples = sum(record["batch_size"] for record in outputs)
+    loss = sum(non_reduced_losses) / num_samples
+    num_correct = sum(record["num_correct"].item() for record in outputs)
     accuracy = num_correct / num_samples
-    return {"val_loss": loss, "val_accuracy": accuracy, "log": {
-      "val_loss": loss, "val_accuracy": accuracy}}
+    return {"loss": loss, "accuracy": accuracy,
+      "log": {"val_loss": loss, "val_accuracy": accuracy},
+      "progress_bar": {"val_loss": loss, "val_accuracy": accuracy}}
+
+  def test_step(self, batch, batch_idx):
+    return self.validation_step(batch, batch_idx)
+
+  def test_epoch_end(self, outputs):
+    outputs = self.validation_epoch_end(outputs)
+    return {"loss": outputs["loss"], "accuracy": outputs["accuracy"],
+      "progress_bar": {"test_loss": outputs["loss"], "test_accuracy": outputs["accuracy"]}}
 
   @staticmethod
   def add_model_specific_args(parent_parser):
@@ -82,7 +97,6 @@ def main(hparams):
   model = EPSPlusLinear(hparams)
   trainer = pl.Trainer(max_epochs=100000, gpus=1, default_save_path=hparams.save_path,
     overfit_pct=hparams.overfit_pct, weights_summary="full", print_nan_grads=True, track_grad_norm=2)
-    #logger=pl.loggers.TensorBoardLogger(hparams.save_path))
   trainer.fit(model)
 
 
