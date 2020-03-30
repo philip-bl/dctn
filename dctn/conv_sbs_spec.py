@@ -55,8 +55,8 @@ class SBSSpecString:
   @cores.validator
   def _check_positions(self, attribute, cores_value) -> None:
     if (
-      not self.min_height_pos <= 0 <= self.max_height_pos
-      or not self.min_width_pos <= 0 <= self.max_width_pos
+      min(core.position.h for core in cores_value) != 0
+      or min(core.position.w for core in cores_value) != 0
     ):
       raise ValueError(f"Positions of cores are invalid")
 
@@ -88,16 +88,8 @@ class SBSSpecString:
     )
 
   @property
-  def min_height_pos(self) -> int:
-    return min(core.position.h for core in self.cores)
-
-  @property
   def max_height_pos(self) -> int:
     return max(core.position.h for core in self.cores)
-
-  @property
-  def min_width_pos(self) -> int:
-    return min(core.position.w for core in self.cores)
 
   @property
   def max_width_pos(self) -> int:

@@ -336,18 +336,10 @@ class ConvSBS(nn.Module):
         intermediate,
         # padding size goes like (left, right, top, lower)
         [
-          max(
-            (self.spec.max_width_pos - self.spec.min_width_pos)
-            - (pos.w - self.spec.min_width_pos),
-            0,
-          ),
-          max(pos.w - self.spec.min_width_pos, 0),
-          max(
-            (self.spec.max_height_pos - self.spec.min_height_pos)
-            - (pos.h - self.spec.min_height_pos),
-            0,
-          ),
-          max(pos.h - self.spec.min_height_pos, 0),
+          max(self.spec.max_width_pos - pos.w, 0),
+          max(pos.w, 0),
+          max(self.spec.max_height_pos - pos.h, 0),
+          max(pos.h, 0),
         ],
         value=0.0,
       )
@@ -367,17 +359,12 @@ class ConvSBS(nn.Module):
       ),
     )
     # TODO in test_conv_sbs change everything to b h w q
+    # wut? i dont understand the comment above
     # the good region is the region where padded value has no effect
     good_region_height_limits = (
-      self.spec.max_height_pos - self.spec.min_height_pos,
-      padded_result.shape[1]
-      - (self.spec.max_height_pos - self.spec.min_height_pos),
-    )
+      self.spec.max_height_pos, padded_result.shape[1] - self.spec.max_height_pos)
     good_region_width_limits = (
-      self.spec.max_width_pos - self.spec.min_width_pos,
-      padded_result.shape[2]
-      - (self.spec.max_width_pos - self.spec.min_width_pos),
-    )
+      self.spec.max_width_pos, padded_result.shape[2] - self.spec.max_width_pos)
     result = padded_result[
       :,
       good_region_height_limits[0] : good_region_height_limits[1],

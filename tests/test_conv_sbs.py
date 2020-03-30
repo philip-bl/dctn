@@ -29,15 +29,15 @@ def test_khrulkov_normal_init_and_std(
   for i in range(num_monte_carlo_iterations):
     spec = SBSSpecString(
       (
-        SBSSpecCore(Pos2D(-1, -1), 1),
-        SBSSpecCore(Pos2D(-1, 0), 1),
-        SBSSpecCore(Pos2D(-1, 1), 1),
+        SBSSpecCore(Pos2D(0, 0), 1),
         SBSSpecCore(Pos2D(0, 1), 1),
-        SBSSpecCore(Pos2D(0, 0), 2),
-        SBSSpecCore(Pos2D(0, -1), 1),
-        SBSSpecCore(Pos2D(1, -1), 1),
+        SBSSpecCore(Pos2D(0, 2), 1),
+        SBSSpecCore(Pos2D(1, 2), 1),
+        SBSSpecCore(Pos2D(1, 1), 2),
         SBSSpecCore(Pos2D(1, 0), 1),
-        SBSSpecCore(Pos2D(1, 1), 1),
+        SBSSpecCore(Pos2D(2, 0), 1),
+        SBSSpecCore(Pos2D(2, 1), 1),
+        SBSSpecCore(Pos2D(2, 2), 1),
       ),
       (bond_size if trace_edge else 1,) + (bond_size,) * 8,
       in_num_channels,
