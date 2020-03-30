@@ -4,8 +4,9 @@ import functools
 import operator
 import logging
 import math
-
 from typing import *
+
+from more_itertools import chunked
 
 import torch
 import torch.nn as nn
@@ -16,6 +17,8 @@ import opt_einsum as oe
 import einops
 
 from .conv_sbs_spec import SBSSpecString, SBSSpecCore
+from .align import align_with_positions
+from .contraction_path_cache import contract
 
 # here goes types of initialization of ConvSBS
 
@@ -73,50 +76,6 @@ class ConvSBS(nn.Module):
       self.init_normal_preserving_output_std()
     elif isinstance(initialization, MinRandomEyeInitialization):
       self.init_min_random_eye(initialization.base_std)
-    self._first_stage_einsum_exprs = None
-    self._second_stage_einsum_expr = None
-
-    self._sum_einsum_expr = oe.contract_expression(
-      *chain.from_iterable(
-        (shape.as_tuple(), dim_names)
-        for shape, dim_names in zip(self.spec.shapes, self.spec.all_dim_names)
-      ),
-      (),  # the result is a scalar - we contract out all dimensions
-      optimize="auto",
-    )
-    logger.info(f"{self._sum_einsum_expr=}")
-
-    # generate the einsum expression for calculating squared frobenius norm
-    # the code below joins all dimensions (of two copies of the tt network)
-    # except for bond dimensions
-    self._squared_fro_norm_einsum_expr = oe.contract_expression(
-      *chain.from_iterable(
-        (shape.as_tuple(), dim_names)
-        for shape, dim_names in zip(
-          self.spec.shapes,
-          self.spec.get_all_dim_names_add_suffix_to_bonds("_a"),
-        )
-      ),
-      *chain.from_iterable(
-        (shape.as_tuple(), dim_names)
-        for shape, dim_names in zip(
-          self.spec.shapes,
-          self.spec.get_all_dim_names_add_suffix_to_bonds("_b"),
-        )
-      ),
-      (),  # the result is a scalar
-      optimize="auto",
-    )
-
-    self._as_explicit_tensor_einsum_expr = oe.contract_expression(
-      *chain.from_iterable(
-        (shape.as_tuple(), dim_names)
-        for shape, dim_names in zip(self.spec.shapes, self.spec.all_dim_names)
-      ),
-      self.spec.all_dangling_dim_names,
-      optimize="auto",
-    )
-
     logger.info(f"{self.var()**0.5=}")
 
   @property
@@ -156,15 +115,16 @@ class ConvSBS(nn.Module):
       torch.nn.init.normal_(core, std=math.sqrt(var_of_cores_elements))
 
   def init_normal_preserving_output_std(self) -> None:
-    """Initializes each component of each core with i.i.d. normal distribution with zero mean and such
-    variance, that if an input of this layer (i.e. a rank-one "window" tensor) has i.i.d. coordinates with
-    mean μ and std σ, then each coordinate of the output of this layer will have std √(σ^2+μ^2)."""
+    """Initializes each component of each core with i.i.d. normal distribution with zero mean
+    and such variance, that if an input of this layer (i.e. a rank-one "window" tensor) has
+    i.i.d. coordinates with mean μ and std σ, then each coordinate of the output of this layer
+    will have std √(σ^2+μ^2)."""
     self.init_khrulkov_normal(self.tt_matrix_num_columns ** -0.5)
 
   def init_min_random_eye(self, base_std: float) -> None:
     """Initializes by min_random_eye, but adjusts so that the layer's output has the same mean as
-    mean of an input's window. base_std will be multiplied by a factor depending on the input dimension
-    of a core to determine std of gaussian noise added to cores."""
+    mean of an input's window. base_std will be multiplied by a factor depending on the input
+    dimension of a core to determine std of gaussian noise added to cores."""
     assert self.spec.bond_sizes[0] == 1  # can't work with a tensor ring
 
     # also can't work with different bond sizes
@@ -207,72 +167,15 @@ class ConvSBS(nn.Module):
       assert torch.allclose(core.data.sum(), torch.tensor(1.0))
       core.data += torch.randn_like(core) * base_std / total_in_dim_size
 
-  @property
-  def _second_stage_result_dimensions_names(self) -> Tuple[str, ...]:
-    return (
-      "batch",
-      "height",
-      "width",
-      *(f"out_quantum_{i}" for i in range(len(self.cores))),
-    )
-
-  def gen_einsum_exprs(self, batch_size: int, height: int, width: int) -> None:
-    self._first_stage_einsum_exprs = tuple(
-      oe.contract_expression(
-        shape.as_tuple(),
-        shape.dimensions_names,  # the core
-        *chain.from_iterable(
-          (
-            (batch_size, height, width, self.spec.in_quantum_dim_size),
-            ("batch", "height", "width", dim_name),
-          )
-          for dim_name in shape.dimensions_names
-          if dim_name.startswith("in_quantum_")
-        ),  # the channels
-        (
-          "batch",
-          "out_quantum",
-          "bond_left",
-          "bond_right",
-          "height",
-          "width",
-        ),  # the result
-        optimize="optimal",
-      )
-      for shape in self.spec.shapes
-    )
-
-    self._second_stage_einsum_expr = oe.contract_expression(
-      *chain.from_iterable(
-        (
-          (
-            batch_size,
-            shape.out_quantum_dim_size,
-            shape.bond_left_size,
-            shape.bond_right_size,
-            height,
-            width,
-          ),
-          (
-            "batch",
-            *parameters_core_dim_names[
-              :3
-            ],  # out_quantum_i, bond_i, bond_(i+1 or 0)
-            "height",
-            "width",
-          ),
-        )
-        for parameters_core_dim_names, shape in zip(
-          self.spec.all_dim_names, self.spec.shapes
-        )
-      ),
-      self._second_stage_result_dimensions_names,
-      optimize="auto",
-    )
-
   def sum(self) -> torch.Tensor:
     """Returns the sum of all elements of the TT tensor."""
-    return self._sum_einsum_expr(*self.cores, backend="torch")
+    return  contract(
+      *chain.from_iterable(
+        (core, dim_names)
+        for core, dim_names in zip(self.cores, self.spec.all_dim_names)
+      ),
+      ()  # the result is a scalar - we contract out all dimensions
+    )
 
   def mean(self) -> torch.Tensor:
     """Returns the mean of all elements of the TT tensor."""
@@ -280,8 +183,14 @@ class ConvSBS(nn.Module):
 
   def squared_fro_norm(self) -> torch.Tensor:
     """Returns the squared Frobenius norm of the TT tensor."""
-    return self._squared_fro_norm_einsum_expr(
-      *self.cores, *self.cores, backend="torch"
+    return contract(
+      *chain.from_iterable(
+        (core, dim_names) for core, dim_names
+        in zip(self.cores, self.spec.get_all_dim_names_add_suffix_to_bonds("_a"))),
+      *chain.from_iterable(
+        (core, dim_names) for core, dim_names
+        in zip(self.cores, self.spec.get_all_dim_names_add_suffix_to_bonds("_b"))),
+      (),  # the result is a scalar
     )
 
   def fro_norm(self) -> torch.Tensor:
@@ -303,75 +212,37 @@ class ConvSBS(nn.Module):
   def as_explicit_tensor(self) -> torch.Tensor:
     """Returns the TT tensor as just one large multidimensional array.
     Dimensions will be ordered as self.spec.all_dangling_dim_names."""
-    return self._as_explicit_tensor_einsum_expr(*self.cores, backend="torch")
+    return contract(
+      *chain.from_iterable(
+        (core, dim_names) for core, dim_names in zip(self.cores, self.spec.all_dim_names)),
+      self.spec.all_dangling_dim_names)
 
   def forward(
-    self, channels: Union[torch.Tensor, Tuple[torch.Tensor, ...]], /
+    self, input: Union[torch.Tensor, Tuple[torch.Tensor, ...]], /
   ) -> torch.Tensor:
     """If passing a tensor, the very first dimension MUST be channels."""
-    if isinstance(channels, torch.Tensor):
-      channels = tuple(channels)
-    # now channels is a tuple of tensors, each tensor corresponding to a channel
-    batch_size, height, width = channels[0].shape[:3]
-    if (
-      self._first_stage_einsum_exprs is None
-      or self._second_stage_einsum_expr is None
-    ):
-      self.gen_einsum_exprs(batch_size, height, width)
-    contracted_with_cores_separately = tuple(
-      einsum_expr(core, *(channel for channel in channels), backend="torch")
-      for i, (core, einsum_expr) in enumerate(
-        zip(self.cores, self._first_stage_einsum_exprs)
-      )
-    )
-    # for each i, contracted_with_cores_separately[i] is the result of contracting the ith
-    # core with the input
-
-    # TODO, instead of this, write code similar to eps.align
-    # TODO, to do this, make a test which checks equivalence of a ConvSBS and an EPS
-
-    # now we do padding:
-    padded = tuple(
-      F.pad(
-        intermediate,
-        # padding size goes like (left, right, top, lower)
-        [
-          max(self.spec.max_width_pos - pos.w, 0),
-          max(pos.w, 0),
-          max(self.spec.max_height_pos - pos.h, 0),
-          max(pos.h, 0),
-        ],
-        value=0.0,
-      )
-      for i, (intermediate, pos) in enumerate(
-        zip(
-          contracted_with_cores_separately,
-          (core_spec.position for core_spec in self.spec.cores),
-        )
-      )
-    )
-
-    # now we do the second stage
-    padded_result = einops.rearrange(
-      self._second_stage_einsum_expr(*padded),
-      "b h w {0} -> b h w ({0})".format(
-        " ".join((f"q{i}" for i in range(len(self.cores))))
-      ),
-    )
-    # TODO in test_conv_sbs change everything to b h w q
-    # wut? i dont understand the comment above
-    # the good region is the region where padded value has no effect
-    good_region_height_limits = (
-      self.spec.max_height_pos, padded_result.shape[1] - self.spec.max_height_pos)
-    good_region_width_limits = (
-      self.spec.max_width_pos, padded_result.shape[2] - self.spec.max_width_pos)
-    result = padded_result[
-      :,
-      good_region_height_limits[0] : good_region_height_limits[1],
-      good_region_width_limits[0] : good_region_width_limits[1],
-      :,
-    ]
-    return result
+    # now input is a tuple of tensors, each tensor corresponding to a channel
+    num_channels = len(input)
+    batch_size, height, width, in_size = input[0].shape
+    aligned_inputs: Iterable[Tensor] = align_with_positions(input, self.spec.positions)
+    # aligned_inputs has num_channels * len(self.spec) elements.
+    # For each element of aligned_inputs, it has shape batch_size×new_height×new_width×in_size.
+    output_tt_cores: Iterable[Tensor] = (
+      contract(
+        *chain.from_iterable(
+          (channel, ("batch", "height", "width", f"in_quantum_{c}"))
+          for c, channel in enumerate(channels)),
+        core, core_shape.dimensions_names,
+        ("batch", "height", "width", "out_quantum", "bond_left", "bond_right"))
+      for core, core_shape, channels
+      in zip(self.cores, self.spec.shapes, chunked(aligned_inputs, num_channels)))
+    output = contract(
+      *chain.from_iterable(
+        (core, ("batch", "height", "width", f"out_quantum_{c}",
+                f"bond_{c}", f"bond_{c+1 if c<len(cores)-1 else 0}"))
+        for c, core in enumerate(output_tt_cores)),
+      ("batch", "height", "width", *(f"out_quantum_{c}" for c in range(len(self.cores)))))
+    return output.reshape(output.shape[0], output.shape[1], output.shape[2], -1)
 
   def multiply_by_scalar(self, scalar: float, /):
     """ConvSBS is a tensor network. This method multiplies this tensor network
