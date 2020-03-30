@@ -3,5 +3,5 @@
 #+BEGIN_SRC
 $ conda install pytest-xdist # from conda-forge
 $ cd ~/projects/dctn
-$ python -m pytest --numprocesses=4
+$ python -m pytest --numprocesses=4 tests/
 #+END_SRC
