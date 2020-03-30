@@ -239,7 +239,7 @@ class ConvSBS(nn.Module):
     output = contract(
       *chain.from_iterable(
         (core, ("batch", "height", "width", f"out_quantum_{c}",
-                f"bond_{c}", f"bond_{c+1 if c<len(cores)-1 else 0}"))
+                f"bond_{c}", f"bond_{c+1 if c<len(self.cores)-1 else 0}"))
         for c, core in enumerate(output_tt_cores)),
       ("batch", "height", "width", *(f"out_quantum_{c}" for c in range(len(self.cores)))))
     return output.reshape(output.shape[0], output.shape[1], output.shape[2], -1)
