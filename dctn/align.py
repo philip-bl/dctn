@@ -7,8 +7,9 @@ from torch import Tensor
 from dctn.conv_sbs_spec import Pos2D
 
 
-def align_with_positions(input: Tensor, positions: Tuple[Pos2D, ...]) -> Iterable[Tensor]:
-  num_channels, batch_size, height, width, in_size = input.shape
+def align_with_positions(input: Union[Tensor, Tuple[Tensor, ...]], positions: Tuple[Pos2D, ...]) -> Iterable[Tensor]:
+  num_channels = len(input)
+  batch_size, height, width, in_size = input[0].shape
   max_h = max(pos.h for pos in positions)
   max_w = max(pos.w for pos in positions)
   assert min(pos.h for pos in positions) == 0
@@ -17,7 +18,7 @@ def align_with_positions(input: Tensor, positions: Tuple[Pos2D, ...]) -> Iterabl
     height_slice = slice(pos.h, None if (unused_height_on_bottom := max_h-pos.h) == 0 else -unused_height_on_bottom)
     width_slice  = slice(pos.w, None if (unused_width_on_right   := max_w-pos.w) == 0 else -unused_width_on_right)
     for channel in range(num_channels):
-      yield input[channel, :, height_slice, width_slice]
+      yield input[channel][:, height_slice, width_slice]
 
 
 def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
