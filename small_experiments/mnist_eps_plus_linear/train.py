@@ -24,7 +24,7 @@ class EPSPlusLinear(pl.LightningModule):
     assert batch.ndim == 3
     batch *= math.pi / 2
     sin_squared = torch.sin(batch) ** 2 / 2 # shape: batch×height×width
-    cos_squared = torch.cos(batch) ** 2 / 2
+    cos_squared = torch.cos(batch) ** 2 / 2 # TODO change / 2 to * 2
     concatenated = torch.cat((sin_squared.unsqueeze(3), cos_squared.unsqueeze(3)), dim=3) \
       .unsqueeze(0) # 1×batch×height×width×2
     intermediate = self.eps(concatenated)
