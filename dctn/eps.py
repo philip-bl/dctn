@@ -10,30 +10,7 @@ import torch.nn.functional as F
 
 import opt_einsum as oe
 
-
-def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
-  """For kernel_size=3, the order goes like this:
-  0 1 2
-  3 4 5
-  6 7 8"""
-  num_channels, batch_size, height, width, in_size = input.shape
-  for (δh, δw) in itertools.product(range(kernel_size), range(kernel_size)):
-    # product goes like (0, 0), (0, 1), (0, 2), (1, 0), ...
-    height_slice = slice(
-      δh,
-      None
-      if (unused_height_on_bottom := kernel_size - δh - 1) == 0
-      else -unused_height_on_bottom,
-    )
-    width_slice = slice(
-      δw,
-      None
-      if (unused_width_on_right := kernel_size - δw - 1) == 0
-      else -unused_width_on_right,
-    )
-    for channel in range(num_channels):
-      yield input[channel, :, height_slice, width_slice]
-
+from dctn.align import align
 
 def eps(core: Tensor, input: Tensor) -> Tensor:
   num_channels, batch_size, height, width, in_size = input.shape

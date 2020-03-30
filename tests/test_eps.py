@@ -3,7 +3,7 @@ from typing import *
 import torch
 from einops import rearrange
 import opt_einsum as oe
-from dctn.eps import eps_one_by_one, align
+from dctn.eps import eps_one_by_one
 
 
 def test_eps_single_pixel_output() -> None:
