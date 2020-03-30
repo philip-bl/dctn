@@ -88,6 +88,10 @@ class SBSSpecString:
     )
 
   @property
+  def positions(self) -> Tuple[Pos2D, ...]:
+    return tuple(core.position for core in self.cores)
+
+  @property
   def max_height_pos(self) -> int:
     return max(core.position.h for core in self.cores)
 
