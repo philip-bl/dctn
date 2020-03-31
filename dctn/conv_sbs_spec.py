@@ -144,9 +144,8 @@ This is used for calculating squared frobenius norm of the TT tensor."""
 
   @property
   def all_dangling_dim_names(self) -> Tuple[str, ...]:
-    """Returns dim names corresponding to all dangling edges. First all out_quantum
-dims, then all in_quantum dims."""
+    """Returns dim names corresponding to all dangling edges. First all in_quantum
+dims, then all out_quantum dims. This is the same order as an EPS's dimensions order."""
     return (
-      *(names[0] for names in self.all_dim_names),
       *chain.from_iterable(names[3:] for names in self.all_dim_names),
-    )
+      *(names[0] for names in self.all_dim_names))
