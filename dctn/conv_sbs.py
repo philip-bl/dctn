@@ -211,7 +211,13 @@ class ConvSBS(nn.Module):
 
   def as_explicit_tensor(self) -> torch.Tensor:
     """Returns the TT tensor as just one large multidimensional array.
-    Dimensions will be ordered as self.spec.all_dangling_dim_names."""
+    Dimensions will be ordered like self.spec.all_dangling_dim_names.
+    This order is compatible with the order of EPS's dimensions, if this ConvSBS's order of
+    cores is like
+    0 1 2
+    3 4 5
+    6 7 8
+    """
     return contract(
       *chain.from_iterable(
         (core, dim_names) for core, dim_names in zip(self.cores, self.spec.all_dim_names)),
