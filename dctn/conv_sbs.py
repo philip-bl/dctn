@@ -16,6 +16,7 @@ import opt_einsum as oe
 
 import einops
 
+from .pos2d import pos_to_index
 from .conv_sbs_spec import SBSSpecString, SBSSpecCore
 from .align import align_with_positions
 from .contraction_path_cache import contract
@@ -222,6 +223,32 @@ class ConvSBS(nn.Module):
       *chain.from_iterable(
         (core, dim_names) for core, dim_names in zip(self.cores, self.spec.all_dim_names)),
       self.spec.all_dangling_dim_names)
+
+  def as_eps(self) -> torch.Tensor:
+    """If this ConvSBS has all cores in a square grid, then it is convertible to EPS.
+    This method returns it converted to an explicit EPS core. It differs from
+    `self.as_explicit_tensor` in that it rearranges the input dimensions in the
+    correct way."""
+    assert self.spec.max_height_pos == self.spec.max_width_pos
+    tensor = self.as_explicit_tensor()
+    # first, collapse all output dims into one dim
+    tensor = tensor.reshape(
+      *(self.spec.in_quantum_dim_size for i
+        in range(self.spec.in_num_channels*len(self.spec))), -1)
+    # second, move the input dims around
+    current_input_dim_names = chain.from_iterable(
+      (f"in{c}x{core_index}" for c in range(self.spec.in_num_channels))
+      for core_index in self.spec.get_indices_wrt_standard_order())
+    # something like ("in0x0", "in1x0", "in0x2", "in1x2", "in0x3", "in1x3", ...)
+
+    desired_input_dim_names = chain.from_iterable(
+      (f"in{c}x{core_index}" for c in range(self.spec.in_num_channels))
+      for core_index in range(len(self.spec)))
+    # something like ("in0x0", "in1x0", "in0x1", "in1x1", "in0x2", "in1x2", ...)
+
+    current_einops_str = " ".join(current_input_dim_names) + " out"
+    desired_einops_str = " ".join(desired_input_dim_names) + " out"
+    return einops.rearrange(tensor, current_einops_str + "->" + desired_einops_str)
 
   def forward(
     self, input: Union[torch.Tensor, Tuple[torch.Tensor, ...]], /
