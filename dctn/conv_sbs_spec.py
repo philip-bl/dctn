@@ -4,7 +4,7 @@ from itertools import chain, islice
 from attr import attrs, attrib
 from typing import *
 
-from .pos2d import Pos2D
+from .pos2d import Pos2D, pos_to_index
 
 
 @attrs(auto_attribs=True, frozen=True)
@@ -86,6 +86,15 @@ class SBSSpecString:
   @property
   def positions(self) -> Tuple[Pos2D, ...]:
     return tuple(core.position for core in self.cores)
+
+  def get_indices_wrt_standard_order(self) -> Tuple[int, ...]:
+    """If this string contains all cores in a rectangle grid, then return the indices cores wrt
+    the standard ordering, which is like
+    0 1 2  3
+    4 5 6  7
+    8 9 10 11"""
+    assert len(self) == (self.max_width_pos+1) * (self.max_height_pos+1)
+    return tuple(pos_to_index(self.max_width_pos, pos) for pos in self.positions)
 
   @property
   def max_height_pos(self) -> int:
