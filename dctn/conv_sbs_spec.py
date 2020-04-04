@@ -4,11 +4,7 @@ from itertools import chain, islice
 from attr import attrs, attrib
 from typing import *
 
-
-@attrs(auto_attribs=True, frozen=True)
-class Pos2D:
-  h: int
-  w: int
+from .pos2d import Pos2D
 
 
 @attrs(auto_attribs=True, frozen=True)

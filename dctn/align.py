@@ -4,7 +4,7 @@ from typing import *
 import torch
 from torch import Tensor
 
-from dctn.conv_sbs_spec import Pos2D
+from dctn.pos2d import Pos2D
 
 
 def align_with_positions(input: Union[Tensor, Tuple[Tensor, ...]], positions: Tuple[Pos2D, ...]) -> Iterable[Tensor]:

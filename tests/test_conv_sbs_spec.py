@@ -1,4 +1,5 @@
-from dctn.conv_sbs_spec import Pos2D, SBSSpecCore, SBSSpecString
+from dctn.pos2d import Pos2D
+from dctn.conv_sbs_spec import SBSSpecCore, SBSSpecString
 
 def test_SBSSpecString_all_dangling_dim_names() -> None:
   spec = SBSSpecString(

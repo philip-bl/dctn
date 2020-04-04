@@ -59,7 +59,8 @@ from dctn.conv_sbs import (
   NormalPreservingOutputStdInitialization,
   MinRandomEyeInitialization,
 )
-from dctn.conv_sbs_spec import SBSSpecCore, Pos2D
+from dctn.pos2d import Pos2D
+from dctn.conv_sbs_spec import SBSSpecCore
 from dctn.base_intermediate_outputs_logger import (
   RecordType,
   log_logits_as_probabilities,

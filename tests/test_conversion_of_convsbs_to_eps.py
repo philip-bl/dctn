@@ -2,7 +2,8 @@ import torch
 
 from einops import rearrange
 
-from dctn.conv_sbs_spec import Pos2D, SBSSpecCore, SBSSpecString
+from dctn.pos2d import Pos2D
+from dctn.conv_sbs_spec import SBSSpecCore, SBSSpecString
 from dctn.conv_sbs import ConvSBS
 from dctn.eps import eps
 
