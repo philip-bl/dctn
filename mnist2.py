@@ -5,6 +5,7 @@ import torch.nn.functional as F
 
 from dctn.eps_plus_linear import EPSPlusLinear
 from dctn.dataset_loading import get_fashionmnist_data_loaders
+from dctn.evaluation import score
 
 # good model:
 # load_path = "/mnt/important/experiments/eps_plus_linear_fashionmnist/2020-03-27T16-42-28/lightning_logs/version_0/checkpoints/epoch=1114.ckpt"
@@ -29,24 +30,6 @@ def load_old_eps_plus_linear(path: str) -> EPSPlusLinear:
 model = load_old_eps_plus_linear(load_path).to(device)
 train_dl, val_dl, test_dl = get_fashionmnist_data_loaders(ds_path, bs, device)
 
-
-def score(model, dl) -> Tuple[float, float]:
-  """Scores the model on all batches of dl. Which means it might skip only the last batch if
-  dl.drop_last == True. Returns mean ce loss and accuracy."""
-  num_samples = 0
-  num_correct = 0
-  sum_loss = 0.
-  with torch.no_grad():
-    for x, y, _ in iter(dl):
-      y = y.to(device)
-      num_samples += len(y)
-      unlogprobs = model(x.to(device)) # unnormalized log probabilities
-      sum_loss += F.cross_entropy(unlogprobs, y, reduction="sum").item()
-      num_correct += (unlogprobs.argmax(dim=1) == y).sum().item()
-  loss = sum_loss / num_samples
-  acc = num_correct / num_samples
-  return loss, acc
-
-print("On train loss={0:.4f}, accuracy={1:.2%}".format(*score(model, train_dl))) # 0.1896, 93.39%
-print("On val   loss={0:.4f}, accuracy={1:.2%}".format(*score(model, val_dl)))   # 0.2752, 90.01%
-print("On test  loss={0:.4f}, accuracy={1:.2%}".format(*score(model, test_dl)))  # 0.2996, 89.72%
+print("On train loss={0:.4f}, accuracy={1:.2%}".format(*score(model, train_dl, device))) # 0.1896, 93.39%
+print("On val   loss={0:.4f}, accuracy={1:.2%}".format(*score(model, val_dl, device)))   # 0.2752, 90.01%
+print("On test  loss={0:.4f}, accuracy={1:.2%}".format(*score(model, test_dl, device)))  # 0.2996, 89.72%
