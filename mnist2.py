@@ -6,8 +6,8 @@ import torch.nn.functional as F
 from dctn.eps_plus_linear import EPSPlusLinear
 from dctn.dataset_loading import get_fashionmnist_data_loaders
 
-
-load_path = "/mnt/important/experiments/eps_plus_linear_fashionmnist/2020-03-27T16-42-28/lightning_logs/version_0/checkpoints/epoch=1114.ckpt"
+# good model:
+# load_path = "/mnt/important/experiments/eps_plus_linear_fashionmnist/2020-03-27T16-42-28/lightning_logs/version_0/checkpoints/epoch=1114.ckpt"
 ds_path = "/mnt/hdd_1tb/datasets/fashionmnist" # ds stands for dataset
 device = torch.device("cuda")
 bs = 128 # batch size
