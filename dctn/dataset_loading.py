@@ -16,17 +16,17 @@ class MNISTLikeQuantumIndexedDataset(Dataset):
   def __init__(self, dataset_type: type, root: str, split: str,
                φ: Tuple[Callable[[Tensor], Tensor], ...]):
     if split == "train":
-      torchvision_split = "train"
+      torchvision_train = True
       torchvision_slice = slice(50000)
     elif split == "val":
-      torchvision_split = "train"
+      torchvision_train = True
       torchvision_slice = slice(50000, 60000)
     elif split == "test":
-      torchvision_split = "test"
+      torchvision_train = False
       torchvision_slice = slice(None)
     else:
       raise ValueError(f"{split=}")
-    torchvision_dataset = dataset_type(root, torchvision_split, transform=to_tensor)
+    torchvision_dataset = dataset_type(root, train=torchvision_train, transform=to_tensor)
     x = torchvision_dataset.data[torchvision_slice].float() / 255. # shape: samples×h×w
     self.y = torchvision_dataset.targets[torchvision_slice] # shape: samples
     self.x = torch.stack(tuple(φ_i(x) for φ_i in φ), dim=3).unsqueeze(0)
@@ -59,3 +59,7 @@ def get_data_loaders(dataset_type: type, root: str, batch_size: int, device: tor
   train_dl = dl_partial(dataset=train_ds, shuffle=True, drop_last=True)
   val_dl, test_dl = (dl_partial(dataset=dataset) for dataset in (val_ds, test_ds))
   return train_dl, val_dl, test_dl
+
+
+get_mnist_data_loaders = partial(get_data_loaders, QuantumMNIST)
+get_fashionmnist_data_loaders = partial(get_data_loaders, QuantumFashionMNIST)
