@@ -78,7 +78,7 @@ class EPS(nn.Module):
 
   @property
   def matrix_shape(self) -> Tuple[int, int]:
-    return (self.out_size, self.in_size ** (self.kernel_size * self.in_num_channels))
+    return (self.out_size, self.in_size ** (self.kernel_size**2 * self.in_num_channels))
 
   def forward(self, input: Tensor) -> Tensor:
     return eps(self.core, input)
