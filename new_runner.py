@@ -66,11 +66,14 @@ def main(**kwargs) -> None:
     model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
   get_dls = {"mnist": get_mnist_data_loaders, "fashionmnist": get_fashionmnist_data_loaders}[
     kwargs["ds_type"]]
-  train_dl, val_dl, test_dl = get_dls(kwargs["ds_path"], kwargs["batch_size"], dev)
+  train_dl, val_dl, test_dl = get_dls(
+    kwargs["ds_path"], kwargs["batch_size"], dev, autoscale_kernel_size=kwargs["kernel_size"])
   set_random_seeds(dev, kwargs["seed"])
   logger.info("On train loss={0:.4f}, acc={1:.2%}".format(*score(model, train_dl, dev)))
   logger.info("On val   loss={0:.4f}, acc={1:.2%}".format(*score(model, val_dl, dev)))
   logger.info("On test  loss={0:.4f}, acc={1:.2%}".format(*score(model, test_dl, dev)))
+  breakpoint()
+
 
 
 if __name__ == "__main__":
