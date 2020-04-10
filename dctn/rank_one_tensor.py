@@ -46,9 +46,7 @@ class RankOneTensorsBatch:
   @property
   def ncoordinates(self) -> int:
     """Returns the number of elements (aka coordinates) in one tensor. NOT IN THE WHOLE BATCH."""
-    return (
-      self.array.shape[self.factors_dim] * self.array.shape[self.coordinates_dim]
-    )
+    return self.array.shape[self.coordinates_dim] ** self.array.shape[self.factors_dim]
 
   @property
   def ntensors(self) -> int:
