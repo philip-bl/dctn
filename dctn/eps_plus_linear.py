@@ -1,5 +1,7 @@
 from typing import *
 
+from more_itertools import intersperse
+
 import torch
 import torch.nn as nn
 
@@ -17,4 +19,5 @@ class EPSesPlusLinear(nn.Sequential):
     linear = nn.Linear((28 - sum(kernel_sizes) + len(kernel_sizes))**2 * out_sizes[-1], 10, bias=True)
     linear.weight.data = torch.randn_like(linear.weight)
     linear.weight.data *= linear.in_features ** -0.5 / 4.
-    super().__init__(*epses, Rearrange("b h w q -> b (h w q)"), linear)
+    unsqueezer = Rearrange("b h w q -> () b h w q")
+    super().__init__(*intersperse(unsqueezer, epses), Rearrange("b h w q -> b (h w q)"), linear)
