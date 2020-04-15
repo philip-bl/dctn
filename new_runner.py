@@ -3,6 +3,7 @@ from subprocess import run
 import os.path
 from os.path import join
 import logging
+from math import pi
 
 import click
 
@@ -51,6 +52,8 @@ def get_git_commit_info() -> str:
 @click.option("--lr", type=float)
 @click.option("--wd", type=float, help="weight decay", default=0.)
 @click.option("--patience", type=int, help="early stopping patience num evaluations", default=20)
+@click.option("--keep-last-models", type=int, help="how many last models to keep", default=10)
+@click.option("--old-scaling/--no-old-scaling", default=False)
 def main(**kwargs) -> None:
   kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
   assert not os.path.exists(kwargs["output_dir"])
@@ -70,12 +73,19 @@ def main(**kwargs) -> None:
 
   dev = kwargs["device"]
   model = EPSPlusLinear(kwargs["kernel_size"], kwargs["out_size"]).to(dev)
+  if kwargs["old_scaling"]:
+    model[0].core.data = torch.randn_like(model[0].core) / 4
+    model[-1].weight.data = torch.rand_like(model[-1].weight) * 0.04 - 0.02
   if kwargs["load_model_state"] is not None:
     model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
   get_dls = {"mnist": get_mnist_data_loaders, "fashionmnist": get_fashionmnist_data_loaders}[
     kwargs["ds_type"]]
-  train_dl, val_dl, test_dl = get_dls(
-    kwargs["ds_path"], kwargs["batch_size"], dev, autoscale_kernel_size=kwargs["kernel_size"])
+  if not kwargs["old_scaling"]:
+    train_dl, val_dl, test_dl = get_dls(
+      kwargs["ds_path"], kwargs["batch_size"], dev, autoscale_kernel_size=kwargs["kernel_size"])
+  else:
+    train_dl, val_dl, test_dl = get_dls(
+      kwargs["ds_path"], kwargs["batch_size"], dev, (lambda X: (X*pi/2.).sin()**2/2, lambda X: (X*pi/2.).cos()**2/2))
   set_random_seeds(dev, kwargs["seed"])
 
   eval_schedule = every_n_iters_intervals((10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000))
@@ -89,7 +99,8 @@ def main(**kwargs) -> None:
                 f"train/val mean_ce={st_it['train_mean_ce']:.5f}/{st_it['val_mean_ce']:.5f} "
                 f"acc={st_it['train_acc']:.2%}/{st_it['val_acc']:.2%}")
 
-  last_models_checkpointer = eval_schedule(LastModelsCheckpointer(kwargs["output_dir"], 10))
+  last_models_checkpointer = eval_schedule(LastModelsCheckpointer(
+    kwargs["output_dir"], kwargs["keep_last_models"]))
   metrics = (("train_acc", False), ("val_acc", False), ("train_mean_ce", True), ("val_mean_ce", True))
   best_value_checkpointers = tuple(
     eval_schedule(BestModelCheckpointer(kwargs["output_dir"], *metric)) for metric in metrics)
