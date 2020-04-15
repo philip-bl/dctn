@@ -72,6 +72,7 @@ def main(**kwargs) -> None:
   logger.info(f"{kwargs['output_dir']=}")
 
   dev = kwargs["device"]
+  set_random_seeds(dev, kwargs["seed"])
   model = EPSPlusLinear(kwargs["kernel_size"], kwargs["out_size"]).to(dev)
   if kwargs["old_scaling"]:
     model[0].core.data = torch.randn_like(model[0].core) / 4
@@ -86,7 +87,6 @@ def main(**kwargs) -> None:
   else:
     train_dl, val_dl, test_dl = get_dls(
       kwargs["ds_path"], kwargs["batch_size"], dev, (lambda X: (X*pi/2.).sin()**2/2, lambda X: (X*pi/2.).cos()**2/2))
-  set_random_seeds(dev, kwargs["seed"])
 
   eval_schedule = every_n_iters_intervals((10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000))
 
@@ -107,6 +107,7 @@ def main(**kwargs) -> None:
   early_stopper = eval_schedule(ValuesNotImprovingEarlyStopper(kwargs["patience"], metrics))
   optimizer = {"adam": Adam, "sgd": SGD}[kwargs["optimizer"]](
     model.parameters(), kwargs["lr"], weight_decay=kwargs["wd"])
+  set_random_seeds(dev, kwargs["seed"])
   st_x, st_it = train(
     train_dl, model, optimizer, kwargs["device"], F.cross_entropy,
     [evaluate_and_log, last_models_checkpointer, *best_value_checkpointers, early_stopper], [], [])
