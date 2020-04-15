@@ -1,11 +1,14 @@
 from typing import *
 from subprocess import run
 import os.path
+import re
 from os.path import join
 import logging
 from math import pi
 
 import click
+
+from more_itertools import chunked
 
 import torch
 from torch.optim import Adam, SGD
@@ -14,7 +17,7 @@ import torch.nn.functional as F
 from libcrap import get_now_as_str, save_json
 from libcrap.torch import set_random_seeds
 
-from dctn.eps_plus_linear import EPSPlusLinear
+from dctn.eps_plus_linear import EPSesPlusLinear
 from dctn.evaluation import score
 from dctn.dataset_loading import get_fashionmnist_data_loaders, get_mnist_data_loaders
 from dctn.training import (
@@ -35,6 +38,12 @@ def get_git_commit_info() -> str:
     .stdout.split("\n")[0]
 
 
+def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
+  assert re.match(r"^\((\d+),(\d+)\)(,\((\d+),(\d+)\))*$", s) is not None
+  result = chunked((int(x) for x in re.findall(r"\d+", s)), 2)
+  return tuple(tuple(list) for list in result)
+
+
 @click.command()
 @click.option("--experiments-dir", type=click.Path(file_okay=False), required=True)
 @click.option("--ds-type", type=click.Choice(("mnist","fashionmnist"), case_sensitive=False))
@@ -44,8 +53,8 @@ def get_git_commit_info() -> str:
 @click.option("-v", "--verbosity", default="INFO",
   type=lambda s: {"DEBUG": logging.DEBUG, "INFO": logging.INFO, "WARN": logging.WARN,
                   "ERROR": logging.ERROR, "CRITICAL": logging.CRITICAL}[s])
-@click.option("--kernel-size", type=int, required=True)
-@click.option("--out-size", type=int, required=True)
+@click.option("--epses-specs", type=parse_epses_specs, required=True,
+              help="Specs (kernel size and out_quantum_size) of epses formatted like (4,4),(2,4)")
 @click.option("--batch-size", type=int, required=True)
 @click.option("--load-model-state", type=click.Path(exists=True, dir_okay=False))
 @click.option("--optimizer", type=click.Choice(("adam", "sgd"), case_sensitive=False))
@@ -73,8 +82,9 @@ def main(**kwargs) -> None:
 
   dev = kwargs["device"]
   set_random_seeds(dev, kwargs["seed"])
-  model = EPSPlusLinear(kwargs["kernel_size"], kwargs["out_size"]).to(dev)
+  model = EPSesPlusLinear(kwargs["epses_specs"]).to(dev)
   if kwargs["old_scaling"]:
+    assert kwargs["epses_specs"] == ((4, 4),)
     model[0].core.data = torch.randn_like(model[0].core) / 4
     model[-1].weight.data = torch.rand_like(model[-1].weight) * 0.04 - 0.02
   if kwargs["load_model_state"] is not None:
@@ -83,7 +93,7 @@ def main(**kwargs) -> None:
     kwargs["ds_type"]]
   if not kwargs["old_scaling"]:
     train_dl, val_dl, test_dl = get_dls(
-      kwargs["ds_path"], kwargs["batch_size"], dev, autoscale_kernel_size=kwargs["kernel_size"])
+      kwargs["ds_path"], kwargs["batch_size"], dev, autoscale_kernel_size=kwargs["epses_specs"][0][0])
   else:
     train_dl, val_dl, test_dl = get_dls(
       kwargs["ds_path"], kwargs["batch_size"], dev, (lambda X: (X*pi/2.).sin()**2/2, lambda X: (X*pi/2.).cos()**2/2))
