@@ -179,3 +179,11 @@ class ValuesNotImprovingEarlyStopper:
         if self.num_bad_calls > self.patience:
             st_it["stop"] = True
             logging.getLogger(__name__).info(f"Early stopping at {st_it['num_iters_done']=}")
+
+
+def make_stopper_after_n_iters(n: int) -> Callable[[StX, StIt], None]:
+    def maybe_stop(st_x: StX, st_it: StIt) -> None:
+        if st_it["num_iters_done"] >= n:
+            st_it["stop"] = True
+
+    return maybe_stop
