@@ -29,6 +29,7 @@ from dctn.training import (
     StIt,
     StX,
     make_stopper_after_n_iters,
+    stop_on_nan_loss,
 )
 
 DIFF_FNAME = "git_diff_with_HEAD.patch"
@@ -216,7 +217,14 @@ def main(**kwargs) -> None:
         else []
     )
     st_x, st_it = train(
-        train_dl, model, optimizer, kwargs["device"], F.cross_entropy, at_iter_start, [], [],
+        train_dl,
+        model,
+        optimizer,
+        kwargs["device"],
+        F.cross_entropy,
+        at_iter_start,
+        [stop_on_nan_loss],
+        [],
     )
 
 
