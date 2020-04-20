@@ -187,3 +187,9 @@ def make_stopper_after_n_iters(n: int) -> Callable[[StX, StIt], None]:
             st_it["stop"] = True
 
     return maybe_stop
+
+
+def stop_on_nan_loss(st_x: StX, st_it: StIt) -> None:
+    if not torch.isfinite(st_it["loss"]):
+        logging.getLogger(__name__).warning("Stopping because of NaN or Inf loss")
+        st_it["stop"] = True
