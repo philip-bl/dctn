@@ -78,7 +78,7 @@ for i, layer in enumerate(model_85_percent_accuracy_on_mnist):
     for j, snake_mtt_sbs in enumerate(layer):
         savemat(
             os.path.join(layer_dir, f"snake_mtt_sbs_{j}.mat"),
-            {str(k): snake_mtt_sbs[k] for k in range(9)},
+            {f"core_{k}": snake_mtt_sbs[k] for k in range(9)},
         )
 
 dir = "/mnt/important/experiments/export_of_mtts_for_phan/model_bigger_min_random_eye"
@@ -88,5 +88,5 @@ for i, layer in enumerate(model_bigger_min_random_eye):
     for j, snake_mtt_sbs in enumerate(layer):
         savemat(
             os.path.join(layer_dir, f"snake_mtt_sbs_{j}.mat"),
-            {str(k): snake_mtt_sbs[k] for k in range(9)},
+            {f"core_{k}": snake_mtt_sbs[k] for k in range(9)},
         )
