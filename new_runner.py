@@ -26,6 +26,9 @@ from dctn.training import (
     LastModelsCheckpointer,
     BestModelCheckpointer,
     ValuesNotImprovingEarlyStopper,
+    StIt,
+    StX,
+    make_stopper_after_n_iters,
 )
 
 DIFF_FNAME = "git_diff_with_HEAD.patch"
@@ -83,6 +86,11 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option("--wd", type=float, help="weight decay", default=0.0)
 @click.option(
     "--patience", type=int, help="early stopping patience num evaluations", default=20
+)
+@click.option(
+    "--max-num-iters",
+    type=int,
+    help="Will do maximum this many iterations plus however many needed until the next evaluation",
 )
 @click.option("--keep-last-models", type=int, help="how many last models to keep", default=10)
 @click.option("--old-scaling/--no-old-scaling", default=False)
@@ -142,7 +150,9 @@ def main(**kwargs) -> None:
     @eval_schedule
     def evaluate_and_log(st_x, st_it):
         st_x["model"].eval()
-        st_it["train_mean_ce"], st_it["train_acc"] = score(st_x["model"], train_dl, st_x["dev"])
+        st_it["train_mean_ce"], st_it["train_acc"] = score(
+            st_x["model"], train_dl, st_x["dev"]
+        )
         st_it["val_mean_ce"], st_it["val_acc"] = score(st_x["model"], val_dl, st_x["dev"])
         logger.info(
             f"After {st_it['num_iters_done']:07} iters: "
@@ -174,7 +184,10 @@ def main(**kwargs) -> None:
         optimizer,
         kwargs["device"],
         F.cross_entropy,
-        [evaluate_and_log, last_models_checkpointer, *best_value_checkpointers, early_stopper],
+        [evaluate_and_log, last_models_checkpointer, *best_value_checkpointers, early_stopper,]
+        + [eval_schedule(make_stopper_after_n_iters(kwargs["max_num_iters"])),]
+        if kwargs["max_num_iters"] is not None
+        else [],
         [],
         [],
     )
