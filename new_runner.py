@@ -85,6 +85,26 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option("--lr", type=float)
 @click.option("--wd", type=float, help="weight decay", default=0.0)
 @click.option(
+    "--es-train-acc/--no-es-train-acc",
+    default=True,
+    help="whether to include as one of the metrics which early stopping looks at",
+)
+@click.option(
+    "--es-val-acc/--no-es-val-acc",
+    default=True,
+    help="whether to include as one of the metrics which early stopping looks at",
+)
+@click.option(
+    "--es-train-mean-ce/--no-es-train-mean-ce",
+    default=True,
+    help="whether to include as one of the metrics which early stopping looks at",
+)
+@click.option(
+    "--es-val-mean-ce/--no-es-val-mean-ce",
+    default=True,
+    help="whether to include as one of the metrics which early stopping looks at",
+)
+@click.option(
     "--patience", type=int, help="early stopping patience num evaluations", default=20
 )
 @click.option(
@@ -173,23 +193,30 @@ def main(**kwargs) -> None:
         eval_schedule(BestModelCheckpointer(kwargs["output_dir"], *metric))
         for metric in metrics
     )
-    early_stopper = eval_schedule(ValuesNotImprovingEarlyStopper(kwargs["patience"], metrics))
+
+    es_metrics = tuple(
+        (name, low_is_good) for (name, low_is_good) in metrics if kwargs[f"es_{name}"]
+    )
+    if len(es_metrics) > 0:
+        early_stopper = eval_schedule(
+            ValuesNotImprovingEarlyStopper(kwargs["patience"], es_metrics)
+        )
     optimizer = {"adam": Adam, "sgd": SGD}[kwargs["optimizer"]](
         model.parameters(), kwargs["lr"], weight_decay=kwargs["wd"]
     )
     set_random_seeds(dev, kwargs["seed"])
-    st_x, st_it = train(
-        train_dl,
-        model,
-        optimizer,
-        kwargs["device"],
-        F.cross_entropy,
-        [evaluate_and_log, last_models_checkpointer, *best_value_checkpointers, early_stopper,]
-        + [eval_schedule(make_stopper_after_n_iters(kwargs["max_num_iters"])),]
+    at_iter_start = [
+        evaluate_and_log,
+        last_models_checkpointer,
+        *best_value_checkpointers,
+        early_stopper,
+    ] + (
+        [eval_schedule(make_stopper_after_n_iters(kwargs["max_num_iters"])),]
         if kwargs["max_num_iters"] is not None
-        else [],
-        [],
-        [],
+        else []
+    )
+    st_x, st_it = train(
+        train_dl, model, optimizer, kwargs["device"], F.cross_entropy, at_iter_start, [], [],
     )
 
 
