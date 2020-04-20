@@ -7,11 +7,12 @@ from typing import Tuple, Any
 
 import numpy as np
 
-min_lr = 5e-5
-max_lr = 1.5e-4
+min_lr = 3e-8
+max_lr = 3e-4
+num_experiments = 20
 
 seed(0)
-lrs = list(np.logspace(np.log10(min_lr), np.log10(max_lr), num=3))
+lrs = list(np.logspace(np.log10(min_lr), np.log10(max_lr), num=20))
 shuffle(lrs)
 assert len(lrs) >= 2
 
@@ -19,19 +20,19 @@ common_args = (
     "python",
     expanduser("~/projects/dctn/new_runner.py"),
     "--experiments-dir",
-    "/tmp/runner",
+    "/mnt/important/experiments/2_epses_plus_linear_fashionmnist/4_4_3_6_sgd_lr_finding",
     "--ds-type",
     "fashionmnist",
     "--ds-path",
     "/mnt/hdd_1tb/datasets/fashionmnist",
     "--epses-specs",
-    "(4,6),(3,6)",
+    "(4,4),(3,6)",
     "--batch-size",
     "128",
     "--optimizer",
-    "adam",
-    "--max-num-iters",
-    "2",
+    "sgd",
+    "--no-es-train-acc",
+    "--no-es-train-mean-ce",
 )
 
 
