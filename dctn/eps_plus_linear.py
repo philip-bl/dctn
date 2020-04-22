@@ -1,4 +1,6 @@
-from typing import Tuple
+from functools import reduce
+import operator
+from typing import Tuple, Dict
 
 from more_itertools import intersperse
 
@@ -24,4 +26,21 @@ class EPSesPlusLinear(nn.Sequential):
         unsqueezer = Rearrange("b h w q -> () b h w q")
         super().__init__(
             *intersperse(unsqueezer, epses), Rearrange("b h w q -> b (h w q)"), linear
+        )
+
+    def root_mean_squares(self) -> Dict[str, torch.Tensor]:
+        return {
+            name: param.norm(p="fro") / param.nelement() ** 0.5
+            for name, param in self.named_parameters()
+        }
+
+    @property
+    def epses(self) -> Tuple[EPS, ...]:
+        return tuple(module for module in self if isinstance(module, EPS))
+
+    def l2_regularizer(self) -> torch.Tensor:
+        """Returns sum of squared frobenius norms of epses' cores and the weight of the last (linear) layer.
+        Note: doesn't do anything with the bias of the last (linear) layer."""
+        return self[-1].weight.norm(p="fro") ** 2 + reduce(
+            operator.add, (eps.core.norm(p="fro") ** 2 for eps in self.epses)
         )
