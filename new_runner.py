@@ -84,6 +84,7 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option("--load-model-state", type=click.Path(exists=True, dir_okay=False))
 @click.option("--optimizer", type=click.Choice(("adam", "sgd"), case_sensitive=False))
 @click.option("--lr", type=float)
+@click.option("--reg-coeff", type=float, default=1e-6)
 @click.option("--wd", type=float, help="weight decay", default=0.0)
 @click.option(
     "--es-train-acc/--no-es-train-acc",
@@ -169,16 +170,21 @@ def main(**kwargs) -> None:
     )
 
     @eval_schedule
-    def evaluate_and_log(st_x, st_it):
+    def evaluate_and_log(st_x: StX, st_it: StIt):
         st_x["model"].eval()
         st_it["train_mean_ce"], st_it["train_acc"] = score(
             st_x["model"], train_dl, st_x["dev"]
         )
         st_it["val_mean_ce"], st_it["val_acc"] = score(st_x["model"], val_dl, st_x["dev"])
+        with torch.no_grad():
+            reg_term = (
+                st_it["reg_term"] if "reg_term" in st_it else st_x["model"].l2_regularizer()
+            )
         logger.info(
             f"After {st_it['num_iters_done']:07} iters: "
             f"train/val mean_ce={st_it['train_mean_ce']:.5f}/{st_it['val_mean_ce']:.5f} "
-            f"acc={st_it['train_acc']:.2%}/{st_it['val_acc']:.2%}"
+            f"acc={st_it['train_acc']:.2%}/{st_it['val_acc']:.2%} "
+            f"{reg_term=:.2e}"
         )
 
     last_models_checkpointer = eval_schedule(
@@ -222,6 +228,8 @@ def main(**kwargs) -> None:
         optimizer,
         kwargs["device"],
         F.cross_entropy,
+        lambda st_x, st_it: st_x["model"].l2_regularizer(),
+        kwargs["reg_coeff"],
         at_iter_start,
         [stop_on_nan_loss],
         [],

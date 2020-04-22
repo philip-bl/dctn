@@ -20,7 +20,16 @@ StIt = Dict[Any, Any]
 
 
 def train(
-    dl: DataLoader, model, optimizer, dev, loss_fn, at_iter_start, after_back, after_param_upd
+    dl: DataLoader,
+    model,
+    optimizer,
+    dev,
+    loss_fn,
+    reg_fn,
+    reg_coeff: float,
+    at_iter_start,
+    after_back,
+    after_param_upd,
 ) -> Tuple[StX, StIt]:
     """`loss_fn` must take (model_output, y) and return the loss as a 0-dim torch.tensor.
   `at_iter_start` - functions which will run each time when an iter starts.
@@ -30,13 +39,23 @@ def train(
         "model": model.to(dev),
         "optimizer": optimizer,
         "loss_fn": loss_fn,
+        "reg_fn": reg_fn,
+        "reg_coeff": reg_coeff,
         "at_iter_start": list(at_iter_start),
         "after_back": list(after_back),
         "after_param_upd": list(after_param_upd),
         "dev": dev,
     }
     # st_x stands for state across iterations, i.e. state which remains between iterations
-    del model, optimizer, dev, loss_fn, after_back  # I don't want to accidentally use these
+    del (
+        model,
+        optimizer,
+        dev,
+        loss_fn,
+        reg_fn,
+        reg_coeff,
+        after_back,
+    )  # I don't want to accidentally use these
 
     def run_x_funcs(key):
         for f in st_x[key][:]:
@@ -56,8 +75,9 @@ def train(
         st_x["model"].train()
         st_it["output"] = st_x["model"](st_it["x"])
         st_it["loss"] = st_x["loss_fn"](st_it["output"], st_it["y"])
+        st_it["reg_term"] = st_x["reg_fn"](st_x, st_it)
         st_x["optimizer"].zero_grad()
-        st_it["loss"].backward()
+        (st_it["loss"] + st_it["reg_term"] * st_x["reg_coeff"]).backward()
         run_x_funcs("after_back")
         st_x["optimizer"].step()
         run_x_funcs("after_param_upd")
