@@ -84,7 +84,12 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option("--load-model-state", type=click.Path(exists=True, dir_okay=False))
 @click.option("--optimizer", type=click.Choice(("adam", "sgd"), case_sensitive=False))
 @click.option("--lr", type=float)
-@click.option("--reg-coeff", type=float, default=1e-6)
+@click.option(
+    "--reg-coeff",
+    type=float,
+    default=0.0,
+    help="Coefficient by which l2 reg term is multiplied. My default is 1e-6.",
+)
 @click.option("--wd", type=float, help="weight decay", default=0.0)
 @click.option(
     "--es-train-acc/--no-es-train-acc",
