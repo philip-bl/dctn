@@ -29,7 +29,7 @@ from dctn.training import (
     StIt,
     StX,
     make_stopper_after_n_iters,
-    stop_on_nan_loss,
+    make_stopper_on_nan_loss,
 )
 
 DIFF_FNAME = "git_diff_with_HEAD.patch"
@@ -120,6 +120,7 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     help="Will do maximum this many iterations plus however many needed until the next evaluation",
 )
 @click.option("--keep-last-models", type=int, help="how many last models to keep", default=10)
+@click.option("--breakpoint-on-nan-loss/--no-breakpoint-on-nan-loss", default=True)
 @click.option("--old-scaling/--no-old-scaling", default=False)
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
@@ -236,7 +237,7 @@ def main(**kwargs) -> None:
         lambda st_x, st_it: st_x["model"].l2_regularizer(),
         kwargs["reg_coeff"],
         at_iter_start,
-        [stop_on_nan_loss],
+        [make_stopper_on_nan_loss(kwargs["output_dir"], kwargs["breakpoint_on_nan_loss"])],
         [],
     )
 

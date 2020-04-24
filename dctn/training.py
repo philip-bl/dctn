@@ -209,7 +209,28 @@ def make_stopper_after_n_iters(n: int) -> Callable[[StX, StIt], None]:
     return maybe_stop
 
 
-def stop_on_nan_loss(st_x: StX, st_it: StIt) -> None:
-    if not torch.isfinite(st_it["loss"]):
-        logging.getLogger(__name__).warning("Stopping because of NaN or Inf loss")
-        st_it["stop"] = True
+def make_stopper_on_nan_loss(dir: str, set_breakpoint: bool) -> Callable[[StX, StIt], None]:
+    def stop_on_nan_loss(st_x: StX, st_it: StIt) -> None:
+        if not torch.isfinite(st_it["loss"]):
+            logging.getLogger(__name__).warning("Stopping because of NaN or Inf loss")
+            st_it["stop"] = True
+
+            subdir = os.path.join(dir, "nan_loss_stop")
+            if os.path.exists(subdir):
+                logging.getLogger(__name__).error(f"{subdir=} already exists")
+            else:
+                os.mkdir(subdir)
+                torch.save(
+                    st_x["model"].state_dict(),
+                    os.path.join(
+                        subdir,
+                        f"model_nitd={st_it['num_iters_done']}_loss={st_it['loss']:.3f}_"
+                        f"reg_term={st_it['reg_term']:.3f}.pth",
+                    ),
+                )
+                for key in ("x", "y", "indices", "output"):
+                    torch.save(st_it[key], os.path.join(subdir, f"{key}.pth"))
+            if set_breakpoint:
+                breakpoint()
+
+    return stop_on_nan_loss
