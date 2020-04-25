@@ -33,6 +33,7 @@ common_args = (
     "sgd",
     "--no-es-train-acc",
     "--no-es-train-mean-ce",
+    "--no-breakpoint-on-nan-loss"
 )
 
 
