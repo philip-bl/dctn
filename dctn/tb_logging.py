@@ -31,3 +31,14 @@ def add_good_bad_bar(img: torch.Tensor, how_good: float) -> torch.Tensor:
         else:
             padded[c, -padding:, :bar_width] = 0.0
     return padded
+
+
+def add_index_dots(img: torch.Tensor, index: int, padding: int = 3) -> torch.Tensor:
+    assert img.ndim == 3
+    assert img.shape[0] == 3
+    assert img.shape[2] >= index * 2
+    new_img = img.clone()
+    for i in range(index):
+        new_img[2, :padding, 2 * i] = 1.0
+        new_img[:2, :padding, 2 * i] = 0.0
+    return new_img
