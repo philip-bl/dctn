@@ -1,9 +1,11 @@
 from new_runner import main
 
+# copies /mnt/important/experiments/2_epses_plus_linear_fashionmnist/2020-04-15T19:42:03/
+# but with epswise l2 regularization
 main.main(
     (
         "--experiments-dir",
-        "/mnt/important/experiments/2_epses_plus_linear_fashionmnist",
+        "/mnt/important/experiments/2_epses_plus_linear_fashionmnist/adam_and_epswise_l2",
         "--ds-type",
         "fashionmnist",
         "--ds-path",
@@ -15,7 +17,9 @@ main.main(
         "--optimizer",
         "adam",
         "--lr",
-        "1e-3",
+        "1.11e-4",
+        "--reg-coeff",
+        "1e-6",
     ),
     standalone_mode=False,
 )
