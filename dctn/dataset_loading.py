@@ -40,9 +40,11 @@ class MNISTLikeQuantumIndexedDataset(Dataset):
         else:
             raise ValueError(f"{split=}")
         torchvision_dataset = dataset_type(root, train=torchvision_train, transform=to_tensor)
-        x = torchvision_dataset.data[torchvision_slice].float() / 255.0  # shape: samples×h×w
+        self.unmodified_x = (
+            torchvision_dataset.data[torchvision_slice].float() / 255.0
+        )  # shape: samples×h×w
         self.y = torchvision_dataset.targets[torchvision_slice]  # shape: samples
-        self.x = torch.stack(tuple(φ_i(x) for φ_i in φ), dim=3).unsqueeze(0)
+        self.x = torch.stack(tuple(φ_i(self.unmodified_x) for φ_i in φ), dim=3).unsqueeze(0)
         # self.x has shape: 1×samples×height×width×φ, where 1 is the number of channels
 
     def __len__(self) -> int:
