@@ -11,6 +11,7 @@ import torch.nn.functional as F
 import opt_einsum as oe
 
 from dctn.align import align
+from dctn.contraction_path_cache import contract
 
 
 def eps(core: Tensor, input: Tensor) -> Tensor:
@@ -78,3 +79,23 @@ class EPS(nn.Module):
 
     def forward(self, input: Tensor) -> Tensor:
         return eps(self.core, input)
+
+
+def contract_on_input_dims(a: Tensor, b: Tensor) -> Tensor:
+    """result.shape: (out dim of a, out dim of b)."""
+    assert is_eps(a)
+    assert is_eps(b)
+    a_out_dim_size = a.shape[-1]
+    b_out_dim_size = b.shape[-1]
+    return a.reshape(-1, a_out_dim_size).T @ b.reshape(-1, b_out_dim_size)
+
+
+def is_eps(a: Tensor) -> bool:
+    """Returns whether a can plausibly be an EPS, judging by its shape."""
+    return a.ndim >= 2 and all(dim_size == a.shape[0] for dim_size in a.shape[:-1])
+
+
+def inner_product(a: Tensor, b: Tensor) -> Tensor:
+    assert a.shape == b.shape
+    assert is_eps(a)
+    return torch.dot(a.reshape(-1), b.reshape(-1))
