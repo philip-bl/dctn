@@ -3,7 +3,7 @@ from typing import *
 import torch
 from einops import rearrange
 import opt_einsum as oe
-from dctn.eps import eps_one_by_one
+from dctn.eps import eps_one_by_one, inner_product, contract_on_input_dims
 
 
 def test_eps_single_pixel_output() -> None:
@@ -59,3 +59,15 @@ def test_eps_two_pixels_output() -> None:
         input[0, 0, 3, 2],
     )
     assert torch.allclose(eps_result[0, 1, 0], oe_result_1)
+
+
+def test_contract_on_inner_dims() -> None:
+    a = torch.einsum("oi,j->ijo", torch.eye(3), 2.0 * torch.ones(3))
+    assert torch.allclose(contract_on_input_dims(a, a), 12.0 * torch.eye(3))
+
+    a = torch.einsum("oi,j->ijo", 2.0 * torch.eye(4), torch.tensor([1.0, 2.0, 3.0, 4.0]))
+    b = torch.einsum("pj,i->ijp", 3.0 * torch.eye(4), torch.ones(4))
+    assert torch.allclose(
+        contract_on_input_dims(a, b),
+        torch.einsum("o,p->op", 2.0 * torch.ones(4), torch.tensor([3.0, 6.0, 9.0, 12.0])),
+    )
