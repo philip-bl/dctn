@@ -13,6 +13,7 @@ from more_itertools import chunked
 import torch
 from torch.optim import Adam, SGD
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 
 from libcrap import get_now_as_str, save_json
 from libcrap.torch import set_random_seeds
@@ -31,6 +32,8 @@ from dctn.training import (
     make_stopper_after_n_iters,
     make_stopper_on_nan_loss,
 )
+from dctn.tb_logging import add_good_bad_bar, add_y_dots
+from torchvision.utils import make_grid
 
 DIFF_FNAME = "git_diff_with_HEAD.patch"
 RUN_INFO_FNAME = "run_info.txt"
@@ -73,6 +76,11 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
         "ERROR": logging.ERROR,
         "CRITICAL": logging.CRITICAL,
     }[s],
+)
+@click.option(
+    "--tb-batches/--no-tb-batches",
+    default=False,
+    help="whether to add logging of batches in tb",
 )
 @click.option(
     "--epses-specs",
@@ -217,7 +225,7 @@ def main(**kwargs) -> None:
     optimizer = {"adam": Adam, "sgd": SGD}[kwargs["optimizer"]](
         model.parameters(), kwargs["lr"], weight_decay=kwargs["wd"]
     )
-    set_random_seeds(dev, kwargs["seed"])
+
     at_iter_start = [
         evaluate_and_log,
         last_models_checkpointer,
@@ -228,6 +236,32 @@ def main(**kwargs) -> None:
         if kwargs["max_num_iters"] is not None
         else []
     )
+
+    if kwargs["tb_batches"]:
+        tb = SummaryWriter(kwargs["output_dir"])
+
+        def log_to_tb(st_x: StX, st_it: StIt) -> None:
+            nitd: int = st_it["num_iters_done"]
+            for key in ("loss", "reg_term"):
+                tb.add_scalar(key, st_it[key], nitd)
+            probs = F.softmax(st_it["output"].detach(), dim=1)
+            probs_of_actual_classes = probs.gather(1, st_it["y"].unsqueeze(1))
+            train_images = train_dl.dataset.unmodified_x  # 50000×28×28, floats in [0, 1], cpu
+            imgs = train_images[st_it["indices"]]
+            processed_imgs = [
+                add_y_dots(add_good_bad_bar(img, prob.item()), y)
+                for img, prob, y in zip(imgs.split(1), probs_of_actual_classes, st_it["y"])
+            ]
+            grid = make_grid(processed_imgs, nrow=8, range=(0.0, 1.0), pad_value=0)
+            tb.add_image("batch", grid, nitd)
+            # BAD VISUALIZATION. TODO: if 0% match, full red bar; if 100% match, full green bar
+            # if 50%, no bar
+            # if NaN, purply-white stripes
+            # TODO in add_good_bad_bar do something else if there's NaN
+            # TODO sort images by how bad the prediction is
+            # TODO add more stuff maybe
+
+    set_random_seeds(dev, kwargs["seed"])
     st_x, st_it = train(
         train_dl,
         model,
@@ -237,7 +271,8 @@ def main(**kwargs) -> None:
         lambda st_x, st_it: st_x["model"].l2_regularizer(),
         kwargs["reg_coeff"],
         at_iter_start,
-        [make_stopper_on_nan_loss(kwargs["output_dir"], kwargs["breakpoint_on_nan_loss"])],
+        ([log_to_tb] if kwargs["tb_batches"] else [])
+        + [make_stopper_on_nan_loss(kwargs["output_dir"], kwargs["breakpoint_on_nan_loss"]),],
         [],
     )
 
