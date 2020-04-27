@@ -5,7 +5,7 @@ from new_runner import main
 main.main(
     (
         "--experiments-dir",
-        "/mnt/important/experiments/2_epses_plus_linear_fashionmnist/adam_and_epswise_l2",
+        "/mnt/important/experiments/2_epses_plus_linear_fashionmnist/adam_and_comp_reg",
         "--ds-type",
         "fashionmnist",
         "--ds-path",
@@ -18,8 +18,12 @@ main.main(
         "adam",
         "--lr",
         "1.11e-4",
+        "--reg-type",
+        "epses_composition",
         "--reg-coeff",
-        "1e-2",
+        "1e-6",
+        "--no-es-train-acc",
+        "--no-es-train-mean-ce",
     ),
     standalone_mode=False,
 )
