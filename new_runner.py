@@ -92,6 +92,7 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option("--load-model-state", type=click.Path(exists=True, dir_okay=False))
 @click.option("--optimizer", type=click.Choice(("adam", "sgd"), case_sensitive=False))
 @click.option("--lr", type=float)
+@click.option("--reg-type", type=click.Choice(("epswise", "epses_composition")))
 @click.option(
     "--reg-coeff",
     type=float,
@@ -161,6 +162,7 @@ def main(**kwargs) -> None:
         model[-1].weight.data = torch.rand_like(model[-1].weight) * 0.04 - 0.02
     if kwargs["load_model_state"] is not None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
+    logger.info(f"{model.epses_composition_fro_norm_squared()=:.3e}")
     get_dls = {"mnist": get_mnist_data_loaders, "fashionmnist": get_fashionmnist_data_loaders}[
         kwargs["ds_type"]
     ]
@@ -183,6 +185,14 @@ def main(**kwargs) -> None:
         (10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000)
     )
 
+    def calc_regularizer(model) -> torch.Tensor:
+        if kwargs["reg_type"] == "epswise":
+            return model.epswise_l2_regularizer()
+        elif kwargs["reg_type"] == "epses_composition":
+            return model.epses_composition_l2_regularizer()
+        else:
+            raise ValueError()
+
     @eval_schedule
     def evaluate_and_log(st_x: StX, st_it: StIt):
         st_x["model"].eval()
@@ -191,9 +201,10 @@ def main(**kwargs) -> None:
         )
         st_it["val_mean_ce"], st_it["val_acc"] = score(st_x["model"], val_dl, st_x["dev"])
         with torch.no_grad():
-            reg_term = (
-                st_it["reg_term"] if "reg_term" in st_it else st_x["model"].l2_regularizer()
-            )
+            if "reg_term" in st_it:
+                reg_term = st_it["reg_term"]
+            else:
+                reg_term = calc_regularizer(st_x["model"])
         logger.info(
             f"After {st_it['num_iters_done']:07} iters: "
             f"train/val mean_ce={st_it['train_mean_ce']:.5f}/{st_it['val_mean_ce']:.5f} "
@@ -268,7 +279,7 @@ def main(**kwargs) -> None:
         optimizer,
         kwargs["device"],
         F.cross_entropy,
-        lambda st_x, st_it: st_x["model"].l2_regularizer(),
+        lambda st_x, st_it: calc_regularizer(st_x["model"]),
         kwargs["reg_coeff"],
         at_iter_start,
         ([log_to_tb] if kwargs["tb_batches"] else [])

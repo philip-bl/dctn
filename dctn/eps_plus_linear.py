@@ -10,6 +10,7 @@ import torch.nn as nn
 from einops.layers.torch import Rearrange
 
 from dctn.eps import EPS
+from . import epses_composition
 
 
 class EPSesPlusLinear(nn.Sequential):
@@ -38,9 +39,16 @@ class EPSesPlusLinear(nn.Sequential):
     def epses(self) -> Tuple[EPS, ...]:
         return tuple(module for module in self if isinstance(module, EPS))
 
-    def l2_regularizer(self) -> torch.Tensor:
+    def epswise_l2_regularizer(self) -> torch.Tensor:
         """Returns sum of squared frobenius norms of epses' cores and the weight of the last (linear) layer.
         Note: doesn't do anything with the bias of the last (linear) layer."""
         return self[-1].weight.norm(p="fro") ** 2 + reduce(
             operator.add, (eps.core.norm(p="fro") ** 2 for eps in self.epses)
         )
+
+    def epses_composition_fro_norm_squared(self) -> torch.Tensor:
+        epses: Tuple[torch.Tensor, ...] = tuple(eps_module.core for eps_module in self.epses)
+        return epses_composition.inner_product(epses, epses)
+
+    def epses_composition_l2_regularizer(self) -> torch.Tensor:
+        return self[-1].weight.norm(p="fro") ** 2 + self.epses_composition_fro_norm_squared()
