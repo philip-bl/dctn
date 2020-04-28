@@ -100,6 +100,7 @@ def get_data_loaders(
     )
     train_dl = dl_partial(dataset=train_ds, shuffle=True, drop_last=True)
     val_dl, test_dl = (dl_partial(dataset=dataset) for dataset in (val_ds, test_ds))
+    torch.cuda.empty_cache()
     return train_dl, val_dl, test_dl
 
 
