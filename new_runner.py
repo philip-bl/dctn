@@ -131,6 +131,10 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option("--keep-last-models", type=int, help="how many last models to keep", default=10)
 @click.option("--breakpoint-on-nan-loss/--no-breakpoint-on-nan-loss", default=True)
 @click.option("--old-scaling/--no-old-scaling", default=False)
+@click.option(
+    "--init-epses-composition-unit-empirical-output-std/--no-init-epses-composition-unit-empirical-output-std",
+    default=False,
+)
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
@@ -154,15 +158,6 @@ def main(**kwargs) -> None:
     logger.info(f"{kwargs['output_dir']=}")
 
     dev = kwargs["device"]
-    set_random_seeds(dev, kwargs["seed"])
-    model = EPSesPlusLinear(kwargs["epses_specs"]).to(dev)
-    if kwargs["old_scaling"]:
-        assert kwargs["epses_specs"] == ((4, 4),)
-        model[0].core.data = torch.randn_like(model[0].core) / 4
-        model[-1].weight.data = torch.rand_like(model[-1].weight) * 0.04 - 0.02
-    if kwargs["load_model_state"] is not None:
-        model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
-    logger.info(f"{model.epses_composition_fro_norm_squared()=:.3e}")
     get_dls = {"mnist": get_mnist_data_loaders, "fashionmnist": get_fashionmnist_data_loaders}[
         kwargs["ds_type"]
     ]
@@ -180,6 +175,20 @@ def main(**kwargs) -> None:
             dev,
             (lambda X: (X * pi / 2.0).sin() ** 2 / 2, lambda X: (X * pi / 2.0).cos() ** 2 / 2),
         )
+    set_random_seeds(dev, kwargs["seed"])
+    model = EPSesPlusLinear(kwargs["epses_specs"]).to(dev)
+    if kwargs["init_epses_composition_unit_empirical_output_std"]:
+        model.init_epses_composition_unit_empirical_output_std(
+            train_dl.dataset.x[:, :10880].to(dev)
+        )
+    if kwargs["old_scaling"]:
+        assert not kwargs["init_epses_composition_unit_empirical_output_std"]
+        assert kwargs["epses_specs"] == ((4, 4),)
+        model[0].core.data = torch.randn_like(model[0].core) / 4
+        model[-1].weight.data = torch.rand_like(model[-1].weight) * 0.04 - 0.02
+    if kwargs["load_model_state"] is not None:
+        model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
+    logger.info(f"{model.epses_composition_fro_norm_squared()=:.3e}")
 
     eval_schedule = every_n_iters_intervals(
         (10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000)
@@ -265,9 +274,6 @@ def main(**kwargs) -> None:
             ]
             grid = make_grid(processed_imgs, nrow=8, range=(0.0, 1.0), pad_value=0)
             tb.add_image("batch", grid, nitd)
-            # BAD VISUALIZATION. TODO: if 0% match, full red bar; if 100% match, full green bar
-            # if 50%, no bar
-            # if NaN, purply-white stripes
             # TODO in add_good_bad_bar do something else if there's NaN
             # TODO sort images by how bad the prediction is
             # TODO add more stuff maybe

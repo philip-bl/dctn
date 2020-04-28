@@ -2,14 +2,13 @@ import itertools
 from typing import Tuple
 
 import torch
+from torch import Tensor
 
 from . import eps
 from .contraction_path_cache import contract
 
 
-def inner_product(
-    epses1: Tuple[torch.Tensor, ...], epses2: Tuple[torch.Tensor, ...]
-) -> torch.Tensor:
+def inner_product(epses1: Tuple[Tensor, ...], epses2: Tuple[Tensor, ...]) -> Tensor:
     """Calculates the inner product of epses1 and epses2. Each pair of corresponding EPSes must have the same
     kernel size, output size, and input size.
     Performs exactly what is describe in my notebook pages 6-6a."""
@@ -45,3 +44,20 @@ def inner_product(
     )
     assert eps.is_eps(new_d)
     return inner_product((new_d,) + epses1[2:], epses2[1:])
+
+
+def make_epses_composition_unit_empirical_output_std(
+    epses_specs: Tuple[Tuple[int, int]],
+    input: Tensor,
+    device: torch.device,
+    dtype: torch.dtype,
+    batch_size: int = 128,
+) -> Tuple[Tensor, ...]:
+    epses = []
+    for kernel_size, out_size in epses_specs:
+        eps_core: Tensor = eps.make_eps_unit_empirical_output_std(
+            kernel_size, out_size, input, device, dtype, batch_size
+        )
+        input = eps.transform_in_slices(eps_core, input.to(device, dtype), batch_size)
+        epses.append(eps_core)
+    return tuple(epses)

@@ -15,6 +15,7 @@ from . import epses_composition
 
 class EPSesPlusLinear(nn.Sequential):
     def __init__(self, epses_specs: Tuple[Tuple[int, int]]):
+        self.epses_specs = epses_specs
         kernel_sizes = tuple(kernel_size for kernel_size, _ in epses_specs)
         out_sizes = tuple(out_size for _, out_size in epses_specs)
         in_sizes = (2,) + out_sizes[:-1]
@@ -28,6 +29,19 @@ class EPSesPlusLinear(nn.Sequential):
         super().__init__(
             *intersperse(unsqueezer, epses), Rearrange("b h w q -> b (h w q)"), linear
         )
+
+    def init_epses_composition_unit_empirical_output_std(
+        self, input: torch.Tensor, batch_size: int = 128
+    ) -> None:
+        device = self.epses[0].core.device
+        dtype = self.epses[0].core.dtype
+        better_epses: Tuple[
+            torch.Tensor, ...
+        ] = epses_composition.make_epses_composition_unit_empirical_output_std(
+            self.epses_specs, input, device, dtype
+        )
+        for eps_module, better_eps in zip(self.epses, better_epses):
+            eps_module.core.data.copy_(better_eps)
 
     def root_mean_squares(self) -> Dict[str, torch.Tensor]:
         return {

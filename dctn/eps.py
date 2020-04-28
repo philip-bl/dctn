@@ -1,4 +1,5 @@
 import itertools
+import logging
 import functools
 import math
 from typing import Tuple
@@ -99,3 +100,37 @@ def inner_product(a: Tensor, b: Tensor) -> Tensor:
     assert a.shape == b.shape
     assert is_eps(a)
     return torch.dot(a.reshape(-1), b.reshape(-1))
+
+
+@torch.no_grad()
+def transform_in_slices(eps_core: Tensor, x: Tensor, batch_size: int) -> torch.Tensor:
+    """Given `x` of shape (num_channels, dataset_size, height, width, in_size), transforms it
+    with `eps_core` to get an output of shape (1, dataset_size, new_height, new_width, out_size).
+    Doesn't propagate grad. Applies in batches to save memory, so can be used even with large
+    dataset_size.
+
+    This is useful for transforming a large part of a dataset."""
+    assert is_eps(eps_core)
+    return torch.cat(
+        tuple(eps(eps_core, x_slice) for x_slice in x.split(batch_size, dim=1))
+    ).unsqueeze(0)
+
+
+def make_eps_unit_empirical_output_std(
+    kernel_size: int,
+    out_size: int,
+    input: Tensor,
+    device: torch.device,
+    dtype: torch.dtype,
+    batch_size: int,
+) -> Tensor:
+    num_channels, dataset_size, height, width, in_size = input.shape
+    core = torch.randn(
+        *(in_size,) * (kernel_size ** 2 * num_channels), out_size, device=device, dtype=dtype
+    )
+    output = transform_in_slices(core, input.to(device, dtype), batch_size)
+    core /= output.std(unbiased=False)
+    logging.getLogger(__name__).info(
+        f"Initialized an EPS with empirical std = {core.std(unbiased=False)}"
+    )
+    return core
