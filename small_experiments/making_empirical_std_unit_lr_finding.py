@@ -7,12 +7,12 @@ from typing import Tuple, Any
 
 import numpy as np
 
-min_lr = 7e-7
-max_lr = 1.5e-5
-num_experiments = 8
+min_lr = 2e-5
+max_lr = 5e-3
+num_experiments = 10
 
 seed(0)
-lrs = list(np.logspace(np.log10(min_lr), np.log10(max_lr), num=20))
+lrs = list(np.logspace(np.log10(min_lr), np.log10(max_lr), num=num_experiments))
 shuffle(lrs)
 assert len(lrs) >= 2
 
@@ -20,7 +20,7 @@ common_args = (
     "python",
     expanduser("~/projects/dctn/new_runner.py"),
     "--experiments-dir",
-    "/mnt/important/experiments/2_epses_plus_linear_fashionmnist/4_4_3_6_sgd_lr_finding",
+    "/home/shibbiry/mounts/home_desktop/mnt/important/experiments/2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/",
     "--ds-type",
     "fashionmnist",
     "--ds-path",
@@ -30,10 +30,16 @@ common_args = (
     "--batch-size",
     "128",
     "--optimizer",
-    "sgd",
-    "--no-es-train-acc",
+    "adam",
+    "--patience",
+    "10",
+    "--reg-type",
+    "epses_composition",
+    "--reg-coeff",
+    "1e-2" "--no-es-train-acc",
     "--no-es-train-mean-ce",
-    "--no-breakpoint-on-nan-loss"
+    "--no-breakpoint-on-nan-loss",
+    "--init-epses-composition-unit-empirical-output-std",
 )
 
 
