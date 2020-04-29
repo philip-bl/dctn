@@ -126,8 +126,8 @@ def make_eps_unit_empirical_output_std(
 ) -> Tensor:
     num_channels, dataset_size, height, width, in_size = input.shape
     core = torch.randn(
-        *(in_size,) * (kernel_size ** 2 * num_channels), out_size, device=device, dtype=dtype
-    )
+        *(in_size,) * (kernel_size ** 2 * num_channels), out_size, dtype=dtype
+    ).to(device)
     output = transform_in_slices(core, input.to(device, dtype), batch_size)
     core /= output.std(unbiased=False)
     logging.getLogger(__name__).info(
