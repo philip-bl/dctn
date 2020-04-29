@@ -9,7 +9,7 @@ import numpy as np
 
 min_lr = 2e-5
 max_lr = 5e-3
-num_experiments = 10
+num_experiments = 16
 
 seed(0)
 lrs = list(np.logspace(np.log10(min_lr), np.log10(max_lr), num=num_experiments))
