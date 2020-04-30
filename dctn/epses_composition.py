@@ -1,5 +1,5 @@
 import itertools
-from typing import Tuple
+from typing import Tuple, Dict
 
 import torch
 from torch import Tensor
@@ -46,6 +46,36 @@ def inner_product(epses1: Tuple[Tensor, ...], epses2: Tuple[Tensor, ...]) -> Ten
     )
     assert eps.is_eps(new_d)
     return inner_product((new_d,) + epses1[2:], epses2[1:])
+
+
+def specs_to_full_specs(
+    epses_specs: Tuple[Tuple[int, int]], initial_in_size: int
+) -> Tuple[Dict[str, int]]:
+    """Each spec is a tuple representing kernel_size, out_size."""
+    kernel_sizes = tuple(kernel_size for kernel_size, _ in epses_specs)
+    out_sizes = tuple(out_size for _, out_size in epses_specs)
+    in_sizes = (initial_in_size,) + out_sizes[:-1]
+    return tuple(
+        {
+            "kernel_size": kernel_size,
+            "in_num_channels": 1,
+            "in_size": in_size,
+            "out_size": out_size,
+        }
+        for kernel_size, out_size, in_size in zip(kernel_sizes, out_sizes, in_sizes)
+    )
+
+
+def make_epses_composition_unit_theoretical_output_std(
+    epses_specs: Tuple[Tuple[int, int]],
+    initial_in_size: int,
+    device: torch.device,
+    dtype: torch.dtype,
+) -> Tuple[Tensor, ...]:
+    return tuple(
+        eps.make_eps_unit_theoretical_output_std(**full_spec, device=device, dtype=dtype)
+        for full_spec in specs_to_full_specs(epses_specs, initial_in_size)
+    )
 
 
 def make_epses_composition_unit_empirical_output_std(
