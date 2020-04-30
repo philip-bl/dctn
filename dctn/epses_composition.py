@@ -4,6 +4,8 @@ from typing import Tuple
 import torch
 from torch import Tensor
 
+from einops import rearrange
+
 from . import eps
 from .contraction_path_cache import contract
 
@@ -61,3 +63,14 @@ def make_epses_composition_unit_empirical_output_std(
         input = eps.transform_in_slices(eps_core, input.to(device, dtype), batch_size)
         epses.append(eps_core)
     return tuple(epses)
+
+
+def contract_with_input(epses: Tuple[Tensor], input: Tensor) -> Tensor:
+    """`input`: must have shape (channels, batch_size, height, width, quantum_in_dim).
+
+    The returned value will have shape (batch_size, new_height, new_width, quantum_out_dim)."""
+    assert all(eps.is_eps(tensor) for tensor in epses)
+    intermediate: Tensor = input
+    for eps_core in epses[:-1]:
+        intermediate = rearrange(eps.eps(eps_core, intermediate), "b h w q -> () b h w q")
+    return eps.eps(epses[-1], intermediate)
