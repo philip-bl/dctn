@@ -7,9 +7,9 @@ from typing import Tuple, Any
 
 import numpy as np
 
-min_lr = 2e-5
-max_lr = 5e-3
-num_experiments = 16
+min_lr = 1.3e-4
+max_lr = 3.3e-4
+num_experiments = 10
 
 seed(0)
 lrs = list(np.logspace(np.log10(min_lr), np.log10(max_lr), num=num_experiments))
