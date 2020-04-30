@@ -136,6 +136,10 @@ def transform_in_slices(eps_core: Tensor, x: Tensor, batch_size: int) -> torch.T
     ).unsqueeze(0)
 
 
+def total_in_dim_size(kernel_size: int, in_num_channels: int, in_size: int) -> int:
+    return in_size ** (in_num_channels * kernel_size ** 2)
+
+
 def make_eps_unit_theoretical_output_std(
     kernel_size: int,
     in_num_channels: int,
@@ -144,7 +148,9 @@ def make_eps_unit_theoretical_output_std(
     device: torch.device,
     dtype: torch.dtype,
 ) -> Tensor:
-    std = matrix_shape[1] ** -0.5  # preserves std during forward pass
+    std = (
+        total_in_dim_size(kernel_size, in_num_channels, in_size) ** -0.5
+    )  # preserves std during forward pass
     return std * torch.randn(
         *calc_eps_shape(kernel_size, in_num_channels, in_size, out_size), dtype=dtype
     ).to(device)
