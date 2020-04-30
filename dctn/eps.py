@@ -62,6 +62,13 @@ def eps_one_by_one(core: Tensor, input: Tensor) -> Tensor:
     return intermediate
 
 
+def calc_eps_shape(
+    kernel_size: int, in_num_channels: int, in_size: int, out_size: int
+) -> Tuple[int, ...]:
+    """Calculates what shape an EPS tensor with these parameters must have."""
+    return (in_size,) * (kernel_size ** 2 * in_num_channels) + (out_size,)
+
+
 class EPS(nn.Module):
     def __init__(self, kernel_size: int, in_num_channels: int, in_size: int, out_size: int):
         super().__init__()
@@ -69,17 +76,30 @@ class EPS(nn.Module):
         self.in_num_channels = in_num_channels
         self.in_size = in_size
         self.out_size = out_size
-        std = self.matrix_shape[1] ** -0.5  # preserves std during forward pass
         self.core = nn.Parameter(
-            torch.randn(*(in_size,) * (kernel_size ** 2 * in_num_channels), out_size) * std
+            make_eps_unit_theoretical_output_std(
+                kernel_size,
+                in_num_channels,
+                in_size,
+                out_size,
+                torch.device("cpu"),
+                torch.float32,
+            )
         )
 
     @property
     def matrix_shape(self) -> Tuple[int, int]:
-        return (self.out_size, self.in_size ** (self.kernel_size ** 2 * self.in_num_channels))
+        return matrix_shape(self.core)
 
     def forward(self, input: Tensor) -> Tensor:
         return eps(self.core, input)
+
+
+def matrix_shape(eps_core: Tensor) -> Tuple[int, int]:
+    assert is_eps(eps_core)
+    out_size = eps_core.shape[-1]
+    in_total_size = math.prod(eps_core.shape[:-1])
+    return out_size, in_total_size
 
 
 def contract_on_input_dims(a: Tensor, b: Tensor) -> Tensor:
@@ -114,6 +134,20 @@ def transform_in_slices(eps_core: Tensor, x: Tensor, batch_size: int) -> torch.T
     return torch.cat(
         tuple(eps(eps_core, x_slice) for x_slice in x.split(batch_size, dim=1))
     ).unsqueeze(0)
+
+
+def make_eps_unit_theoretical_output_std(
+    kernel_size: int,
+    in_num_channels: int,
+    in_size: int,
+    out_size: int,
+    device: torch.device,
+    dtype: torch.dtype,
+) -> Tensor:
+    std = matrix_shape[1] ** -0.5  # preserves std during forward pass
+    return std * torch.randn(
+        *calc_eps_shape(kernel_size, in_num_channels, in_size, out_size), dtype=dtype
+    ).to(device)
 
 
 def make_eps_unit_empirical_output_std(
