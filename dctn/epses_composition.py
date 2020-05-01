@@ -104,3 +104,8 @@ def contract_with_input(epses: Tuple[Tensor], input: Tensor) -> Tensor:
     for eps_core in epses[:-1]:
         intermediate = rearrange(eps.eps(eps_core, intermediate), "b h w q -> () b h w q")
     return eps.eps(epses[-1], intermediate)
+
+
+def epswise_squared_fro_norm(epses: Tuple[Tensor]) -> Tensor:
+    assert all(eps.is_eps(tensor) for tensor in epses)
+    return sum(eps_core.norm(p="fro") ** 2 for eps_core in epses)

@@ -18,8 +18,13 @@ from torch.utils.tensorboard import SummaryWriter
 from libcrap import get_now_as_str, save_json
 from libcrap.torch import set_random_seeds
 
-from dctn.eps_plus_linear import EPSesPlusLinear
+from dctn.eps_plus_linear import (
+    EPSesPlusLinear,
+    UnitEmpiricalOutputStd,
+    UnitTheoreticalOutputStd,
+)
 from dctn.evaluation import score
+from dctn import epses_composition
 from dctn.dataset_loading import get_fashionmnist_data_loaders, get_mnist_data_loaders
 from dctn.training import (
     train,
@@ -135,6 +140,12 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     "--init-epses-composition-unit-empirical-output-std/--no-init-epses-composition-unit-empirical-output-std",
     default=False,
 )
+@click.option(
+    "--dropout-p",
+    type=float,
+    default=1.0,
+    help="probability to not zero out an eps's component",
+)
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
@@ -176,19 +187,21 @@ def main(**kwargs) -> None:
             (lambda X: (X * pi / 2.0).sin() ** 2 / 2, lambda X: (X * pi / 2.0).cos() ** 2 / 2),
         )
     set_random_seeds(dev, kwargs["seed"])
-    model = EPSesPlusLinear(kwargs["epses_specs"]).to(dev)
     if kwargs["init_epses_composition_unit_empirical_output_std"]:
-        model.init_epses_composition_unit_empirical_output_std(
-            train_dl.dataset.x[:, :10880].to(dev)
-        )
+        initialization = UnitEmpiricalOutputStd(train_dl.dataset.x[:, :10880].to(dev))
+    else:
+        initialization = UnitTheoreticalOutputStd()
+    model = EPSesPlusLinear(
+        kwargs["epses_specs"], initialization, kwargs["dropout_p"], dev, torch.float32
+    )
     if kwargs["old_scaling"]:
         assert not kwargs["init_epses_composition_unit_empirical_output_std"]
         assert kwargs["epses_specs"] == ((4, 4),)
-        model[0].core.data = torch.randn_like(model[0].core) / 4
-        model[-1].weight.data = torch.rand_like(model[-1].weight) * 0.04 - 0.02
+        model.epses[0].data.copy_(torch.randn_like(model.epses[0]) / 4.0)
+        model.linear.weight.data.copy_(torch.rand_like(model.linear.weight) * 0.04 - 0.02)
     if kwargs["load_model_state"] is not None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
-    logger.info(f"{model.epses_composition_fro_norm_squared()=:.3e}")
+    logger.info(f"{epses_composition.inner_product(model.epses, model.epses)=:.4e}")
 
     eval_schedule = every_n_iters_intervals(
         (10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000)
