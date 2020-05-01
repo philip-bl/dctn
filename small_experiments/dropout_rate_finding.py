@@ -7,20 +7,20 @@ from typing import Tuple, Any
 
 import numpy as np
 
-min_lr = 1.3e-4
-max_lr = 3.3e-4
-num_experiments = 10
+min_p = 0.01
+max_p = 1.0
+num_experiments = 20
 
 seed(0)
-lrs = list(np.logspace(np.log10(min_lr), np.log10(max_lr), num=num_experiments))
-shuffle(lrs)
-assert len(lrs) >= 2
+ps = list(np.linspace(min_p, max_p, num=num_experiments))
+shuffle(ps)
+assert len(ps) >= 2
 
 common_args = (
     "python",
     expanduser("~/projects/dctn/new_runner.py"),
     "--experiments-dir",
-    "/mnt/important/experiments/2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/",
+    "/mnt/important/experiments/2_epses_plus_linear_fashionmnist/dropout_rate_finding",
     "--ds-type",
     "fashionmnist",
     "--ds-path",
@@ -31,8 +31,10 @@ common_args = (
     "128",
     "--optimizer",
     "adam",
+    "--lr",
+    "1.821e-4",
     "--patience",
-    "10",
+    "13",
     "--reg-type",
     "epses_composition",
     "--reg-coeff",
@@ -44,27 +46,27 @@ common_args = (
 )
 
 
-def make_args(lr: float) -> Tuple[str, ...]:
-    return (*common_args, "--lr", str(lr))
+def make_args(p: float) -> Tuple[str, ...]:
+    return (*common_args, "--dropout-p", str(p))
 
 
 def create_process(device: int):
-    lr = lrs.pop()
-    print(f"{lr=} popped with {device=}")
-    p = Popen(make_args(lr), env={**environ, "CUDA_VISIBLE_DEVICES": str(device)})
+    p = ps.pop()
+    print(f"{p=} popped with {device=}")
+    process = Popen(make_args(p), env={**environ, "CUDA_VISIBLE_DEVICES": str(device)})
     sleep(1.5)  # otherwise I get filename clashes
-    return p
+    return process
 
 
-ps = [create_process(i) for i in range(2)]
+processes = [create_process(i) for i in range(2)]
 
 while True:
     for i in range(2):
-        if (retcode := ps[i].poll()) is not None:
+        if (retcode := processes[i].poll()) is not None:
             if retcode != 0:
                 print("error!\n" * 50)
-            if len(lrs) != 0:
-                ps[i] = create_process(i)
-    if len(lrs) == 0 and all(p.poll() is not None for p in ps):
+            if len(processes) != 0:
+                processes[i] = create_process(i)
+    if len(ps) == 0 and all(process.poll() is not None for process in processes):
         break
     sleep(10)
