@@ -1,5 +1,5 @@
 import itertools
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Sequence
 
 import torch
 from torch import Tensor
@@ -10,7 +10,7 @@ from . import eps
 from .contraction_path_cache import contract
 
 
-def inner_product(epses1: Tuple[Tensor, ...], epses2: Tuple[Tensor, ...]) -> Tensor:
+def inner_product(epses1: Sequence[Tensor], epses2: Sequence[Tensor]) -> Tensor:
     """Calculates the inner product of epses1 and epses2. Each pair of corresponding EPSes must have the same
     kernel size, output size, and input size.
     Performs exactly what is describe in my notebook pages 6-6a."""
@@ -18,6 +18,8 @@ def inner_product(epses1: Tuple[Tensor, ...], epses2: Tuple[Tensor, ...]) -> Ten
     for eps1, eps2 in zip(epses1, epses2):
         assert eps1.shape == eps2.shape
         assert eps.is_eps(eps1)
+    epses1 = tuple(epses1)
+    epses2 = tuple(epses2)
 
     if len(epses1) == 1:  # 1) in my notebook page 6
         return eps.inner_product(epses1[0], epses2[0])

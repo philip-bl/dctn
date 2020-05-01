@@ -20,7 +20,7 @@ from . import epses_composition
 @attrs(auto_attribs=True, frozen=True)
 class UnitEmpiricalOutputStd:
     input: Tensor
-    batch_size = attrib(default=128)
+    batch_size: int = attrib(default=128)
 
 
 class UnitTheoreticalOutputStd:
@@ -43,21 +43,19 @@ class EPSesPlusLinear(nn.Module):
         assert 0.0 < p <= 1
         super().__init__()
         if isinstance(initialization, UnitEmpiricalOutputStd):
-            self.epses = nn.ParameterList(
-                epses_composition.make_epses_composition_unit_empirical_output_std(
-                    epses_specs, initialization.input, device, dtype, initialization.batch_size
-                )
+            epses = epses_composition.make_epses_composition_unit_empirical_output_std(
+                epses_specs, initialization.input, device, dtype, initialization.batch_size
             )
+
         elif isinstance(initialization, UnitTheoreticalOutputStd):
-            self.epses = nn.ParameterList(
-                epses_composition.make_epses_composition_unit_theoretical_output_std(
-                    epses_specs, 2, device, dtype
-                )
+            epses = epses_composition.make_epses_composition_unit_theoretical_output_std(
+                epses_specs, 2, device, dtype
             )
         else:
             raise ValueError(f"{initialization=} is not {Initialization}")
+        self.epses = nn.ParameterList(nn.Parameter(eps_core) for eps_core in epses)
         pre_linear_image_height = (
-            28 - (kernel_sizes := tuple(ks for ks, _ in epses_specs)) + len(kernel_sizes)
+            28 - sum(kernel_sizes := tuple(ks for ks, _ in epses_specs)) + len(kernel_sizes)
         )
         pre_linear_image_width = pre_linear_image_height
         self.linear = nn.Linear(
@@ -70,7 +68,7 @@ class EPSesPlusLinear(nn.Module):
         self.linear.weight.data.copy_(
             torch.randn_like(self.linear.weight) * self.linear.in_features ** -0.5 / 4.0
         )
-        self.register_buffer("p", torch.tensor(p, dtype, device))
+        self.register_buffer("p", torch.tensor(p, device=device, dtype=dtype))
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         if self.p < 1.0 and self.training:
@@ -86,11 +84,11 @@ class EPSesPlusLinear(nn.Module):
     def epswise_l2_regularizer(self) -> torch.Tensor:
         """Returns sum of squared frobenius norms of epses' cores and the weight of the last (linear) layer.
         Note: doesn't do anything with the bias of the last (linear) layer."""
-        return self[-1].weight.norm(p="fro") ** 2 + epses_composition.epswise_squared_fro_norm(
-            self.epses
-        )
+        return self.linear.weight.norm(
+            p="fro"
+        ) ** 2 + epses_composition.epswise_squared_fro_norm(self.epses)
 
     def epses_composition_l2_regularizer(self) -> torch.Tensor:
-        return self[-1].weight.norm(p="fro") ** 2 + epses_composition.inner_product(
+        return self.linear.weight.norm(p="fro") ** 2 + epses_composition.inner_product(
             self.epses, self.epses
         )
