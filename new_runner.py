@@ -154,8 +154,7 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
-    assert isinstance(tuple, kwargs["eval_schedule"])
-    return
+    assert isinstance(kwargs["eval_schedule"], tuple)
     os.mkdir(kwargs["output_dir"])
     save_json(
         {**kwargs, "commit": get_git_commit_info()}, join(kwargs["output_dir"], RUN_INFO_FNAME)
