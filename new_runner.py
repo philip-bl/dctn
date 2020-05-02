@@ -146,9 +146,16 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     default=1.0,
     help="probability to not zero out an eps's component",
 )
+@click.option(
+    "--eval-schedule",
+    type=eval,
+    default="((10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000))",
+)
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
+    assert isinstance(tuple, kwargs["eval_schedule"])
+    return
     os.mkdir(kwargs["output_dir"])
     save_json(
         {**kwargs, "commit": get_git_commit_info()}, join(kwargs["output_dir"], RUN_INFO_FNAME)
@@ -203,9 +210,7 @@ def main(**kwargs) -> None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
     logger.info(f"{epses_composition.inner_product(model.epses, model.epses)=:.4e}")
 
-    eval_schedule = every_n_iters_intervals(
-        (10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000)
-    )
+    eval_schedule = every_n_iters_intervals(*kwargs["eval_schedule"])
 
     def calc_regularizer(model) -> torch.Tensor:
         if kwargs["reg_type"] == "epswise":
