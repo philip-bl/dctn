@@ -1,4 +1,5 @@
 from random import shuffle, seed
+import itertools
 from os import environ
 from os.path import expanduser
 from subprocess import Popen
@@ -8,17 +9,26 @@ from typing import Tuple, Any
 import numpy as np
 
 min_p = 0.01
-max_p = 1.0
-num_experiments = 20
+max_p = 0.4
+num_experiments = 5
+additional_ps = [1.0]
+
+ps = [0.05, 0.2, 0.4]
+lrs = [1.821e-4, 9e-5, 4.5e-5]
+
+additional_p_and_lr = (1.0, 1.821e-4)
+
+ps_and_lrs = [*itertools.product(ps, lrs), additional_p_and_lr]
 
 seed(0)
-ps = list(np.linspace(min_p, max_p, num=num_experiments))
-shuffle(ps)
-assert len(ps) >= 2
+shuffle(ps_and_lrs)
+assert len(ps_and_lrs) >= 2
 
 common_args = (
     "python",
     expanduser("~/projects/dctn/new_runner.py"),
+    "--seed",
+    "1",  # NOTICE: NOT THE USUAL "0" SEED BECAUSE I SUSPECT RANDOM MEANS A LOT HERE
     "--experiments-dir",
     "/mnt/important/experiments/2_epses_plus_linear_fashionmnist/dropout_rate_finding",
     "--ds-type",
@@ -31,10 +41,10 @@ common_args = (
     "128",
     "--optimizer",
     "adam",
-    "--lr",
-    "1.821e-4",
+    "--eval-schedule",
+    "((10,1), (20,2), (40,4), (200,10), (500,50), (2000,100), (6000,300), (20000,1000), (None,2500))",
     "--patience",
-    "13",
+    "30",
     "--reg-type",
     "epses_composition",
     "--reg-coeff",
@@ -46,14 +56,14 @@ common_args = (
 )
 
 
-def make_args(p: float) -> Tuple[str, ...]:
-    return (*common_args, "--dropout-p", str(p))
+def make_args(p: float, lr: float) -> Tuple[str, ...]:
+    return (*common_args, "--dropout-p", str(p), "--lr", str(lr))
 
 
 def create_process(device: int):
-    p = ps.pop()
-    print(f"{p=} popped with {device=}")
-    process = Popen(make_args(p), env={**environ, "CUDA_VISIBLE_DEVICES": str(device)})
+    p, lr = ps_and_lrs.pop()
+    print(f"{p=:.3f}, {lr=:.3e} popped with {device=}")
+    process = Popen(make_args(p, lr), env={**environ, "CUDA_VISIBLE_DEVICES": str(device)})
     sleep(1.5)  # otherwise I get filename clashes
     return process
 
