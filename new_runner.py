@@ -151,6 +151,7 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     type=eval,
     default="((10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000))",
 )
+@click.option("--phi-multiplier", type=float)
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
@@ -178,7 +179,18 @@ def main(**kwargs) -> None:
     get_dls = {"mnist": get_mnist_data_loaders, "fashionmnist": get_fashionmnist_data_loaders}[
         kwargs["ds_type"]
     ]
-    if not kwargs["old_scaling"]:
+    if kwargs["phi_multiplier"] is not None:
+        assert not kwargs["old_scaling"]
+        train_dl, val_dl, test_dl = get_dls(
+            kwargs["ds_path"],
+            kwargs["batch_size"],
+            dev,
+            (
+                lambda X: (X * pi / 2.0).sin() ** 2 * kwargs["phi_multiplier"],
+                lambda X: (X * pi / 2.0).cos() ** 2 * kwargs["phi_multiplier"],
+            ),
+        )
+    elif not kwargs["old_scaling"]:
         train_dl, val_dl, test_dl = get_dls(
             kwargs["ds_path"],
             kwargs["batch_size"],
