@@ -69,7 +69,7 @@ def specs_to_full_specs(
 
 
 def make_epses_composition_unit_theoretical_output_std(
-    epses_specs: Tuple[Tuple[int, int]],
+    epses_specs: Tuple[Tuple[int, int], ...],
     initial_in_size: int,
     device: torch.device,
     dtype: torch.dtype,
@@ -81,7 +81,7 @@ def make_epses_composition_unit_theoretical_output_std(
 
 
 def make_epses_composition_unit_empirical_output_std(
-    epses_specs: Tuple[Tuple[int, int]],
+    epses_specs: Tuple[Tuple[int, int], ...],
     input: Tensor,
     device: torch.device,
     dtype: torch.dtype,
