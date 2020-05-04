@@ -7,6 +7,7 @@ import logging
 from math import pi
 
 import click
+from click_params import FloatListParamType
 
 from more_itertools import chunked
 
@@ -22,6 +23,7 @@ from dctn.eps_plus_linear import (
     EPSesPlusLinear,
     UnitEmpiricalOutputStd,
     UnitTheoreticalOutputStd,
+    ManuallyChosenInitialization,
 )
 from dctn.evaluation import score
 from dctn import epses_composition
@@ -36,6 +38,13 @@ from dctn.training import (
     StX,
     make_stopper_after_n_iters,
     make_stopper_on_nan_loss,
+)
+from dctn.utils import (
+    implies,
+    xor,
+    exactly_one_true,
+    ZeroCenteredNormalInitialization,
+    ZeroCenteredUniformInitialization,
 )
 from dctn.tb_logging import add_good_bad_bar, add_y_dots
 from torchvision.utils import make_grid
@@ -135,7 +144,10 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 )
 @click.option("--keep-last-models", type=int, help="how many last models to keep", default=10)
 @click.option("--breakpoint-on-nan-loss/--no-breakpoint-on-nan-loss", default=True)
-@click.option("--old-scaling/--no-old-scaling", default=False)
+@click.option(
+    "--init-epses-composition-unit-theoretical-output-std/--no-init-epses-composition-unit-theoretical-output-std",
+    default=False,
+)
 @click.option(
     "--init-epses-composition-unit-empirical-output-std/--no-init-epses-composition-unit-empirical-output-std",
     default=False,
@@ -151,11 +163,44 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     type=eval,
     default="((10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000))",
 )
-@click.option("--phi-multiplier", type=float)
+@click.option(
+    "--phi-multiplier",
+    type=float,
+    help="If this is set, will mul cos and sine by this. Otherwise will autoscale.",
+)
+@click.option(
+    "--init-epses-zero-centered-normal",
+    type=FloatListParamType(","),
+    help="""Components of epses will be initialized with indepently with normal distribution
+with zero mean and these stds (you must provide one std per eps)""",
+)
+@click.option(
+    "--init-linear-weight-zero-centered-uniform",
+    type=float,
+    help="""Components of linear.weight will be initialized i.i.d. with Uniform[-x, x],
+where x is this parameters value.""",
+)
+@click.option(
+    "--init-linear-bias-zero-centered-uniform",
+    type=float,
+    help="""Components of linear.bias will be initialized i.i.d. with Uniform[-x, x],
+where x is this parameters value.""",
+)
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
     assert isinstance(kwargs["eval_schedule"], tuple)
+    assert (
+        (kwargs["init_epses_zero_centered_normal"] is not None)
+        == (kwargs["init_linear_weight_zero_centered_uniform"] is not None)
+        == (kwargs["init_linear_bias_zero_centered_uniform"] is not None)
+    )
+    assert exactly_one_true(
+        kwargs["init_epses_composition_unit_theoretical_output_std"],
+        kwargs["init_epses_composition_unit_empirical_output_std"],
+        kwargs["init_epses_zero_centered_normal"] is not None,
+    )
+
     os.mkdir(kwargs["output_dir"])
     save_json(
         {**kwargs, "commit": get_git_commit_info()}, join(kwargs["output_dir"], RUN_INFO_FNAME)
@@ -174,49 +219,52 @@ def main(**kwargs) -> None:
     )
     logger = logging.getLogger(__name__)
     logger.info(f"{kwargs['output_dir']=}")
-
     dev = kwargs["device"]
+
+    # determine φ multiplier and create dataloaders
     get_dls = {"mnist": get_mnist_data_loaders, "fashionmnist": get_fashionmnist_data_loaders}[
         kwargs["ds_type"]
     ]
-    if kwargs["phi_multiplier"] is not None:
-        assert not kwargs["old_scaling"]
-        train_dl, val_dl, test_dl = get_dls(
-            kwargs["ds_path"],
-            kwargs["batch_size"],
-            dev,
-            (
-                lambda X: (X * pi / 2.0).sin() ** 2 * kwargs["phi_multiplier"],
-                lambda X: (X * pi / 2.0).cos() ** 2 * kwargs["phi_multiplier"],
-            ),
-        )
-    elif not kwargs["old_scaling"]:
-        train_dl, val_dl, test_dl = get_dls(
-            kwargs["ds_path"],
-            kwargs["batch_size"],
-            dev,
-            autoscale_kernel_size=kwargs["epses_specs"][0][0],
-        )
-    else:
-        train_dl, val_dl, test_dl = get_dls(
-            kwargs["ds_path"],
-            kwargs["batch_size"],
-            dev,
-            (lambda X: (X * pi / 2.0).sin() ** 2 / 2, lambda X: (X * pi / 2.0).cos() ** 2 / 2),
-        )
+    train_dl, val_dl, test_dl = get_dls(
+        kwargs["ds_path"],
+        kwargs["batch_size"],
+        dev,
+        **(
+            {
+                "φ": (
+                    lambda X: (X * pi / 2.0).sin() ** 2 * kwargs["phi_multiplier"],
+                    lambda X: (X * pi / 2.0).cos() ** 2 * kwargs["phi_multiplier"],
+                )
+            }
+            if kwargs["phi_multiplier"] is not None
+            else {"autoscale_kernel_size": kwargs["epses_specs"][0][0]}
+        ),
+    )
+
+    # create the model and initialize its parameters
     set_random_seeds(dev, kwargs["seed"])
     if kwargs["init_epses_composition_unit_empirical_output_std"]:
         initialization = UnitEmpiricalOutputStd(train_dl.dataset.x[:, :10880].to(dev))
-    else:
+    elif kwargs["init_epses_composition_unit_theoretical_output_std"]:
         initialization = UnitTheoreticalOutputStd()
+    elif kwargs["init_epses_zero_centered_normal"] is not None:
+        initialization = ManuallyChosenInitialization(
+            tuple(
+                ZeroCenteredNormalInitialization(std)
+                for std in kwargs["init_epses_zero_centered_normal"]
+            ),
+            ZeroCenteredUniformInitialization(
+                kwargs["init_linear_weight_zero_centered_uniform"]
+            ),
+            ZeroCenteredUniformInitialization(
+                kwargs["init_linear_bias_zero_centered_uniform"]
+            ),
+        )
+    else:
+        assert False
     model = EPSesPlusLinear(
         kwargs["epses_specs"], initialization, kwargs["dropout_p"], dev, torch.float32
     )
-    if kwargs["old_scaling"]:
-        assert not kwargs["init_epses_composition_unit_empirical_output_std"]
-        assert kwargs["epses_specs"] == ((4, 4),)
-        model.epses[0].data.copy_(torch.randn_like(model.epses[0]) / 4.0)
-        model.linear.weight.data.copy_(torch.rand_like(model.linear.weight) * 0.04 - 0.02)
     if kwargs["load_model_state"] is not None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
     logger.info(f"{epses_composition.inner_product(model.epses, model.epses)=:.4e}")
