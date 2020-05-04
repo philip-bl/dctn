@@ -2,7 +2,7 @@ import itertools
 import logging
 import functools
 import math
-from typing import Tuple
+from typing import Tuple, Dict
 
 import torch
 from torch import Tensor
@@ -174,3 +174,9 @@ def make_eps_unit_empirical_output_std(
         f"Initialized an EPS with empirical std = {core.std(unbiased=False)}"
     )
     return core
+
+
+def spec_to_shape(
+    kernel_size: int, in_num_channels: int, in_size: int, out_size: int
+) -> Tuple[int, ...]:
+    return (in_size,) * (in_num_channels * kernel_size ** 2) + (out_size,)
