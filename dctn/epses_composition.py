@@ -8,6 +8,12 @@ from einops import rearrange
 
 from . import eps
 from .contraction_path_cache import contract
+from .utils import (
+    OneTensorInitialization,
+    ZeroCenteredNormalInitialization,
+    ZeroCenteredUniformInitialization,
+    raise_exception,
+)
 
 
 def inner_product(epses1: Sequence[Tensor], epses2: Sequence[Tensor]) -> Tensor:
@@ -95,6 +101,27 @@ def make_epses_composition_unit_empirical_output_std(
         input = eps.transform_in_slices(eps_core, input.to(device, dtype), batch_size)
         epses.append(eps_core)
     return tuple(epses)
+
+
+def make_epses_composition_manually_chosen_inializations(
+    epses_specs: Tuple[Tuple[int, int], ...],
+    initializations: Tuple[OneTensorInitialization, ...],
+    initial_in_size: int,
+    device: torch.device,
+    dtype: torch.dtype,
+) -> Tuple[Tensor, ...]:
+    assert len(epses_specs) == len(initializations)
+    return tuple(
+        torch.randn(eps.spec_to_shape(**spec), dtype=dtype).to(device) * init.std
+        if isinstance(init, ZeroCenteredNormalInitialization)
+        else torch.rand(eps.spec_to_shape(**spec), dtype=dtype).to(device) * (2 * init.maximum)
+        - init.maximum
+        if isinstance(init, ZeroCenteredUniformInitialization)
+        else raise_exception(ValueError())
+        for spec, init in zip(
+            specs_to_full_specs(epses_specs, initial_in_size), initializations
+        )
+    )
 
 
 def contract_with_input(epses: Tuple[Tensor], input: Tensor) -> Tensor:
