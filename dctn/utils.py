@@ -1,4 +1,7 @@
-from typing import Callable
+from functools import reduce
+from typing import Callable, Tuple, Union
+
+from attr import attrs, attrib
 
 import torch
 from torch import Tensor
@@ -12,3 +15,35 @@ def transform_dataset(f: Callable[[Tensor], Tensor], x: Tensor, batch_size: int 
     return torch.cat(tuple(f(slice) for slice in torch.split(x, batch_size, dim=1))).unsqueeze(
         0
     )
+
+
+def implies(x: bool, y: bool) -> bool:
+    return not x or y
+
+
+def xor(*args: Tuple[bool]) -> bool:
+    return reduce(lambda x, y: (x and not y) or (not x and y), args, False)
+
+
+def exactly_one_true(*args: Tuple[bool]) -> bool:
+    assert all(isinstance(arg, bool) for arg in args)
+    return sum(args) == 1
+
+
+@attrs(auto_attribs=True, frozen=True)
+class ZeroCenteredNormalInitialization:
+    std: float
+
+
+@attrs(auto_attribs=True, frozen=True)
+class ZeroCenteredUniformInitialization:
+    maximum: float
+
+
+OneTensorInitialization = Union[
+    ZeroCenteredNormalInitialization, ZeroCenteredUniformInitialization
+]
+
+
+def raise_exception(exception):
+    raise exception
