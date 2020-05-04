@@ -53,7 +53,7 @@ def inner_product(epses1: Sequence[Tensor], epses2: Sequence[Tensor]) -> Tensor:
 def specs_to_full_specs(
     epses_specs: Tuple[Tuple[int, int]], initial_in_size: int
 ) -> Tuple[Dict[str, int]]:
-    """Each spec is a tuple representing kernel_size, out_size."""
+    """Each spec in `epses_specs` is a tuple representing kernel_size, out_size."""
     kernel_sizes = tuple(kernel_size for kernel_size, _ in epses_specs)
     out_sizes = tuple(out_size for _, out_size in epses_specs)
     in_sizes = (initial_in_size,) + out_sizes[:-1]
