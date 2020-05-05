@@ -1,15 +1,17 @@
 from functools import reduce
+import math
 import operator
+from logging import getLogger
 from typing import Tuple, Dict, Union
 
 from more_itertools import intersperse
 from attr import attrs, attrib
 
 import torch
+import torch.nn.functional as F
 from torch import Tensor
 import torch.nn as nn
 
-from einops.layers.torch import Rearrange
 from einops import rearrange
 
 from . import eps
@@ -20,6 +22,8 @@ from .utils import (
     ZeroCenteredUniformInitialization,
     OneTensorInitialization,
 )
+from .align import make_windows
+from .rank_one_tensor import RankOneTensorsBatch
 
 
 @attrs(auto_attribs=True, frozen=True)
@@ -136,3 +140,40 @@ class EPSesPlusLinear(nn.Module):
         return self.linear.weight.norm(p="fro") ** 2 + epses_composition.inner_product(
             self.epses, self.epses
         )
+
+    @torch.no_grad()
+    def log_intermediate_reps_stats(self, x: torch.Tensor, batch_size: int = 128) -> None:
+        logger = getLogger(f"{__name__}.{self.log_intermediate_reps_stats.__qualname__}")
+        logger.info("Logging intermediate reps stats as if self.training == False")
+
+        def log_one_tensor_stats(tensor: torch.Tensor, tensor_name: str) -> None:
+            μ = tensor.mean()
+            σ = tensor.std(unbiased=False)
+            logger.info(
+                f"{tensor_name}: {μ=:.7e}, {σ=:.7e}, {μ**2+σ**2=:.7e}, shape={tuple(tensor.shape)}"
+            )
+
+        def log_windows_stats(windows: RankOneTensorsBatch, tensor_name: str) -> None:
+            μ = windows.mean_over_batch()
+            σ = windows.std_over_batch(unbiased=False)
+            logger.info(
+                f"{tensor_name}: {μ=:.7e}, {σ=:.7e}, {μ**2+σ**2=:.7e}, "
+                f"batch_shape={windows.batch_shape}, "
+                f"num_factors={windows.array.shape[windows.factors_dim]}, "
+                f"num_coordinates_in_one_factor={windows.array.shape[windows.coordinates_dim]}"
+            )
+
+        for n, eps_core in enumerate(self.epses):
+            # log stats of the intermediate representations before contracting eps_core
+            log_one_tensor_stats(x, f"x_{n}")
+            kernel_size = math.isqrt(eps_core.ndim - 1)
+            assert kernel_size ** 2 == eps_core.ndim - 1
+            w: RankOneTensorsBatch = make_windows(x, kernel_size)
+            log_windows_stats(w, f"w_{n}")
+            x = eps.transform_in_slices(eps_core, x, batch_size)
+
+        x = rearrange(x, "() b h w q -> b (h w q)")
+        log_one_tensor_stats(x, f"x_{len(self.epses)}")
+        output_of_linear_without_bias = F.linear(x, self.linear.weight)
+        log_one_tensor_stats(output_of_linear_without_bias, "output_of_linear_without_bias")
+        log_one_tensor_stats(self.linear(x), "output_of_linear_with_bias")
