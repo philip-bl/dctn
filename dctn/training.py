@@ -1,10 +1,11 @@
-import logging
+from logging import getLogger
 from functools import wraps
 from collections import deque
 import os
 from typing import Iterator, Any, Tuple, Dict, Callable
 
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from more_itertools import last
@@ -198,7 +199,7 @@ class ValuesNotImprovingEarlyStopper:
             self.num_bad_calls += 1
         if self.num_bad_calls > self.patience:
             st_it["stop"] = True
-            logging.getLogger(__name__).info(f"Early stopping at {st_it['num_iters_done']=}")
+            getLogger(__name__).info(f"Early stopping at {st_it['num_iters_done']=}")
 
 
 def make_stopper_after_n_iters(n: int) -> Callable[[StX, StIt], None]:
@@ -212,12 +213,12 @@ def make_stopper_after_n_iters(n: int) -> Callable[[StX, StIt], None]:
 def make_stopper_on_nan_loss(dir: str, set_breakpoint: bool) -> Callable[[StX, StIt], None]:
     def stop_on_nan_loss(st_x: StX, st_it: StIt) -> None:
         if not torch.isfinite(st_it["loss"]):
-            logging.getLogger(__name__).warning("Stopping because of NaN or Inf loss")
+            getLogger(__name__).warning("Stopping because of NaN or Inf loss")
             st_it["stop"] = True
 
             subdir = os.path.join(dir, "nan_loss_stop")
             if os.path.exists(subdir):
-                logging.getLogger(__name__).error(f"{subdir=} already exists")
+                getLogger(__name__).error(f"{subdir=} already exists")
             else:
                 os.mkdir(subdir)
                 torch.save(
@@ -234,3 +235,14 @@ def make_stopper_on_nan_loss(dir: str, set_breakpoint: bool) -> Callable[[StX, S
                 breakpoint()
 
     return stop_on_nan_loss
+
+
+def log_parameters_stats(st_x: StX, st_it: StIt) -> None:
+    logger = getLogger(f"{__name__}.{log_parameters_stats.__qualname__}")
+    model: nn.Module = st_x["model"]
+    logger.info(f"After {st_it['num_iters_done']:07} iters:")
+    with torch.no_grad():
+        for name, param in model.named_parameters():
+            logger.info(
+                f"{name}: μ={param.mean():.7e}, σ={param.std(unbiased=False):.7e}, shape={tuple(param.shape)}"
+            )
