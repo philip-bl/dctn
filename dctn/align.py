@@ -4,7 +4,8 @@ from typing import Union, Tuple, Iterable
 import torch
 from torch import Tensor
 
-from dctn.pos2d import Pos2D
+from .pos2d import Pos2D
+from .rank_one_tensor import RankOneTensorsBatch
 
 
 def align_with_positions(
@@ -42,4 +43,19 @@ def align(input: Tensor, kernel_size: int) -> Iterable[Tensor]:
             Pos2D(δh, δw)
             for (δh, δw) in itertools.product(range(kernel_size), range(kernel_size))
         ),
+    )
+
+
+def make_windows(x: torch.Tensor, kernel_size: int) -> RankOneTensorsBatch:
+    """`x`: tensor of shape (num_channels, batch_size, height, width, in_quantum_size)."""
+    return RankOneTensorsBatch(
+        torch.cat(
+            tuple(
+                torch.stack(tuple(align(x_slice, kernel_size)), dim=0)
+                for x_slice in x.split(128, dim=1)
+            ),
+            dim=1,
+        ),
+        factors_dim=0,
+        coordinates_dim=4,
     )
