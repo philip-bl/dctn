@@ -24,6 +24,7 @@ from dctn.eps_plus_linear import (
     UnitEmpiricalOutputStd,
     UnitTheoreticalOutputStd,
     ManuallyChosenInitialization,
+
 )
 from dctn.evaluation import score
 from dctn import epses_composition
@@ -38,6 +39,7 @@ from dctn.training import (
     StX,
     make_stopper_after_n_iters,
     make_stopper_on_nan_loss,
+    log_parameters_stats
 )
 from dctn.utils import (
     implies,
@@ -269,6 +271,8 @@ def main(**kwargs) -> None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
     logger.info(f"{epses_composition.inner_product(model.epses, model.epses)=:.4e}")
 
+    model.log_intermediate_reps_stats(train_dl.dataset.x[:, :10880].to(dev))
+
     eval_schedule = every_n_iters_intervals(*kwargs["eval_schedule"])
 
     def calc_regularizer(model) -> torch.Tensor:
@@ -325,6 +329,7 @@ def main(**kwargs) -> None:
 
     at_iter_start = [
         evaluate_and_log,
+        eval_schedule(log_parameters_stats),
         last_models_checkpointer,
         *best_value_checkpointers,
         early_stopper,
