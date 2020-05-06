@@ -200,6 +200,12 @@ where x is this parameters value.""",
     help="""Components of linear.bias will be initialized i.i.d. with Uniform[-x, x],
 where x is this parameters value.""",
 )
+@click.option(
+    "--freeze-eps",
+    type=int,
+    multiple=True,
+    help="""The EPS with this index will be frozen and won't be trained.""",
+)
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
@@ -303,6 +309,9 @@ def main(**kwargs) -> None:
     logger.info(f"{epses_composition.inner_product(model.epses, model.epses)=:.4e}")
 
     model.log_intermediate_reps_stats(train_dl.dataset.x[:, :10880].to(dev))
+
+    for eps_index in kwargs["freeze_eps"]:
+        model.epses[eps_index].requires_grad = False
 
     eval_schedule = every_n_iters_intervals(*kwargs["eval_schedule"])
 
