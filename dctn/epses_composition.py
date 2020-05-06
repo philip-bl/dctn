@@ -12,7 +12,9 @@ from .utils import (
     OneTensorInitialization,
     ZeroCenteredNormalInitialization,
     ZeroCenteredUniformInitialization,
+    FromFileInitialization,
     raise_exception,
+    id_assert_shape_matches,
 )
 
 
@@ -117,6 +119,10 @@ def make_epses_composition_manually_chosen_inializations(
         else torch.rand(eps.spec_to_shape(**spec), dtype=dtype).to(device) * (2 * init.maximum)
         - init.maximum
         if isinstance(init, ZeroCenteredUniformInitialization)
+        else id_assert_shape_matches(
+            torch.load(init.path, device).to(dtype=dtype), eps.spec_to_shape(**spec)
+        )
+        if isinstance(init, FromFileInitialization)
         else raise_exception(ValueError())
         for spec, init in zip(
             specs_to_full_specs(epses_specs, initial_in_size), initializations

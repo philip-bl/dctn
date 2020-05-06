@@ -20,6 +20,7 @@ from . import epses_composition
 from .utils import (
     ZeroCenteredNormalInitialization,
     ZeroCenteredUniformInitialization,
+    FromFileInitialization,
     OneTensorInitialization,
 )
 from .align import make_windows
@@ -70,7 +71,6 @@ class EPSesPlusLinear(nn.Module):
                 epses_specs, 2, device, dtype
             )
         elif isinstance(initialization, ManuallyChosenInitialization):
-            # TODO change this
             epses = tuple(
                 epses_composition.make_epses_composition_manually_chosen_inializations(
                     epses_specs, initialization.epses, 2, device, dtype

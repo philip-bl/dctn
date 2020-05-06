@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Callable, Tuple, Union
+from typing import Callable, Tuple, Union, Sequence
 
 from attr import attrs, attrib
 
@@ -40,10 +40,20 @@ class ZeroCenteredUniformInitialization:
     maximum: float
 
 
+@attrs(auto_attribs=True, frozen=True)
+class FromFileInitialization:
+    path: str
+
+
 OneTensorInitialization = Union[
-    ZeroCenteredNormalInitialization, ZeroCenteredUniformInitialization
+    ZeroCenteredNormalInitialization, ZeroCenteredUniformInitialization, FromFileInitialization
 ]
 
 
 def raise_exception(exception):
     raise exception
+
+
+def id_assert_shape_matches(tensor: torch.Tensor, shape: Sequence[int]) -> torch.Tensor:
+    assert tensor.shape == tuple(shape)
+    return tensor

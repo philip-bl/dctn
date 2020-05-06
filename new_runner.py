@@ -1,4 +1,5 @@
-from typing import Tuple
+import itertools
+from typing import Tuple, List, Optional
 from subprocess import run
 import os.path
 import re
@@ -9,7 +10,7 @@ from math import pi
 import click
 from click_params import FloatListParamType
 
-from more_itertools import chunked
+from more_itertools import chunked, ilen
 
 import torch
 from torch.optim import Adam, SGD
@@ -24,7 +25,6 @@ from dctn.eps_plus_linear import (
     UnitEmpiricalOutputStd,
     UnitTheoreticalOutputStd,
     ManuallyChosenInitialization,
-
 )
 from dctn.evaluation import score
 from dctn import epses_composition
@@ -39,7 +39,7 @@ from dctn.training import (
     StX,
     make_stopper_after_n_iters,
     make_stopper_on_nan_loss,
-    log_parameters_stats
+    log_parameters_stats,
 )
 from dctn.utils import (
     implies,
@@ -47,6 +47,8 @@ from dctn.utils import (
     exactly_one_true,
     ZeroCenteredNormalInitialization,
     ZeroCenteredUniformInitialization,
+    FromFileInitialization,
+    OneTensorInitialization,
 )
 from dctn.tb_logging import add_good_bad_bar, add_y_dots
 from torchvision.utils import make_grid
@@ -171,10 +173,20 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     help="If this is set, will mul cos and sine by this. Otherwise will autoscale.",
 )
 @click.option(
-    "--init-epses-zero-centered-normal",
-    type=FloatListParamType(","),
-    help="""Components of epses will be initialized with indepently with normal distribution
-with zero mean and these stds (you must provide one std per eps)""",
+    "--init-eps-zero-centered-normal-std",
+    nargs=2,
+    type=(int, float),
+    multiple=True,
+    help="""If you pass --init-eps-zero-centered-normal 3 4e-5, the components of epses[3] will
+be initialized i.i.d with Normal(mean=0., std=4e-5).""",
+)
+@click.option(
+    "--init-eps-from-file",
+    nargs=2,
+    type=(int, click.Path(exists=True, dir_okay=False, readable=True)),
+    multiple=True,
+    help="""If you pass --init-eps-from-file 2 /path/to/file.pth, epses[2] will be loaded
+from /path/to/file.pth, which must contain just this one tensor.""",
 )
 @click.option(
     "--init-linear-weight-zero-centered-uniform",
@@ -192,15 +204,30 @@ def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
     assert isinstance(kwargs["eval_schedule"], tuple)
+
+    initialization_chosen_for_individual_epses: List[bool] = [False] * len(
+        kwargs["epses_specs"]
+    )
+
+    for eps_index, _ in itertools.chain(
+        kwargs["init_eps_zero_centered_normal_std"], kwargs["init_eps_from_file"]
+    ):
+        assert not initialization_chosen_for_individual_epses[eps_index]
+        initialization_chosen_for_individual_epses[eps_index] = True
+    assert all(initialization_chosen_for_individual_epses) or not any(
+        initialization_chosen_for_individual_epses
+    )
+    initialization_chosen_per_param = all(initialization_chosen_for_individual_epses)
+
     assert (
-        (kwargs["init_epses_zero_centered_normal"] is not None)
+        initialization_chosen_per_param
         == (kwargs["init_linear_weight_zero_centered_uniform"] is not None)
         == (kwargs["init_linear_bias_zero_centered_uniform"] is not None)
     )
     assert exactly_one_true(
         kwargs["init_epses_composition_unit_theoretical_output_std"],
         kwargs["init_epses_composition_unit_empirical_output_std"],
-        kwargs["init_epses_zero_centered_normal"] is not None,
+        initialization_chosen_per_param,
     )
 
     os.mkdir(kwargs["output_dir"])
@@ -249,12 +276,16 @@ def main(**kwargs) -> None:
         initialization = UnitEmpiricalOutputStd(train_dl.dataset.x[:, :10880].to(dev))
     elif kwargs["init_epses_composition_unit_theoretical_output_std"]:
         initialization = UnitTheoreticalOutputStd()
-    elif kwargs["init_epses_zero_centered_normal"] is not None:
+    elif initialization_chosen_per_param:
+        epses_initialization: List[Optional[OneTensorInitialization]] = [None] * len(
+            kwargs["epses_specs"]
+        )
+        for eps_index, std in kwargs["init_eps_zero_centered_normal_std"]:
+            epses_initialization[eps_index] = ZeroCenteredNormalInitialization(std)
+        for eps_index, path in kwargs["init_eps_from_file"]:
+            epses_initialization[eps_index] = FromFileInitialization(path)
         initialization = ManuallyChosenInitialization(
-            tuple(
-                ZeroCenteredNormalInitialization(std)
-                for std in kwargs["init_epses_zero_centered_normal"]
-            ),
+            tuple(epses_initialization),
             ZeroCenteredUniformInitialization(
                 kwargs["init_linear_weight_zero_centered_uniform"]
             ),
