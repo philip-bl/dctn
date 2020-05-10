@@ -1,7 +1,7 @@
 import os.path
 from typing import Tuple
 
-from bokeh.models import ColumnDataSource, Range1d
+from bokeh.models import ColumnDataSource, Range1d, Slider, RangeSlider
 from bokeh.layouts import gridplot
 from bokeh.plotting import save, output_file, figure, Figure
 
@@ -19,7 +19,7 @@ experiments_rel_dirs: Tuple[str, ...] = (
 )
 experiments_names = (
     "Very small stds",
-    "EPSes are initialized to make intermediate xs have unit std empirically",
+    "Init to make intermediate xs have std=1 empirically",
 )
 assert len(experiments_names) == len(experiments_rel_dirs)
 colors = get_distinguishable_colors(len(experiments_names))
@@ -55,8 +55,8 @@ max_mce = max(
     max(max(record.trmce for record in records) for records in all_records),
     max(max(record.vmce for record in records) for records in all_records),
 )
-trmce_range = Range1d(0.0, max_mce, bounds=(min_mce, max_mce))
-vmce_range = Range1d(0.0, max_mce, bounds=(min_mce, max_mce))
+trmce_range = Range1d(0.0, 5.0, bounds=(min_mce, max_mce))
+vmce_range = Range1d(0.0, 5.0, bounds=(min_mce, max_mce))
 
 # plot vacc by tracc
 vacc_by_tracc_plot = figure(
@@ -79,9 +79,13 @@ for experiment_name, records, color in zip(
         legend_label=experiment_name,
         line_color=color,
     )
+vacc_by_tracc_plot.legend.location = "top_left"
+vacc_by_tracc_plot.legend.click_policy = "hide"
 
 
-def plot_something_by_nitd(y_axis_label: str, y_range: Range1d, record_attr: str) -> Figure:
+def plot_something_by_nitd(
+    y_axis_label: str, y_range: Range1d, record_attr: str, legend_location: str
+) -> Figure:
     plot = figure(
         x_axis_label="number of iterations done",
         y_axis_label=y_axis_label,
@@ -96,22 +100,47 @@ def plot_something_by_nitd(y_axis_label: str, y_range: Range1d, record_attr: str
             legend_label=experiment_name,
             line_color=color,
         )
+    plot.legend.location = legend_location
+    plot.legend.click_policy = "hide"
     return plot
 
 
-vacc_by_nitd_plot = plot_something_by_nitd("val acc", vacc_range, "vacc")
-tracc_by_nitd_plot = plot_something_by_nitd("train acc", tracc_range, "tracc")
+vacc_by_nitd_plot = plot_something_by_nitd("val acc", vacc_range, "vacc", "bottom_right")
+tracc_by_nitd_plot = plot_something_by_nitd("train acc", tracc_range, "tracc", "bottom_right")
 vmce_by_nitd_plot = plot_something_by_nitd(
-    "val mean negative log likelihood", vmce_range, "vmce"
+    "val mean negative log likelihood", vmce_range, "vmce", "top_right"
 )
 trmce_by_nitd_plot = plot_something_by_nitd(
-    "train mean negative log likelihood", trmce_range, "trmce"
+    "train mean negative log likelihood", trmce_range, "trmce", "top_right"
 )
+
+
+def create_range_slider(range: Range1d, title: str, step: float) -> RangeSlider:
+    slider = RangeSlider(
+        start=range.start,
+        end=range.end,
+        step=step,
+        value=(range.bounds[0], range.bounds[1]),
+        title=title,
+    )
+    slider.js_link("value", range, "start", attr_selector=0)
+    slider.js_link("value", range, "end", attr_selector=1)
+    return slider
+
+
+vmce_slider = create_range_slider(vmce_range, "val mean negative log likelihood", 0.05)
+trmce_slider = create_range_slider(trmce_range, "train mean negative log likelihood", 0.05)
+vacc_slider = create_range_slider(vacc_range, "val acc", 0.005)
+tracc_slider = create_range_slider(tracc_range, "train acc", 0.005)
+nitd_slider = create_range_slider(nitd_range, "number of iterations done", 50)
 
 p = gridplot(
     (
         (vacc_by_tracc_plot,),
+        (vacc_slider, tracc_slider),
         (vacc_by_nitd_plot, tracc_by_nitd_plot),
+        (vmce_slider, trmce_slider),
+        (nitd_slider,),
         (vmce_by_nitd_plot, trmce_by_nitd_plot),
     )
 )
