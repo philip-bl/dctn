@@ -1,5 +1,5 @@
 import os.path
-from typing import Tuple
+from typing import Tuple, Optional
 
 from bokeh.models import ColumnDataSource, Range1d, Slider, RangeSlider
 from bokeh.layouts import gridplot
@@ -55,8 +55,8 @@ max_mce = max(
     max(max(record.trmce for record in records) for records in all_records),
     max(max(record.vmce for record in records) for records in all_records),
 )
-trmce_range = Range1d(0.0, 5.0, bounds=(min_mce, max_mce))
-vmce_range = Range1d(0.0, 5.0, bounds=(min_mce, max_mce))
+trmce_range = Range1d(0.0, max_mce, bounds=(min_mce, max_mce))
+vmce_range = Range1d(0.0, max_mce, bounds=(min_mce, max_mce))
 
 # plot vacc by tracc
 vacc_by_tracc_plot = figure(
@@ -84,7 +84,11 @@ vacc_by_tracc_plot.legend.click_policy = "hide"
 
 
 def plot_something_by_nitd(
-    y_axis_label: str, y_range: Range1d, record_attr: str, legend_location: str
+    y_axis_label: str,
+    y_range: Range1d,
+    record_attr: str,
+    legend_location: str,
+    plot_height: Optional[int] = None,
 ) -> Figure:
     plot = figure(
         x_axis_label="number of iterations done",
@@ -92,6 +96,7 @@ def plot_something_by_nitd(
         tools=tools,
         x_range=nitd_range,
         y_range=y_range,
+        plot_height=plot_height,
     )
     for experiment_name, records, color in zip(experiments_names, all_records, colors):
         plot.line(
@@ -105,13 +110,22 @@ def plot_something_by_nitd(
     return plot
 
 
-vacc_by_nitd_plot = plot_something_by_nitd("val acc", vacc_range, "vacc", "bottom_right")
-tracc_by_nitd_plot = plot_something_by_nitd("train acc", tracc_range, "tracc", "bottom_right")
+x_by_nitd_plot_height = 300
+vacc_by_nitd_plot = plot_something_by_nitd(
+    "val acc", vacc_range, "vacc", "bottom_right", x_by_nitd_plot_height
+)
+tracc_by_nitd_plot = plot_something_by_nitd(
+    "train acc", tracc_range, "tracc", "bottom_right", x_by_nitd_plot_height
+)
 vmce_by_nitd_plot = plot_something_by_nitd(
-    "val mean negative log likelihood", vmce_range, "vmce", "top_right"
+    "val mean negative log likelihood", vmce_range, "vmce", "top_right", x_by_nitd_plot_height
 )
 trmce_by_nitd_plot = plot_something_by_nitd(
-    "train mean negative log likelihood", trmce_range, "trmce", "top_right"
+    "train mean negative log likelihood",
+    trmce_range,
+    "trmce",
+    "top_right",
+    x_by_nitd_plot_height,
 )
 
 
@@ -153,6 +167,4 @@ save(p)
 # being able to disable an experiment
 # toolbar for each of the plots
 # Add tooltips in the legend maybe
-# allow scrolling even when y is bounded and is currently maxed
 # fix not being able to scroll when one of the ranges hit the bound
-# slider for vmce and trmce ranges
