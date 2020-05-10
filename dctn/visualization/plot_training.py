@@ -1,17 +1,37 @@
 import os.path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, Any
 
-from bokeh.models import ColumnDataSource, Range1d, Slider, RangeSlider
+from bokeh.models import ColumnDataSource, Range1d, Slider, RangeSlider, Div
 from bokeh.layouts import gridplot
 from bokeh.plotting import save, output_file, figure, Figure
 
-
+from libcrap import load_json
 from libcrap.visualization import get_distinguishable_colors
 
 from dctn.visualization.log_parsing import Record, load_records
 
 base_dir = "/mnt/important/experiments"
 log_rel_fname = "log.log"
+run_info_rel_fname = "run_info.txt"
+
+run_info_useless_keys = frozenset(
+    {
+        "breakpoint_on_nan_loss",
+        "commit",
+        "device",
+        "ds_path",
+        "es_train_acc",
+        "es_train_mean_ce",
+        "es_val_acc",
+        "es_val_mean_ce",
+        "experiments_dir",
+        "keep_last_models",
+        "max_num_iters",
+        "patience",
+        "tb_batches",
+        "verbosity",
+    }
+)
 
 experiments_rel_dirs: Tuple[str, ...] = (
     "eps_plus_linear_fashionmnist/replicate_90.19_vacc/2020-05-05T19:45:54_stopped_manually",
@@ -21,6 +41,23 @@ experiments_names = (
     "Very small stds",
     "Init to make intermediate xs have std=1 empirically",
 )
+
+experiments_descriptions = (
+    "The EPS was initialized using normal distribution with very small std.",
+    "The EPS was initialized using normal distribution and rescaled to have make the output of EPS have std=1.",
+)
+
+runs_infos: Dict[str, Any] = tuple(
+    {
+        k: v
+        for k, v in load_json(
+            os.path.join(base_dir, experiment_rel_dir, run_info_rel_fname)
+        ).items()
+        if k not in run_info_useless_keys
+    }
+    for experiment_rel_dir in experiments_rel_dirs
+)
+
 assert len(experiments_names) == len(experiments_rel_dirs)
 colors = get_distinguishable_colors(len(experiments_names))
 
@@ -148,9 +185,21 @@ vacc_slider = create_range_slider(vacc_range, "val acc", 0.005)
 tracc_slider = create_range_slider(tracc_range, "train acc", 0.005)
 nitd_slider = create_range_slider(nitd_range, "number of iterations done", 50)
 
+div = Div(
+    text='<ul style="list-style-type:circle;"><li>'
+    + "</li><li>".join(
+        f"<b>{name}</b>: <i>{description}</i> : {run_info}"
+        for name, description, run_info in zip(
+            experiments_names, experiments_descriptions, runs_infos
+        )
+    )
+    + "</li></ul>"
+)
+
+
 p = gridplot(
     (
-        (vacc_by_tracc_plot,),
+        (vacc_by_tracc_plot, div),
         (vacc_slider, tracc_slider),
         (vacc_by_nitd_plot, tracc_by_nitd_plot),
         (vmce_slider, trmce_slider),
@@ -160,11 +209,3 @@ p = gridplot(
 )
 
 save(p)
-
-# TODO:
-# better hover tooltips
-# legend outside of the figure
-# being able to disable an experiment
-# toolbar for each of the plots
-# Add tooltips in the legend maybe
-# fix not being able to scroll when one of the ranges hit the bound
