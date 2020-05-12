@@ -1,0 +1,2 @@
+This is very annoying. It seems that often when I make optimization more stable, I make
+validation accuracy slightly worse.

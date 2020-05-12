@@ -1,0 +1,28 @@
+Suppose $$A \in \mathbb{R}^{O \times J}$$ is a random matrix, the
+coordinates of which are sampled i.i.d. with mean=0,
+variance=$$\alpha^2$$.
+
+Suppose $$x \in \mathbb{R}^J$$ is a random vector, the coordinates of
+which are sampled i.i.d. with mean=$$\mu$$, variance=$$\sigma^2$$.
+
+Then $$\mathbb{E}[Ax] = 0, \operatorname{Var}[Ax] = J \alpha^2 (\sigma^2 + \mu^2) I$$.
+
+init_epses_composition_unit_theoretical_output_std is initialization of $A$, where I make $J
+\alpha^2 = 1$.
+In deep learning literature this is called He initialization.
+
+init_epses_composition_unit_empirical_output_std is initialization of $A$, where I first
+initialize it with standard normal distribution, then I look at empirical std of $Ax$ (where
+$x$ is the actual input of the EPS), and then I rescale $A$ to make that empirical std equal to 1.
+
+I try init_epses_composition_unit_empirical_output_std because with
+init_epses_composition_unit_theoretical_output_std I often get unlucky, and
+the actual std of intermediate representations becomes not at all close to 1 (can be magnitudes
+larger or smaller). This results in the initial negative log likelihood being very high - much
+higher than 2.302.
+
+I conjecture that:
+- Empirical std of intermediate representations is very different from 1 because the whole
+  tensor network is is a high degree (9) polynomial of the first EPS.
+- If initial negative log likelihood is very high, this might lead to
+  optimization not working well.

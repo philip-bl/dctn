@@ -1,0 +1,16 @@
+{
+    "common_description": " I try init_epses_composition_unit_empirical_output_std instead of init_epses_composition_unit_theoretical_output_std because with that I often get unlucky, and the actual std of intermediate representations becomes not at all close to 1. I think this is due to the function being a high degree polynomial.",
+    "experiments": [
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/3_4_3_6/2020-04-28T14:22:42",
+            "name": "Kernel size = 3, lr=4e-5, init_epses_composition_unit_theoretical_output_std",
+            "description": "First kernel size is 3. Initialization makes intermediate representations have unit std THEORETICALLY if input vectors of each EPS are i.i.d. (He initialization)"
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/3_4_3_6/2020-04-28T19:42:05",
+            "name": "Kernel size = 3, lr=4e-5, init_epses_composition_unit_empirical_output_std",
+            "description": "First kernel size is 3. Initialization is normal and then rescaled so as to make empirical std of intermediate representations equal to 1."
+        }
+
+    ]
+}

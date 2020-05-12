@@ -1,0 +1,55 @@
+{
+    "common_description": "Different rates of dropout. p is the probability to NOT zero-out a tensor's coordinates. Dropout is applied to components of EPS parameters, not to outputs. reg_coeff=1e-2, reg_type=epses_composition, lr=1.821e-4, init=init_epses_composition_unit_empirical_output_std. It's unclear if Lower p brings better validation accuracy. It makes training slower. Low values of p make training unstable. Training with very low p didn't work at all.",
+    "experiments": [
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-03T00:41:40_p=1_earlystopped",
+            "name": "p=1",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-02T22:57:05_p=0.89_lr=1.821e-4_stopped_by_me",
+            "name": "p=0.89",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-02T06:41:23_p=0.79_stopped_by_me",
+            "name": "p=0.79",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-01T21:05:50_p=0.68_earlystopped",
+            "name": "p=0.68",
+            "description": ""
+        },                
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-02T18:18:00_p=0.58_earlystopped",
+            "name": "p=0.58",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-02T11:05:14_p=0.48_earlystopped",
+            "name": "p=0.48",
+            "description": ""
+        },                
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-03T00:41:38_p=0.4_lr=1.821e-4_earlystopped",
+            "name": "p=0.4",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-02T11:00:13_p=0.27_earlystopped",
+            "name": "p=0.27",
+            "description": ""
+        },        
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-02T17:55:38_p=0.11_earlystopped",
+            "name": "p=0.11",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/dropout_rate_finding/2020-05-03T06:32:20_p=0.05_lr=1.821e-4_earlystopped",
+            "name": "p=0.05",
+            "description": ""
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+{
+    "common_description": "Initialization: init_epses_composition_unit_theoretical_output_std (initializing EPSes to make intermediate representations have unit std theoretically, this is also called He initialization). Regularization type: l-2 regularization of the composition of EPSes as a whole tensor network. Lr=1.11e-4. All hyperparameters except regularization coefficient are the same.",
+    "experiments": [
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/2020-04-15T19:42:27",
+            "name": "reg_coeff=0",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/adam_and_comp_reg/2020-04-27T19:16:11_earlystopped",
+            "name": "reg_coeff=1e-6",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/adam_and_comp_reg/2020-04-27T23:46:16_segfault",
+            "name": "reg_coeff=1e-4",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/adam_and_comp_reg/2020-04-27T19:13:20_earlystopped",
+            "name": "reg_coeff=1e-3",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/adam_and_comp_reg/2020-04-27T21:10:21_earlystopped",
+            "name": "reg_coeff=1e-2",
+            "description": ""
+        }
+    ]
+}

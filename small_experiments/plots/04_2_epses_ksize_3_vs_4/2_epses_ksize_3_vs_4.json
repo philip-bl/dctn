@@ -1,0 +1,26 @@
+{
+    "common_description": "Since two epses with K_1=4 overfits a lot compared to just one eps, I decided to try K_1=3.. I haven't done grid search of lr for K_1=3. So it might be that this lr is just too low, and that's why the results are not better than with K_1=4. But this discouraged me from experimenting with making kernel size smaller.",
+    "experiments": [
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/2020-04-30T00:21:04",
+            "name": "K_1=4, lr=1.8e-4, init_epses_composition_unit_empirical_output_std",
+            "description": ""
+        },        
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/2020-04-30T03:43:56",
+            "name": "K_1=4, lr=4.2e-5, init_epses_composition_unit_empirical_output_std",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/3_4_3_6/2020-04-28T14:22:42",
+            "name": "K_1=3, lr=4e-5, init_epses_composition_unit_theoretical_output_std",
+            "description": "First kernel size is 3. Initialization makes intermediate representations have unit std THEORETICALLY if input vectors of each EPS are i.i.d. (He initialization)"
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/3_4_3_6/2020-04-28T19:42:05",
+            "name": "K_1=3, lr=4e-5, init_epses_composition_unit_empirical_output_std",
+            "description": "First kernel size is 3. Initialization is normal and then rescaled so as to make empirical std of intermediate representations equal to 1."
+        }
+
+    ]
+}
