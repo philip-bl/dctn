@@ -1,0 +1,26 @@
+{
+    "common_description": "Comparison of models with 1, 2, and 3 EPSes. One of the models with 1 EPS has very small stds initialization, the initialization of others are very similar to each other - init_epses_composition_unit_{empirical,theoretical}_output_std. More EPSes require smaller learning rate, otherwise they don't converge. One of the models has l-2 regularization, but in my experience it's not important.",
+    "experiments": [
+        {
+            "rel_dir": "eps_plus_linear_fashionmnist/replicate_90.19_vacc/2020-05-05T19:45:54_stopped_manually",
+            "name": "One EPS, very small stds init, lr=3e-3",
+            "description": "EPS(K=4,Q=4), Initialized with very small stds, lr=3e-3, no l-2 regularization"
+        },
+        {
+            "rel_dir": "eps_plus_linear_fashionmnist/2020-04-28T19:52:08",
+            "name": "One EPS, lr=3e-3",
+            "description": "EPS(K=4,Q=4), init_epses_composition_unit_empirical_output_std, lr=3e-3, no l-2 regularization"
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/2020-04-16T11:05:46",
+            "name": "Two EPSes, lr=1.5e-4",
+            "description": "EPS(K=4,Q=4)+EPS(K=3,Q=6), init_epses_composition_unit_theoretical_output_std, lr=1.5e-4, no l-2 regularization"
+        },
+        {
+            "rel_dir": "3_epses_plus_linear_fashionmnist/2020-05-12T19:33:11_vacc=0.7708_manually_stopped",
+            "name": "3 EPSes, lr=1e-7",
+            "description": "EPS(K_1=4,Q_1=4)+EPS(K_2=3,Q_2=12)+EPS(K_3=2,Q_3=24), init_epses_composition_unit_empirical_output_std, lr=1e-7, reg_coeff=1e-1"
+        }
+            
+    ]
+}
