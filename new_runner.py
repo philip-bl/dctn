@@ -28,7 +28,11 @@ from dctn.eps_plus_linear import (
 )
 from dctn.evaluation import score
 from dctn import epses_composition
-from dctn.dataset_loading import get_fashionmnist_data_loaders, get_mnist_data_loaders
+from dctn.dataset_loading import (
+    get_fashionmnist_data_loaders,
+    get_mnist_data_loaders,
+    get_cifar10_28x28_grayscale_data_loaders,
+)
 from dctn.training import (
     train,
     every_n_iters_intervals,
@@ -79,7 +83,12 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 
 @click.command()
 @click.option("--experiments-dir", type=click.Path(file_okay=False), required=True)
-@click.option("--ds-type", type=click.Choice(("mnist", "fashionmnist"), case_sensitive=False))
+@click.option(
+    "--ds-type",
+    type=click.Choice(
+        ("mnist", "fashionmnist", "cifar10_28x28_grayscale"), case_sensitive=False
+    ),
+)
 @click.option("--ds-path", type=click.Path(exists=True, file_okay=False))
 @click.option("--device", type=str, default="cuda")
 @click.option("--seed", type=int, default=0)
@@ -257,9 +266,11 @@ def main(**kwargs) -> None:
     dev = kwargs["device"]
 
     # determine φ multiplier and create dataloaders
-    get_dls = {"mnist": get_mnist_data_loaders, "fashionmnist": get_fashionmnist_data_loaders}[
-        kwargs["ds_type"]
-    ]
+    get_dls = {
+        "mnist": get_mnist_data_loaders,
+        "fashionmnist": get_fashionmnist_data_loaders,
+        "cifar10_28x28_grayscale": get_cifar10_28x28_grayscale_data_loaders,
+    }[kwargs["ds_type"]]
     train_dl, val_dl, test_dl = get_dls(
         kwargs["ds_path"],
         kwargs["batch_size"],
