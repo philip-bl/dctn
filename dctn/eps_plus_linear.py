@@ -57,11 +57,14 @@ class EPSesPlusLinear(nn.Module):
         p: float,
         device: torch.device,
         dtype: torch.dtype,
+        image_size: int = 28,
     ):
         """`p` is the probability of not dropping a tensor's component."""
         assert 0.0 < p <= 1
         super().__init__()
         if isinstance(initialization, UnitEmpiricalOutputStd):
+            assert initialization.input.shape[2] == image_size
+            assert initialization.input.shape[3] == image_size
             epses = epses_composition.make_epses_composition_unit_empirical_output_std(
                 epses_specs, initialization.input, device, dtype, initialization.batch_size
             )
@@ -82,7 +85,9 @@ class EPSesPlusLinear(nn.Module):
 
         # initialize the linear layer
         pre_linear_image_height = (
-            28 - sum(kernel_sizes := tuple(ks for ks, _ in epses_specs)) + len(kernel_sizes)
+            image_size
+            - sum(kernel_sizes := tuple(ks for ks, _ in epses_specs))
+            + len(kernel_sizes)
         )
         pre_linear_image_width = pre_linear_image_height
         self.linear = nn.Linear(

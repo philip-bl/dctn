@@ -97,6 +97,8 @@ CIFAR10_NUM_TRAIN_SAMPLES = 45000
 def _to_28x28_grayscale_tensor(
     ds: torchvision.datasets.CIFAR10, save_examples_to_dir: Optional[str] = None
 ) -> torch.FloatTensor:
+    """The returned tensor has shape (dataset_size, 28, 28),
+    and all components are in range [0. 1.]"""
     x_pil_images: Tuple[Image] = tuple(to_pil_image(image) for image in ds.data)
     x_28x28: Tuple[Image] = tuple(resize(image, (28, 28)) for image in x_pil_images)
     x_28x28_grayscale: Tuple[Image] = tuple(to_grayscale(image) for image in x_28x28)
@@ -109,9 +111,15 @@ def _to_28x28_grayscale_tensor(
                     f"28x28_grayscale_{i}_{ds.classes[ds.targets[i]]}.png",
                 )
             )
-    return torch.cat(
-        tuple(to_tensor(image) for image in x_28x28_grayscale)
-    )  # (N, 28, 28); ∈ [0., 1.]
+    return torch.cat(tuple(to_tensor(image) for image in x_28x28_grayscale))
+
+
+def _to_32x32_grayscale_tensor(ds: torchvision.datasets.CIFAR10) -> torch.FloatTensor:
+    """The returned tensor has shape (dataset_size, 32, 32),
+    and all components are in range [0. 1.]"""
+    x_pil_images: Tuple[Image] = tuple(to_pil_image(image) for image in ds.data)
+    x_grayscale: Tuple[Image] = tuple(to_grayscale(image) for image in x_pil_images)
+    return torch.cat(tuple(to_tensor(image) for image in x_grayscale))
 
 
 @attrs(auto_attribs=True, frozen=True)
@@ -129,11 +137,16 @@ class DatasetAsTensors:
     indices_test: torch.LongTensor
 
 
-def load_cifar10_as_grayscale_tensors(ds_path: str) -> DatasetAsTensors:
+def load_cifar10_as_grayscale_tensors(ds_path: str, image_size: int) -> DatasetAsTensors:
+    assert image_size in (28, 32)
     ds_train_and_val = torchvision.datasets.CIFAR10(ds_path, train=True)
     x: np.ndarray = ds_train_and_val.data  # (50000, 32, 32, 3)
     y: List[int] = ds_train_and_val.targets
-    x_tensor = _to_28x28_grayscale_tensor(ds_train_and_val, ds_path)
+    x_tensor = (
+        _to_28x28_grayscale_tensor(ds_train_and_val)
+        if image_size == 28
+        else _to_32x32_grayscale_tensor(ds_train_and_val)
+    )
 
     # shuffle the training dataset
     seed(0)
@@ -147,28 +160,29 @@ def load_cifar10_as_grayscale_tensors(ds_path: str) -> DatasetAsTensors:
     y_shuffled: List[int] = np.array(y)[shuffled_indices].tolist()
 
     return DatasetAsTensors(
-        x_train=x_tensor_shuffled[:CIFAR10_NUM_TRAIN_SAMPLES],  # (45000, 28, 28)
+        x_train=x_tensor_shuffled[:CIFAR10_NUM_TRAIN_SAMPLES],  # (45000, height, width)
         y_train=torch.tensor(y_shuffled[:CIFAR10_NUM_TRAIN_SAMPLES]),
         indices_train=torch.tensor(shuffled_indices[:CIFAR10_NUM_TRAIN_SAMPLES]),
         x_val=x_tensor_shuffled[CIFAR10_NUM_TRAIN_SAMPLES:],
         y_val=torch.tensor(y_shuffled[CIFAR10_NUM_TRAIN_SAMPLES:]),
         indices_val=torch.tensor(shuffled_indices[CIFAR10_NUM_TRAIN_SAMPLES:]),
-        x_test=_to_28x28_grayscale_tensor(
-            ds_test := torchvision.datasets.CIFAR10(ds_path, train=False)
-        ),
+        x_test=(
+            _to_28x28_grayscale_tensor if image_size == 28 else _to_32x32_grayscale_tensor
+        )(ds_test := torchvision.datasets.CIFAR10(ds_path, train=False)),
         y_test=torch.tensor(ds_test.targets),
         indices_test=torch.tensor(range(len(ds_test))),
     )
 
 
-class CIFAR1028x28GrayscaleQuantumIndexedDataset(Dataset):
+class _CIFAR10GrayscaleQuantumIndexedDataset(Dataset):
     def __init__(
         self,
         root: str,
         split: str,
         φ: Tuple[Callable[[torch.FloatTensor], torch.FloatTensor], ...],
+        image_size: int,
     ):
-        tensors = load_cifar10_as_grayscale_tensors(root)
+        tensors = load_cifar10_as_grayscale_tensors(root, image_size)
         self.unmodified_x = getattr(
             tensors, f"x_{split}"
         )  # actually modified. samples × h × w
@@ -184,6 +198,16 @@ class CIFAR1028x28GrayscaleQuantumIndexedDataset(Dataset):
         self, i: int
     ) -> Tuple[torch.FloatTensor, torch.LongTensor, torch.LongTensor]:
         return self.x[:, i], self.y[i], self.indices[i]
+
+
+class CIFAR1028x28GrayscaleQuantumIndexedDataset(_CIFAR10GrayscaleQuantumIndexedDataset):
+    def __init__(self, *args):
+        super().__init__(*args, image_size=28)
+
+
+class CIFAR1032x32GrayscaleQuantumIndexedDataset(_CIFAR10GrayscaleQuantumIndexedDataset):
+    def __init__(self, *args):
+        super().__init__(*args, image_size=32)
 
 
 def collate_quantum(
@@ -206,6 +230,7 @@ def get_data_loaders(
         QuantumMNIST,
         QuantumFashionMNIST,
         CIFAR1028x28GrayscaleQuantumIndexedDataset,
+        CIFAR1032x32GrayscaleQuantumIndexedDataset,
     )
     train_ds, val_ds, test_ds = (dataset_type(root, s, φ) for s in ("train", "val", "test"))
     if autoscale_kernel_size is not None:
@@ -238,4 +263,7 @@ get_mnist_data_loaders = partial(get_data_loaders, QuantumMNIST)
 get_fashionmnist_data_loaders = partial(get_data_loaders, QuantumFashionMNIST)
 get_cifar10_28x28_grayscale_data_loaders = partial(
     get_data_loaders, CIFAR1028x28GrayscaleQuantumIndexedDataset
+)
+get_cifar10_32x32_grayscale_data_loaders = partial(
+    get_data_loaders, CIFAR1032x32GrayscaleQuantumIndexedDataset
 )

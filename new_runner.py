@@ -32,6 +32,7 @@ from dctn.dataset_loading import (
     get_fashionmnist_data_loaders,
     get_mnist_data_loaders,
     get_cifar10_28x28_grayscale_data_loaders,
+    get_cifar10_32x32_grayscale_data_loaders,
 )
 from dctn.training import (
     train,
@@ -86,7 +87,8 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option(
     "--ds-type",
     type=click.Choice(
-        ("mnist", "fashionmnist", "cifar10_28x28_grayscale"), case_sensitive=False
+        ("mnist", "fashionmnist", "cifar10_28x28_grayscale", "cifar10_32x32_grayscale"),
+        case_sensitive=False,
     ),
 )
 @click.option("--ds-path", type=click.Path(exists=True, file_okay=False))
@@ -270,6 +272,7 @@ def main(**kwargs) -> None:
         "mnist": get_mnist_data_loaders,
         "fashionmnist": get_fashionmnist_data_loaders,
         "cifar10_28x28_grayscale": get_cifar10_28x28_grayscale_data_loaders,
+        "cifar10_32x32_grayscale": get_cifar10_32x32_grayscale_data_loaders,
     }[kwargs["ds_type"]]
     train_dl, val_dl, test_dl = get_dls(
         kwargs["ds_path"],
@@ -313,7 +316,17 @@ def main(**kwargs) -> None:
     else:
         assert False
     model = EPSesPlusLinear(
-        kwargs["epses_specs"], initialization, kwargs["dropout_p"], dev, torch.float32
+        kwargs["epses_specs"],
+        initialization,
+        kwargs["dropout_p"],
+        dev,
+        torch.float32,
+        {
+            "mnist": 28,
+            "fashionmnist": 28,
+            "cifar10_28x28_grayscale": 28,
+            "cifar10_32x32_grayscale": 32,
+        }[kwargs["ds_type"]],
     )
     if kwargs["load_model_state"] is not None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
