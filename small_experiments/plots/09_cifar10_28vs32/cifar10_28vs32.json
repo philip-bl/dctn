@@ -1,0 +1,26 @@
+{
+    "common_description": "CIFAR10 grayscale. EPS(K=4,Q=4)+EPS(K=3,Q=6) everywhere. Initialization of linear = default in pytorch, i.e. Uniform[-1/sqrt(fan_in), 1/sqrt(fan_in)].",
+    "experiments": [
+
+        {
+            "rel_dir": "cifar10/28x28_grayscale/2_epses/2020-05-17T13:57:49",
+            "name": "28x28, x_0.σ=0.381, output_of_linear_without_bias.σ=6.65e-9",
+            "description": "EPS(K=4,Q=4)+EPS(K=3,Q=6)"
+        },
+        {
+            "rel_dir": "cifar10/28x28_grayscale/2_epses/2020-05-17T15:27:31",
+            "name": "28x28, x_0.σ=0.3692, output_of_linear_without_bias.σ=6.876e-11",
+            "description": "EPS(K=4,Q=4)+EPS(K=3,Q=6)"
+        },
+        {
+            "rel_dir": "cifar10/32x32_grayscale/2_epses/2020-05-17T19:48:34",
+            "name": "32x32, x_0.σ=0.3777, output_of_linear_without_bias.σ=8.013e-11",
+            "description": "EPS(K=4,Q=4)+EPS(K=3,Q=6)"
+        },
+        {
+            "rel_dir": "cifar10/32x32_grayscale/2_epses/2020-05-17T19:51:07",
+            "name": "32x32, x_0.σ=0.39, output_of_linear_without_bias.σ=7.75e-09",
+            "description": "EPS(K=4,Q=4)+EPS(K=3,Q=6)"
+        }
+    ]
+}
