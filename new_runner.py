@@ -176,7 +176,7 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option(
     "--eval-schedule",
     type=eval,
-    default="((10, 1), (100, 10), (1000, 100), (20000, 1000), (None, 10000))",
+    default="((10, 1), (100, 10), (1000, 100), (20000, 500), (None, 5000))",
 )
 @click.option(
     "--phi-multiplier",
