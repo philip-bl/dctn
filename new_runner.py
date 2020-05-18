@@ -33,6 +33,7 @@ from dctn.dataset_loading import (
     get_mnist_data_loaders,
     get_cifar10_28x28_grayscale_data_loaders,
     get_cifar10_32x32_grayscale_data_loaders,
+    get_cifar10_rgb_data_loaders,
 )
 from dctn.training import (
     train,
@@ -87,7 +88,13 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option(
     "--ds-type",
     type=click.Choice(
-        ("mnist", "fashionmnist", "cifar10_28x28_grayscale", "cifar10_32x32_grayscale"),
+        (
+            "mnist",
+            "fashionmnist",
+            "cifar10_28x28_grayscale",
+            "cifar10_32x32_grayscale",
+            "cifar10_rgb",
+        ),
         case_sensitive=False,
     ),
 )
@@ -286,20 +293,23 @@ def main(**kwargs) -> None:
         "fashionmnist": get_fashionmnist_data_loaders,
         "cifar10_28x28_grayscale": get_cifar10_28x28_grayscale_data_loaders,
         "cifar10_32x32_grayscale": get_cifar10_32x32_grayscale_data_loaders,
+        "cifar10_rgb": get_cifar10_rgb_data_loaders,
     }[kwargs["ds_type"]]
     train_dl, val_dl, test_dl = get_dls(
         kwargs["ds_path"],
         kwargs["batch_size"],
         dev,
         **(
-            {
+            {"autoscale_kernel_size": kwargs["epses_specs"][0][0]}
+            if kwargs["phi_multiplier"] is None
+            else {"ν": kwargs["phi_multiplied"]}
+            if kwargs["ds_type"] == "cifar10_rgb"
+            else {
                 "φ": (
                     lambda X: (X * pi / 2.0).sin() ** 2 * kwargs["phi_multiplier"],
                     lambda X: (X * pi / 2.0).cos() ** 2 * kwargs["phi_multiplier"],
                 )
             }
-            if kwargs["phi_multiplier"] is not None
-            else {"autoscale_kernel_size": kwargs["epses_specs"][0][0]}
         ),
     )
 
@@ -343,7 +353,9 @@ def main(**kwargs) -> None:
             "fashionmnist": 28,
             "cifar10_28x28_grayscale": 28,
             "cifar10_32x32_grayscale": 32,
+            "cifar10_rgb": 32,
         }[kwargs["ds_type"]],
+        Q_0=3 if kwargs["ds_type"] == "cifar10_rgb" else 2,
     )
     if kwargs["load_model_state"] is not None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))

@@ -26,6 +26,7 @@ from ignite.engine import Engine
 
 from .rank_one_tensor import RankOneTensorsBatch
 from .align import align
+from .utils import implies
 
 φ_cos_sin_squared_1 = (
     lambda X: 2 * (X * pi / 2.0).sin() ** 2,
@@ -174,6 +175,40 @@ def load_cifar10_as_grayscale_tensors(ds_path: str, image_size: int) -> DatasetA
     )
 
 
+def load_cifar10_as_colored_tensors(ds_path: str, colors: str = "rgb") -> DatasetAsTensors:
+    assert colors in ("rgb",)
+    ds_train_and_val = torchvision.datasets.CIFAR10(ds_path, train=True)
+    x: torch.FloatTensor = torch.tensor(ds_train_and_val.data).unsqueeze(
+        0
+    )  # (1, 50000, 32, 32, 3)
+    y: List[int] = ds_train_and_val.targets
+
+    # shuffle the training dataset
+    seed(0)
+    shuffled_indices: List[int] = shuffled(range(len(y)))
+    getLogger(f"{__name__}.{load_cifar10_as_colored_tensors.__qualname__}").info(
+        f"{hash(tuple(shuffled_indices))=}, {shuffled_indices[:10]=}"
+    )
+    # 6271394816323448769 and (25247, 49673, 27562, 2653, 16968, 33506, 31845, 26537, 19877, 31234)
+
+    x_shuffled: torch.Tensor = x[:, shuffled_indices]  # TODO stopped here
+    y_shuffled: List[int] = np.array(y)[shuffled_indices].tolist()
+
+    return DatasetAsTensors(
+        x_train=x_shuffled[:, :CIFAR10_NUM_TRAIN_SAMPLES],  # (1, 45000, height, width)
+        y_train=torch.tensor(y_shuffled[:CIFAR10_NUM_TRAIN_SAMPLES]),
+        indices_train=torch.tensor(shuffled_indices[:CIFAR10_NUM_TRAIN_SAMPLES]),
+        x_val=x_shuffled[:, CIFAR10_NUM_TRAIN_SAMPLES:],
+        y_val=torch.tensor(y_shuffled[CIFAR10_NUM_TRAIN_SAMPLES:]),
+        indices_val=torch.tensor(shuffled_indices[CIFAR10_NUM_TRAIN_SAMPLES:]),
+        x_test=torch.tensor(
+            (ds_test := torchvision.datasets.CIFAR10(ds_path, train=False)).data
+        ).unsqueeze(0),
+        y_test=torch.tensor(ds_test.targets),
+        indices_test=torch.tensor(range(len(ds_test))),
+    )
+
+
 class _CIFAR10GrayscaleQuantumIndexedDataset(Dataset):
     def __init__(
         self,
@@ -189,6 +224,22 @@ class _CIFAR10GrayscaleQuantumIndexedDataset(Dataset):
         self.y = getattr(tensors, f"y_{split}")  # shape: samples
         self.x = torch.stack(tuple(φ_i(self.unmodified_x) for φ_i in φ), dim=3).unsqueeze(0)
         # self. x has shape 1 × samples × height × width × φ, where 1 is the number of channels
+        self.indices = getattr(tensors, f"indices_{split}")
+
+    def __len__(self) -> int:
+        return len(self.y)
+
+    def __getitem__(
+        self, i: int
+    ) -> Tuple[torch.FloatTensor, torch.LongTensor, torch.LongTensor]:
+        return self.x[:, i], self.y[i], self.indices[i]
+
+
+class CIFAR10RGBIndexedDataset(Dataset):
+    def __init__(self, root: str, split: str, ν: float):
+        tensors = load_cifar10_as_colored_tensors(root, "rgb")
+        self.y = getattr(tensors, f"y_{split}")
+        self.x = getattr(tensors, f"x_{split}") * ν
         self.indices = getattr(tensors, f"indices_{split}")
 
     def __len__(self) -> int:
@@ -223,6 +274,7 @@ def get_data_loaders(
     batch_size: int,
     device: torch.device,
     φ: Tuple[Callable[[Tensor], Tensor], ...] = φ_cos_sin_squared_1,
+    ν: Optional[float] = None,
     autoscale_kernel_size: Optional[int] = None,
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """Returns train, val, and test dataloaders for `dataset_type`. Only train_dl shuffles."""
@@ -231,8 +283,20 @@ def get_data_loaders(
         QuantumFashionMNIST,
         CIFAR1028x28GrayscaleQuantumIndexedDataset,
         CIFAR1032x32GrayscaleQuantumIndexedDataset,
+        CIFAR10RGBIndexedDataset,
     )
-    train_ds, val_ds, test_ds = (dataset_type(root, s, φ) for s in ("train", "val", "test"))
+    assert implies(ν is not None, dataset_type == CIFAR10RGBIndexedDataset)
+    assert implies(autoscale_kernel_size is not None, ν is None)
+    if ν is None:
+        ν = 1.0
+    if dataset_type != CIFAR10RGBIndexedDataset:
+        train_ds, val_ds, test_ds = (
+            dataset_type(root, s, φ) for s in ("train", "val", "test")
+        )
+    else:
+        train_ds, val_ds, test_ds = (
+            dataset_type(root, s, ν) for s in ("train", "val", "test")
+        )
     if autoscale_kernel_size is not None:
         ν = calc_scaling_factor(train_ds, autoscale_kernel_size, device)
         getLogger(f"{__name__}.{get_data_loaders.__qualname__}").info(f"{ν=}")
@@ -267,3 +331,4 @@ get_cifar10_28x28_grayscale_data_loaders = partial(
 get_cifar10_32x32_grayscale_data_loaders = partial(
     get_data_loaders, CIFAR1032x32GrayscaleQuantumIndexedDataset
 )
+get_cifar10_rgb_data_loaders = partial(get_data_loaders, CIFAR10RGBIndexedDataset)
