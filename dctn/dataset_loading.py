@@ -234,11 +234,11 @@ def get_data_loaders(
     )
     train_ds, val_ds, test_ds = (dataset_type(root, s, φ) for s in ("train", "val", "test"))
     if autoscale_kernel_size is not None:
-        c = calc_scaling_factor(train_ds, autoscale_kernel_size, device)
-        getLogger(f"{__name__}.{get_data_loaders.__qualname__}").debug(f"{c=}")
-        train_ds.x *= c
-        val_ds.x *= c
-        test_ds.x *= c
+        ν = calc_scaling_factor(train_ds, autoscale_kernel_size, device)
+        getLogger(f"{__name__}.{get_data_loaders.__qualname__}").info(f"{ν=}")
+        train_ds.x *= ν
+        val_ds.x *= ν
+        test_ds.x *= ν
         if (
             dataset_type is QuantumFashionMNIST
             and autoscale_kernel_size == 4

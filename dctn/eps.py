@@ -1,5 +1,6 @@
 import itertools
 import logging
+from logging import getLogger
 import functools
 import math
 from typing import Tuple, Dict
@@ -151,6 +152,9 @@ def make_eps_unit_theoretical_output_std(
     std = (
         total_in_dim_size(kernel_size, in_num_channels, in_size) ** -0.5
     )  # preserves std during forward pass
+    getLogger(f"{__name__}.{make_eps_unit_theoretical_output_std.__qualname__}").info(
+        f"Multiplying the output of randn by {std:.30e}"
+    )
     return std * torch.randn(
         *calc_eps_shape(kernel_size, in_num_channels, in_size, out_size), dtype=dtype
     ).to(device)
@@ -169,10 +173,11 @@ def make_eps_unit_empirical_output_std(
         *(in_size,) * (kernel_size ** 2 * num_channels), out_size, dtype=dtype
     ).to(device)
     output = transform_in_slices(core, input.to(device, dtype), batch_size)
-    core /= output.std(unbiased=False)
-    logging.getLogger(__name__).info(
-        f"Initialized an EPS with empirical std = {core.std(unbiased=False)}"
-    )
+    inverse_output_std = output.std(unbiased=False) ** -1
+    logger = getLogger(f"{__name__}.{make_eps_unit_empirical_output_std.__qualname__}")
+    logger.info(f"Multiplying the output of randn by {inverse_output_std:.30e}")
+    core *= inverse_output_std
+    logger.info(f"Initialized an EPS with empirical std = {core.std(unbiased=False):.30e}")
     return core
 
 
