@@ -206,6 +206,12 @@ from /path/to/file.pth, which must contain just this one tensor.""",
 where x is this parameters value.""",
 )
 @click.option(
+    "--init-linear-weight-zero-centered-normal-std",
+    type=float,
+    help="""Components of linear.weight will be initialized i.i.d. with
+Normal(mean=0., std=param passed here).""",
+)
+@click.option(
     "--init-linear-bias-zero-centered-uniform",
     type=float,
     help="""Components of linear.bias will be initialized i.i.d. with Uniform[-x, x],
@@ -236,9 +242,16 @@ def main(**kwargs) -> None:
     )
     initialization_chosen_per_param = all(initialization_chosen_for_individual_epses)
 
+    assert implies(
+        kwargs["init_linear_weight_zero_centered_uniform"] is not None,
+        initialization_chosen_per_param,
+    )
     assert (
         initialization_chosen_per_param
-        == (kwargs["init_linear_weight_zero_centered_uniform"] is not None)
+        == xor(
+            kwargs["init_linear_weight_zero_centered_uniform"] is not None,
+            kwargs["init_linear_weight_zero_centered_normal_std"] is not None,
+        )
         == (kwargs["init_linear_bias_zero_centered_uniform"] is not None)
     )
     assert exactly_one_true(
@@ -308,6 +321,10 @@ def main(**kwargs) -> None:
             tuple(epses_initialization),
             ZeroCenteredUniformInitialization(
                 kwargs["init_linear_weight_zero_centered_uniform"]
+            )
+            if kwargs["init_linear_weight_zero_centered_uniform"] is not None
+            else ZeroCenteredNormalInitialization(
+                kwargs["init_linear_weight_zero_centered_normal_std"]
             ),
             ZeroCenteredUniformInitialization(
                 kwargs["init_linear_bias_zero_centered_uniform"]
