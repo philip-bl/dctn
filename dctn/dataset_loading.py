@@ -14,6 +14,8 @@ from PIL.Image import Image
 
 from attr import attrib, attrs
 
+from einops import rearrange
+
 import torch
 from torch import Tensor
 import torchvision.datasets
@@ -175,13 +177,30 @@ def load_cifar10_as_grayscale_tensors(ds_path: str, image_size: int) -> DatasetA
     )
 
 
-def load_cifar10_as_colored_tensors(ds_path: str, colors: str = "rgb") -> DatasetAsTensors:
-    assert colors in ("rgb",)
+def load_cifar10_as_colored_tensors(ds_path: str, colors: str) -> DatasetAsTensors:
+    assert colors in ("rgb", "YCbCr")
     ds_train_and_val = torchvision.datasets.CIFAR10(ds_path, train=True)
-    x: torch.FloatTensor = (torch.tensor(ds_train_and_val.data).float() / 255.0).unsqueeze(
+    ds_test = torchvision.datasets.CIFAR10(ds_path, train=False)
+    images_train: Tuple[Image, ...] = tuple(
+        ds_train_and_val[i][0] for i in range(len(ds_train_and_val))
+    )
+    images_test: Tuple[Image, ...] = tuple(ds_test[i][0] for i in range(len(ds_test)))
+    if colors == "YCbCr":
+        images_train = tuple(image.convert("YCbCr") for image in images_train)
+        images_test = tuple(image.convert("YCbCr") for image in images_test)
+
+    x: torch.FloatTensor = torch.stack(
+        [rearrange(to_tensor(image), "c h w -> h w c") for image in images_train]
+    ).unsqueeze(
         0
-    )  # (1, 50000, 32, 32, 3)
+    )  # 1 × 50000 × 32 × 32 × 3
     y: List[int] = ds_train_and_val.targets
+
+    x_test: torch.FloatTensor = torch.stack(
+        [rearrange(to_tensor(image), "c h w -> h w c") for image in images_test]
+    ).unsqueeze(
+        0
+    )  # 1 × 10000 × 32 × 32 × 3
 
     # shuffle the training dataset
     seed(0)
@@ -191,7 +210,7 @@ def load_cifar10_as_colored_tensors(ds_path: str, colors: str = "rgb") -> Datase
     )
     # 6271394816323448769 and (25247, 49673, 27562, 2653, 16968, 33506, 31845, 26537, 19877, 31234)
 
-    x_shuffled: torch.Tensor = x[:, shuffled_indices]  # TODO stopped here
+    x_shuffled: torch.Tensor = x[:, shuffled_indices]
     y_shuffled: List[int] = np.array(y)[shuffled_indices].tolist()
 
     return DatasetAsTensors(
@@ -201,12 +220,7 @@ def load_cifar10_as_colored_tensors(ds_path: str, colors: str = "rgb") -> Datase
         x_val=x_shuffled[:, CIFAR10_NUM_TRAIN_SAMPLES:],
         y_val=torch.tensor(y_shuffled[CIFAR10_NUM_TRAIN_SAMPLES:]),
         indices_val=torch.tensor(shuffled_indices[CIFAR10_NUM_TRAIN_SAMPLES:]),
-        x_test=(
-            torch.tensor(
-                (ds_test := torchvision.datasets.CIFAR10(ds_path, train=False)).data
-            ).float()
-            / 255.0
-        ).unsqueeze(0),
+        x_test=x_test,
         y_test=torch.tensor(ds_test.targets),
         indices_test=torch.tensor(range(len(ds_test))),
     )
