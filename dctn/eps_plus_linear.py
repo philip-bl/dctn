@@ -116,9 +116,13 @@ class EPSesPlusLinear(nn.Module):
                 param.data.copy_(new_data)
 
         else:
+            linear_weight_std = self.linear.in_features ** -0.5 / 4.0
+            logger = getLogger(f"{__name__}.{EPSesPlusLinear.__init__.__qualname__}")
             self.linear.weight.data.copy_(
-                torch.randn_like(self.linear.weight) * self.linear.in_features ** -0.5 / 4.0
+                torch.randn_like(self.linear.weight) * linear_weight_std
             )
+            logger.info(f"Initialized linear.weight as randn * {linear_weight_std:.30e}")
+            logger.info(f"Initialized linear.bias as the default pytorch initialization")
         self.linear.to(device)
 
         self.register_buffer("p", torch.tensor(p, device=device, dtype=dtype))
