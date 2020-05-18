@@ -58,6 +58,7 @@ class EPSesPlusLinear(nn.Module):
         device: torch.device,
         dtype: torch.dtype,
         image_size: int = 28,
+        Q_0: int = 2,
     ):
         """`p` is the probability of not dropping a tensor's component."""
         assert 0.0 < p <= 1
@@ -71,12 +72,12 @@ class EPSesPlusLinear(nn.Module):
 
         elif isinstance(initialization, UnitTheoreticalOutputStd):
             epses = epses_composition.make_epses_composition_unit_theoretical_output_std(
-                epses_specs, 2, device, dtype
+                epses_specs, Q_0, device, dtype
             )
         elif isinstance(initialization, ManuallyChosenInitialization):
             epses = tuple(
                 epses_composition.make_epses_composition_manually_chosen_inializations(
-                    epses_specs, initialization.epses, 2, device, dtype
+                    epses_specs, initialization.epses, Q_0, device, dtype
                 )
             )
         else:
@@ -122,7 +123,7 @@ class EPSesPlusLinear(nn.Module):
                 torch.randn_like(self.linear.weight) * linear_weight_std
             )
             logger.info(f"Initialized linear.weight as randn * {linear_weight_std:.30e}")
-            linear_bias_maximum = self.linear.in_feature ** -0.5
+            linear_bias_maximum = self.linear.in_features ** -0.5
             self.linear.bias.data.copy_(
                 torch.rand_like(self.linear.bias) * (2 * linear_bias_maximum)
                 - linear_bias_maximum
