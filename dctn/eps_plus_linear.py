@@ -122,7 +122,14 @@ class EPSesPlusLinear(nn.Module):
                 torch.randn_like(self.linear.weight) * linear_weight_std
             )
             logger.info(f"Initialized linear.weight as randn * {linear_weight_std:.30e}")
-            logger.info(f"Initialized linear.bias as the default pytorch initialization")
+            linear_bias_maximum = self.linear.in_feature ** -0.5
+            self.linear.bias.data.copy_(
+                torch.rand_like(self.linear.bias) * (2 * linear_bias_maximum)
+                - linear_bias_maximum
+            )
+            logger.info(
+                f"Initialized linear.bias from Uniform[{-linear_bias_maximum:.30e}, {linear_bias_maximum:.30e}"
+            )
         self.linear.to(device)
 
         self.register_buffer("p", torch.tensor(p, device=device, dtype=dtype))
