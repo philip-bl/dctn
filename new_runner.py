@@ -1,3 +1,4 @@
+from functools import partial
 import itertools
 from typing import Tuple, List, Optional
 from subprocess import run
@@ -33,7 +34,7 @@ from dctn.dataset_loading import (
     get_mnist_data_loaders,
     get_cifar10_28x28_grayscale_data_loaders,
     get_cifar10_32x32_grayscale_data_loaders,
-    get_cifar10_rgb_data_loaders,
+    get_cifar10_colored_data_loaders,
 )
 from dctn.training import (
     train,
@@ -94,6 +95,7 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
             "cifar10_28x28_grayscale",
             "cifar10_32x32_grayscale",
             "cifar10_rgb",
+            "cifar10_YCbCr",
         ),
         case_sensitive=False,
     ),
@@ -191,6 +193,12 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     help="If this is set, will mul cos and sine by this. Otherwise will autoscale.",
 )
 @click.option(
+    "--center-and-normalize-each-channel/--no-center-and-normalize-each-channel", default=False
+)
+@click.option(
+    "--nu-per-channel", nargs=3, type=float, help="Can be set only for multi-channel cifar10",
+)
+@click.option(
     "--init-eps-zero-centered-normal-std",
     nargs=2,
     type=(int, float),
@@ -266,6 +274,18 @@ def main(**kwargs) -> None:
         kwargs["init_epses_composition_unit_empirical_output_std"],
         initialization_chosen_per_param,
     )
+    assert implies(
+        kwargs["center_and_normalize_each_channel"],
+        kwargs["ds_type"] in ("cifar10_rgb", "cifar10_YCbCr"),
+    )
+    assert implies(
+        kwargs["nu_per_channel"] is not None,
+        kwargs["ds_type"] in ("cifar10_rgb", "cifar10_YCbCr"),
+    )
+    assert implies(
+        kwargs["phi_multiplier"] is not None,
+        kwargs["ds_type"] not in ("cifar10_rgb", "cifar10_YCbCr"),
+    )
 
     os.mkdir(kwargs["output_dir"])
     save_json(
@@ -287,30 +307,34 @@ def main(**kwargs) -> None:
     logger.info(f"{kwargs['output_dir']=}")
     dev = kwargs["device"]
 
-    # determine φ multiplier and create dataloaders
+    # determine φ multiplier or ν and create dataloaders
     get_dls = {
         "mnist": get_mnist_data_loaders,
         "fashionmnist": get_fashionmnist_data_loaders,
         "cifar10_28x28_grayscale": get_cifar10_28x28_grayscale_data_loaders,
         "cifar10_32x32_grayscale": get_cifar10_32x32_grayscale_data_loaders,
-        "cifar10_rgb": get_cifar10_rgb_data_loaders,
+        "cifar10_rgb": partial(get_cifar10_colored_data_loaders, "rgb"),
+        "cifar10_YCbCr": partial(get_cifar10_colored_data_loaders, "YCbCr"),
     }[kwargs["ds_type"]]
+    if kwargs["phi_multiplier"] is not None:
+        get_dls = partial(
+            get_dls,
+            φ=(
+                lambda X: (X * pi / 2.0).sin() ** 2 * kwargs["phi_multiplier"],
+                lambda X: (X * pi / 2.0).cos() ** 2 * kwargs["phi_multiplier"],
+            ),
+        )
+    elif kwargs["nu_per_channel"]:
+        get_dls = partial(get_dls, ν=tuple(kwargs["nu_per_channel"]))
+    else:
+        get_dls = partial(get_dls, autoscale_kernel_size=kwargs["epses_specs"][0][0])
+    if kwargs["ds_type"] in ("cifar10_rgb", "cifar10_YCbCr"):
+        get_dls = partial(
+            get_dls,
+            center_and_normalize_each_channel=kwargs["center_and_normalize_each_channel"],
+        )
     train_dl, val_dl, test_dl = get_dls(
-        kwargs["ds_path"],
-        kwargs["batch_size"],
-        dev,
-        **(
-            {"autoscale_kernel_size": kwargs["epses_specs"][0][0]}
-            if kwargs["phi_multiplier"] is None
-            else {"ν": kwargs["phi_multiplied"]}
-            if kwargs["ds_type"] == "cifar10_rgb"
-            else {
-                "φ": (
-                    lambda X: (X * pi / 2.0).sin() ** 2 * kwargs["phi_multiplier"],
-                    lambda X: (X * pi / 2.0).cos() ** 2 * kwargs["phi_multiplier"],
-                )
-            }
-        ),
+        root=kwargs["ds_path"], batch_size=kwargs["batch_size"], device=dev
     )
 
     # create the model and initialize its parameters
@@ -354,8 +378,9 @@ def main(**kwargs) -> None:
             "cifar10_28x28_grayscale": 28,
             "cifar10_32x32_grayscale": 32,
             "cifar10_rgb": 32,
+            "cifar10_YCbCr": 32,
         }[kwargs["ds_type"]],
-        Q_0=3 if kwargs["ds_type"] == "cifar10_rgb" else 2,
+        Q_0=3 if kwargs["ds_type"] in ("cifar10_rgb", "cifar10_YCbCr") else 2,
     )
     if kwargs["load_model_state"] is not None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))

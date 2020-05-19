@@ -28,7 +28,7 @@ from ignite.engine import Engine
 
 from .rank_one_tensor import RankOneTensorsBatch
 from .align import align
-from .utils import implies
+from .utils import implies, xor
 
 φ_cos_sin_squared_1 = (
     lambda X: 2 * (X * pi / 2.0).sin() ** 2,
@@ -252,11 +252,12 @@ class _CIFAR10GrayscaleQuantumIndexedDataset(Dataset):
         return self.x[:, i], self.y[i], self.indices[i]
 
 
-class CIFAR10RGBIndexedDataset(Dataset):
-    def __init__(self, root: str, split: str, ν: float):
-        tensors = load_cifar10_as_colored_tensors(root, "rgb")
+class CIFAR10ColoredIndexedDataset(Dataset):
+    def __init__(self, colors: str, root: str, split: str):
+        assert colors in ("rgb", "YCbCr")
+        tensors = load_cifar10_as_colored_tensors(root, colors)
         self.y = getattr(tensors, f"y_{split}")
-        self.x = getattr(tensors, f"x_{split}") * ν
+        self.x = getattr(tensors, f"x_{split}")
         self.indices = getattr(tensors, f"indices_{split}")
 
     def __len__(self) -> int:
@@ -291,7 +292,6 @@ def get_data_loaders(
     batch_size: int,
     device: torch.device,
     φ: Tuple[Callable[[Tensor], Tensor], ...] = φ_cos_sin_squared_1,
-    ν: Optional[float] = None,
     autoscale_kernel_size: Optional[int] = None,
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """Returns train, val, and test dataloaders for `dataset_type`. Only train_dl shuffles."""
@@ -300,20 +300,8 @@ def get_data_loaders(
         QuantumFashionMNIST,
         CIFAR1028x28GrayscaleQuantumIndexedDataset,
         CIFAR1032x32GrayscaleQuantumIndexedDataset,
-        CIFAR10RGBIndexedDataset,
     )
-    assert implies(ν is not None, dataset_type == CIFAR10RGBIndexedDataset)
-    assert implies(autoscale_kernel_size is not None, ν is None)
-    if ν is None:
-        ν = 1.0
-    if dataset_type != CIFAR10RGBIndexedDataset:
-        train_ds, val_ds, test_ds = (
-            dataset_type(root, s, φ) for s in ("train", "val", "test")
-        )
-    else:
-        train_ds, val_ds, test_ds = (
-            dataset_type(root, s, ν) for s in ("train", "val", "test")
-        )
+    train_ds, val_ds, test_ds = (dataset_type(root, s, φ) for s in ("train", "val", "test"))
     if autoscale_kernel_size is not None:
         ν = calc_scaling_factor(train_ds, autoscale_kernel_size, device)
         getLogger(f"{__name__}.{get_data_loaders.__qualname__}").info(f"{ν=}")
@@ -340,6 +328,55 @@ def get_data_loaders(
     return train_dl, val_dl, test_dl
 
 
+def get_cifar10_colored_data_loaders(
+    colors: str,
+    root: str,
+    batch_size: int,
+    device: torch.device,
+    center_and_normalize_each_channel: bool,
+    ν: Optional[Tuple[float, float, float]] = None,
+    autoscale_kernel_size: Optional[int] = None,
+) -> Tuple[DataLoader, DataLoader, DataLoader]:
+    """Returns train_ds, val_ds, and test_ds for CIFAR10 32x32 with Q_0=3. Only `train_ds` shuffles."""
+    assert colors in ("rgb", "YCbCr")
+    assert xor(autoscale_kernel_size is not None, ν is not None)
+    dses = tuple(
+        CIFAR10ColoredIndexedDataset(colors, root, split) for split in ("train", "val", "test")
+    )
+    train_ds, val_ds, test_ds = dses
+    logger = getLogger(f"{__name__}.{get_cifar10_colored_data_loaders.__qualname__}")
+    if center_and_normalize_each_channel:
+        assert train_ds.x.shape == (1, 45000, 32, 32, 3)
+        μ = train_ds.x.double().mean(dim=(0, 1, 2, 3))
+        σ = train_ds.x.double().std(dim=(0, 1, 2, 3), unbiased=False)
+        for ds in (train_ds, val_ds, test_ds):
+            ds.x -= μ
+            ds.x /= σ
+        logger.info(
+            f"In training datasets images' channels had μ={μ.tolist()}, σ={σ.tolist()}, normalized them to zero μ and unit σ"
+        )
+    if autoscale_kernel_size is not None:
+        ν_single_value: float = calc_scaling_factor(train_ds, autoscale_kernel_size, device)
+        ν = (ν_single_value, ν_single_value, ν_single_value)
+        logger.info(f"calc_scaling_factor chose {ν=}")
+    for ds in dses:
+        ds.x *= torch.tensor(ν)
+    logger.info(
+        f"After multiplying by {ν=}, train_ds.x.σ={train_ds.x.std(dim=(0,1,2,3), unbiased=False).tolist()}"
+    )
+    dl_partial = partial(
+        DataLoader,
+        batch_size=batch_size,
+        collate_fn=collate_quantum,
+        pin_memory=(device.type == "cuda"),
+    )
+    train_dl = dl_partial(dataset=train_ds, shuffle=True, drop_last=True)
+    val_dl = dl_partial(dataset=val_ds)
+    test_dl = dl_partial(dataset=test_ds)
+    torch.cuda.empty_cache()
+    return train_dl, val_dl, test_dl
+
+
 get_mnist_data_loaders = partial(get_data_loaders, QuantumMNIST)
 get_fashionmnist_data_loaders = partial(get_data_loaders, QuantumFashionMNIST)
 get_cifar10_28x28_grayscale_data_loaders = partial(
@@ -348,4 +385,3 @@ get_cifar10_28x28_grayscale_data_loaders = partial(
 get_cifar10_32x32_grayscale_data_loaders = partial(
     get_data_loaders, CIFAR1032x32GrayscaleQuantumIndexedDataset
 )
-get_cifar10_rgb_data_loaders = partial(get_data_loaders, CIFAR10RGBIndexedDataset)
