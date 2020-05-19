@@ -199,6 +199,11 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     "--nu-per-channel", nargs=3, type=float, help="Can be set only for multi-channel cifar10",
 )
 @click.option(
+    "--add-constant-channel",
+    type=float,
+    help="Can be set only for multi-channel cifar10. Adds a fourth channel filled with this value.",
+)
+@click.option(
     "--init-eps-zero-centered-normal-std",
     nargs=2,
     type=(int, float),
@@ -286,6 +291,10 @@ def main(**kwargs) -> None:
         kwargs["phi_multiplier"] is not None,
         kwargs["ds_type"] not in ("cifar10_rgb", "cifar10_YCbCr"),
     )
+    assert implies(
+        kwargs["add_constant_channel"] is not None,
+        kwargs["ds_type"] in ("cifar10_rgb", "cifar10_YCbCr"),
+    )
 
     os.mkdir(kwargs["output_dir"])
     save_json(
@@ -333,6 +342,8 @@ def main(**kwargs) -> None:
             get_dls,
             center_and_normalize_each_channel=kwargs["center_and_normalize_each_channel"],
         )
+    if kwargs["add_constant_channel"] is not None:
+        get_dls = partial(get_dls, add_constant_channel=kwargs["add_constant_channel"])
     train_dl, val_dl, test_dl = get_dls(
         root=kwargs["ds_path"], batch_size=kwargs["batch_size"], device=dev
     )
@@ -380,7 +391,11 @@ def main(**kwargs) -> None:
             "cifar10_rgb": 32,
             "cifar10_YCbCr": 32,
         }[kwargs["ds_type"]],
-        Q_0=3 if kwargs["ds_type"] in ("cifar10_rgb", "cifar10_YCbCr") else 2,
+        Q_0=4
+        if kwargs["add_constant_channel"] is not None
+        else 3
+        if kwargs["ds_type"] in ("cifar10_rgb", "cifar10_YCbCr")
+        else 2,
     )
     if kwargs["load_model_state"] is not None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))

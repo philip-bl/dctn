@@ -334,6 +334,7 @@ def get_cifar10_colored_data_loaders(
     batch_size: int,
     device: torch.device,
     center_and_normalize_each_channel: bool,
+    add_constant_channel: Optional[float] = None,
     ν: Optional[Tuple[float, float, float]] = None,
     autoscale_kernel_size: Optional[int] = None,
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
@@ -355,9 +356,20 @@ def get_cifar10_colored_data_loaders(
         logger.info(
             f"In training datasets images' channels had μ={μ.tolist()}, σ={σ.tolist()}, normalized them to zero μ and unit σ"
         )
+    if add_constant_channel is not None:
+        for ds in (train_ds, val_ds, test_ds):
+            # ds.x has shape 1 × ds_size × 32 × 32 × 3
+            ds.x = torch.cat(
+                (ds.x, add_constant_channel * torch.ones_like(ds.x[:, :, :, :, :1])), dim=4
+            )
+        logger.info(
+            f"After (maybe) centering and normalization, but before (maybe) autoscaling based on kernel size, and multiplying by ν, added a channel of with all values {add_constant_channel:.30e}"
+        )
+        if ν is not None:
+            ν = ν + (1.0,)
     if autoscale_kernel_size is not None:
         ν_single_value: float = calc_scaling_factor(train_ds, autoscale_kernel_size, device)
-        ν = (ν_single_value, ν_single_value, ν_single_value)
+        ν = (ν_single_value, ν_single_value, ν_single_value, ν_single_value)
         logger.info(f"calc_scaling_factor chose {ν=}")
     for ds in dses:
         ds.x *= torch.tensor(ν)
