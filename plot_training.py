@@ -76,7 +76,7 @@ def main(config_path: str, output_path: str):
     # output_file("one_eps_vacc_by_tracc.html")
     output_file(output_path, mode="inline")
 
-    tools = "pan,wheel_zoom,box_zoom,reset,crosshair,hover"
+    tools = "pan,wheel_zoom,box_zoom,reset,crosshair,hover,undo,redo,save"
 
     tracc_range = Range1d(bounds=(0.0, 1.0))
     vacc_range = Range1d(bounds=(0.0, 1.0))
@@ -183,7 +183,7 @@ def main(config_path: str, output_path: str):
     trmce_slider = create_range_slider(trmce_range, "train mean negative log likelihood", 0.05)
     vacc_slider = create_range_slider(vacc_range, "val acc", 0.005)
     tracc_slider = create_range_slider(tracc_range, "train acc", 0.005)
-    nitd_slider = create_range_slider(nitd_range, "number of iterations done", 50)
+    nitd_slider = create_range_slider(nitd_range, "number of iterations done", 10)
 
     div = Div(
         text=f'<p>{config["common_description"]}</p><ul style="list-style-type:circle;"><li>'
