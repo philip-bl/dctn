@@ -1,0 +1,35 @@
+{
+    "common_description": "How learning rate affects training and generalization. Here I don't show lrs for which the model failed to train at all.",
+    "experiments": [
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/2020-04-30T00:21:04",
+            "name": "lr=1.8e-4",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/2020-04-30T01:02:49",
+            "name": "lr=8.7e-5",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/2020-04-30T03:18:03",
+            "name": "6e-5",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/2020-04-30T03:43:56",
+            "name": "4.2e-5",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/2020-04-30T04:14:01",
+            "name": "2.9e-5",
+            "description": ""
+        },
+        {
+            "rel_dir": "2_epses_plus_linear_fashionmnist/making_empirical_std_one_lr_finding/2020-04-30T00:21:56",
+            "name": "lr=2e-5",
+            "description": ""
+        }
+    ]
+}

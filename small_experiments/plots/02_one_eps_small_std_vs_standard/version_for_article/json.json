@@ -1,0 +1,15 @@
+{
+    "common_description": "Models with one EPS. Comparison of training with different initializations. It's important to make initialization similar to 'very small stds' but for more EPSes. I haven't figured out yet how to do that. Remark: 'very small std' training took about 960 times longer.",
+    "experiments": [
+        {
+            "rel_dir": "eps_plus_linear_fashionmnist/replicate_90.19_vacc/2020-05-05T19:45:54_stopped_manually",
+            "name": "Small ν",
+            "description": "The EPS was initialized using normal distribution with very small std. x_0.std=2.195e-1, w_0.std=3.722e-8, eps.std=2.494e-1, x_1.std=1.69e-6, linear.weight~U[-2e-2,2e-2], (x_1@linear.weight).std=1.11e-6, linear.bias~U[-2e-2,2e-2], (x_1@linear.weight+linear.bias).std=1.142e-2"
+        },
+        {
+            "rel_dir": "eps_plus_linear_fashionmnist/2020-04-28T19:52:08",
+            "name": "Empirical unit std of intermediate representations initialization",
+            "description": "The EPS was initialized using normal distribution and rescaled to have make the output of EPS have std=1."
+        }
+    ]
+}
