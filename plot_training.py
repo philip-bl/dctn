@@ -16,8 +16,13 @@ from dctn.visualization.log_parsing import Record, load_records
 @click.command()
 @click.argument("config-path", type=click.Path(exists=True, dir_okay=False, writable=False))
 @click.argument("output-path", type=click.Path(exists=False, dir_okay=False, writable=True))
-def main(config_path: str, output_path: str):
-    base_dir = "/mnt/important/experiments"
+@click.option(
+    "--experiments-base-dir",
+    type=click.Path(exists=True, dir_okay=True, file_okay=False, writable=False),
+    default="/mnt/important/experiments",
+)
+@click.option("--big-plots/--no-big-plots", default=False)
+def main(config_path: str, output_path: str, experiments_base_dir, big_plots: bool):
     log_rel_fname = "log.log"
     run_info_rel_fname = "run_info.txt"
     run_info_useless_keys = frozenset(
@@ -49,7 +54,7 @@ def main(config_path: str, output_path: str):
         {
             k: v
             for k, v in load_json(
-                os.path.join(base_dir, experiment_rel_dir, run_info_rel_fname)
+                os.path.join(experiments_base_dir, experiment_rel_dir, run_info_rel_fname)
             ).items()
             if k not in run_info_useless_keys
         }
@@ -61,14 +66,16 @@ def main(config_path: str, output_path: str):
 
     all_increasing_tracc_records: Tuple[Tuple[Record, ...], ...] = tuple(
         load_records(
-            os.path.join(base_dir, experiment_dir, log_rel_fname), increasing_tracc=True
+            os.path.join(experiments_base_dir, experiment_dir, log_rel_fname),
+            increasing_tracc=True,
         )
         for experiment_dir in experiments_rel_dirs
     )
 
     all_records: Tuple[Tuple[Record, ...], ...] = tuple(
         load_records(
-            os.path.join(base_dir, experiment_dir, log_rel_fname), increasing_tracc=False
+            os.path.join(experiments_base_dir, experiment_dir, log_rel_fname),
+            increasing_tracc=False,
         )
         for experiment_dir in experiments_rel_dirs
     )
@@ -103,6 +110,7 @@ def main(config_path: str, output_path: str):
         tools=tools,
         x_range=tracc_range,
         y_range=vacc_range,
+        **({"plot_height": 850, "plot_width": 1400} if big_plots else {}),
     )
     vacc_by_tracc_plot.line(
         (0.0, 1.0), (0.0, 1.0), line_color="black", alpha=0.3, line_dash="dashed"
@@ -132,7 +140,11 @@ def main(config_path: str, output_path: str):
             tools=tools,
             x_range=nitd_range,
             y_range=y_range,
-            plot_height=plot_height,
+            **(
+                {"plot_height": 850, "plot_width": 1400}
+                if big_plots
+                else {"plot_height": plot_height}
+            ),
         )
         for experiment_name, records, color in zip(experiments_names, all_records, colors):
             plot.line(
@@ -196,16 +208,33 @@ def main(config_path: str, output_path: str):
         + "</li></ul>"
     )
 
-    p = gridplot(
-        (
-            (vacc_by_tracc_plot, div),
-            (vacc_slider, tracc_slider),
-            (vacc_by_nitd_plot, tracc_by_nitd_plot),
-            (vmce_slider, trmce_slider),
-            (nitd_slider,),
-            (vmce_by_nitd_plot, trmce_by_nitd_plot),
+    if big_plots:
+        p = gridplot(
+            (
+                (vacc_by_tracc_plot,),
+                (div,),
+                (vacc_slider,),
+                (tracc_slider,),
+                (vacc_by_nitd_plot,),
+                (tracc_by_nitd_plot,),
+                (vmce_slider,),
+                (trmce_slider,),
+                (nitd_slider,),
+                (vmce_by_nitd_plot,),
+                (trmce_by_nitd_plot,),
+            )
         )
-    )
+    else:
+        p = gridplot(
+            (
+                (vacc_by_tracc_plot, div),
+                (vacc_slider, tracc_slider),
+                (vacc_by_nitd_plot, tracc_by_nitd_plot),
+                (vmce_slider, trmce_slider),
+                (nitd_slider,),
+                (vmce_by_nitd_plot, trmce_by_nitd_plot),
+            )
+        )
 
     save(p)
 
