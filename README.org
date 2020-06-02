@@ -1,5 +1,10 @@
 * Deep convolutional tensor network
 
+** What is this?
+
+This is the code I used to perform experiments in
+[[https://arxiv.org/abs/2005.14506][Deep convolutional tensor network (arxiv:2005.14506)]].
+
 ** How to run an experiment
 
 The main entry point is [[./new_runner.py]]. To see help about its arguments, run
@@ -22,6 +27,15 @@ $ PYTHONPATH=. python new_runner.py \
   --init-epses-composition-unit-empirical-output-std \
   --lr 1.11e-4
 #+end_src
+
+The flag =--init-epses-composition-unit-empirical-output-std= turns on
+"empirical unit std of intermediate representations initialization", as it's called in the
+article. You can pass the flag =--init-epses-composition-unit-theoretical-output-std= instead
+to use /He initialization/.
+
+The code base is full of old code which I don't use anymore. Unfortunately, I don't have time
+to clean it up for public use. So I suggest you look at [[./new_runner.py]] and at code it uses,
+but ignore code it doesn't use.
 
 ** How to run tests in parallel
 
