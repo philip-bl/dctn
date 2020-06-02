@@ -171,29 +171,35 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
 @click.option(
     "--init-epses-composition-unit-theoretical-output-std/--no-init-epses-composition-unit-theoretical-output-std",
     default=False,
+    help="He initialization",
 )
 @click.option(
     "--init-epses-composition-unit-empirical-output-std/--no-init-epses-composition-unit-empirical-output-std",
     default=False,
+    help="'empirical unit std of intermediate representations initialization', as it's called in the article",
 )
 @click.option(
     "--dropout-p",
     type=float,
     default=1.0,
-    help="probability to not zero out an eps's component",
+    help="Probability to not zero out an eps's component. If 1.0, the model doesn't use dropout",
 )
 @click.option(
     "--eval-schedule",
     type=eval,
     default="((10, 1), (100, 10), (1000, 100), (20000, 500), (None, 5000))",
+    help="Schedule - how many iterations to wait between evaluations on val dataset.",
 )
 @click.option(
     "--phi-multiplier",
     type=float,
-    help="If this is set, will mul cos and sine by this. Otherwise will autoscale.",
+    help="""If this is set, will multiply cos squared and sine squared by this.
+In the article, this is called ν.""",
 )
 @click.option(
-    "--center-and-normalize-each-channel/--no-center-and-normalize-each-channel", default=False
+    "--center-and-normalize-each-channel/--no-center-and-normalize-each-channel",
+    default=False,
+    help="For colored datasets, e.g. CIFAR10, normalize each channel to μ=0, σ=1.",
 )
 @click.option(
     "--nu-per-channel", nargs=3, type=float, help="Can be set only for multi-channel cifar10",
@@ -208,8 +214,10 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     nargs=2,
     type=(int, float),
     multiple=True,
-    help="""If you pass --init-eps-zero-centered-normal 3 4e-5, the components of epses[3] will
-be initialized i.i.d with Normal(mean=0., std=4e-5).""",
+    help="""An option for choosing with what standard deviation the EPS with the chosen
+index will be initialized.
+For example, if you pass --init-eps-zero-centered-normal 3 4e-5,
+the components of epses[3] will be initialized i.i.d with Normal(mean=0., std=4e-5).""",
 )
 @click.option(
     "--init-eps-from-file",
