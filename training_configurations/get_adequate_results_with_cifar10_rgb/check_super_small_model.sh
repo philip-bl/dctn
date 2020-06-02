@@ -1,0 +1,12 @@
+CUDA_VISIBLE_DEVICES=0 PYTHONPATH=~/projects/dctn python ~/projects/dctn/new_runner.py \
+                    --experiments-dir /tmp/runner \
+                    --ds-type cifar10_ycbcr \
+                    --ds-path /mnt/hdd_1tb/datasets/cifar10 \
+                    --epses-specs '(3,6)' \
+                    --batch-size 128 \
+                    --optimizer adam \
+                    --reg-type epses_composition --reg-coeff 1e-8 \
+                    --init-epses-composition-unit-empirical-output-std \
+                    --lr 5e-4 \
+                    --center-and-normalize-each-channel \
+                    --add-constant-channel 1.
