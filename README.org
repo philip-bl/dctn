@@ -11,6 +11,7 @@ The main entry point is [[./new_runner.py]]. To see help about its arguments, ru
 #+begin_src
 PYTHONPATH=. python new_runner.py --help
 #+end_src
+or read all the decorators of =main= function in [[./new_runner.py]].
 
 An example of how to run training is
 
