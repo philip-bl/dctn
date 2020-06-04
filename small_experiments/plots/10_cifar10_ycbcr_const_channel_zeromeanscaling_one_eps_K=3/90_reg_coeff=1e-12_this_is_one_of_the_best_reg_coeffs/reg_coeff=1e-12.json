@@ -1,0 +1,45 @@
+{
+  "common_description": "{'add_constant_channel': 1.0,\n'batch_size': 128,\n'breakpoint_on_nan_loss': False,\n'center_and_normalize_each_channel': True,\n'device': 'cuda',\n'dropout_p': 1.0,\n'ds_path': '/mnt/hdd_1tb/datasets/cifar10',\n'ds_type': 'cifar10_YCbCr',\n'epses_specs': [[3, 6]],\n'es_train_acc': False,\n'es_train_mean_ce': False,\n'es_val_acc': True,\n'es_val_mean_ce': True,\n'eval_schedule': [[10, 2],\n                 [20, 3],\n                 [40, 8],\n                 [200, 20],\n                 [500, 100],\n                 [2000, 200],\n                 [6000, 500],\n                 [None, 2000]],\n'experiments_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel',\n'freeze_eps': [],\n'init_eps_from_file': [],\n'init_eps_zero_centered_normal_std': [],\n'init_epses_composition_unit_empirical_output_std': True,\n'init_epses_composition_unit_theoretical_output_std': False,\n'init_linear_bias_zero_centered_uniform': None,\n'init_linear_weight_zero_centered_normal_std': None,\n'init_linear_weight_zero_centered_uniform': None,\n'keep_last_models': 10,\n'load_model_state': None,\n'max_num_iters': 300000,\n'nu_per_channel': [],\n'optimizer': 'adam',\n'patience': 60,\n'phi_multiplier': None,\n'reg_coeff': 1e-12,\n'reg_type': 'epses_composition',\n'tb_batches': False,\n'verbosity': 20,\n'wd': 0.0}",
+  "experiments": [
+    {
+      "description": "{'commit': '85829ff1476eb46eb70c8374e7de4bc64b545cd1 Add the LICENSE', 'lr': 2.448436746822229e-06, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel/2020-06-01T07:14:34', 'seed': 20836}",
+      "name": "{'lr': 2.448436746822229e-06}",
+      "rel_dir": "2020-06-01T07:14:34"
+    },
+    {
+      "description": "{'commit': '85829ff1476eb46eb70c8374e7de4bc64b545cd1 Add the LICENSE', 'lr': 1.4677992676220705e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel/2020-05-30T17:11:53', 'seed': 1479}",
+      "name": "{'lr': 1.4677992676220705e-05}",
+      "rel_dir": "2020-05-30T17:11:53"
+    },
+    {
+      "description": "{'commit': '0e31dd5261bf3e41463903ae1de9851f78436d36 Add --add-constant-channel option for colored cifar10', 'lr': 1e-06, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel/2020-05-24T20:50:36', 'seed': 30796}",
+      "name": "{'lr': 1e-06}",
+      "rel_dir": "2020-05-24T20:50:36"
+    },
+    {
+      "description": "{'commit': '85829ff1476eb46eb70c8374e7de4bc64b545cd1 Add the LICENSE', 'lr': 0.00021544346900318845, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel/2020-05-28T11:30:41', 'seed': 3400}",
+      "name": "{'lr': 0.00021544346900318845}",
+      "rel_dir": "2020-05-28T11:30:41"
+    },
+    {
+      "description": "{'commit': 'd6579ab6ba7079f9a8346588aa3449cb80270d6e Add pre publishing test evaluation scripts', 'lr': 0.001291549665014884, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel/2020-05-25T06:32:25', 'seed': 46781}",
+      "name": "{'lr': 0.001291549665014884}",
+      "rel_dir": "2020-05-25T06:32:25"
+    },
+    {
+      "description": "{'commit': '85829ff1476eb46eb70c8374e7de4bc64b545cd1 Add the LICENSE', 'lr': 5.994842503189409e-06, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel/2020-05-28T18:57:26', 'seed': 8050}",
+      "name": "{'lr': 5.994842503189409e-06}",
+      "rel_dir": "2020-05-28T18:57:26"
+    },
+    {
+      "description": "{'commit': 'ce355323f9fdf2d1785a046bf91a8c8745f20932 Improve plot_training.py slightly', 'lr': 3.5938136638046256e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel/2020-05-26T01:13:55', 'seed': 27643}",
+      "name": "{'lr': 3.5938136638046256e-05}",
+      "rel_dir": "2020-05-26T01:13:55"
+    },
+    {
+      "description": "{'commit': '0e31dd5261bf3e41463903ae1de9851f78436d36 Add --add-constant-channel option for colored cifar10', 'lr': 8.799225435691074e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel/2020-05-21T21:20:41', 'seed': 16824}",
+      "name": "{'lr': 8.799225435691074e-05}",
+      "rel_dir": "2020-05-21T21:20:41"
+    }
+  ]
+}

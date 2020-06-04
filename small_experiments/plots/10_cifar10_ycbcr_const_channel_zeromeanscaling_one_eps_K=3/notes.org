@@ -1,0 +1,37 @@
+This is my analysis of the results of learning rate and regularization coefficient (called λ in
+the article) gridsearch
+on CIFAR10 YCbCr with one EPS(K=3,Q=6). I limited max number of iterations to 300000, so some
+experiments haven't reached peak validation accuracy. The script to run the gridsearch is
+[[file:~/projects/dctn/training_configurations/get_adequate_results_with_cifar10_rgb/lr_gridsearch.py]].
+
+How to look at these results: look through subdirectories in the directory of this file. Look
+through them in order according to their numbers lexicographically. You won't be able too look
+at html plots on github, you need to download them to your computer.
+
+The baseline is simply linear regression which gets 45.474% train accuracy and 41.73%
+validation accuracy. Unfortunately, adding one EPS barely improves this result. I don't know
+how much training accuracy I can achieve, but it's at least 60% (I earlystopped). The best
+validation accuracy is 43.3%, which is not good at all. Note that all these experiments are
+worse than about 50% val accuracy I got with grayscale CIFAR10 and MUCH WORSE than state of the
+art results and MUCH WORSE than mnist and fashionmnist results.
+
+- [[./02_random_25_experiments_on_one_plot]] shows randomly chosen 25 experiments all on one
+  plot. You can see some of the best experiments there and you can see how, for some unknown
+  reason, very high learning rate causes a lot of overfitting.
+- [[./05_with_reg_coeff=1_training_doesnt_go_anywhere]] - I start looking at how regularization
+  coefficient affects everything. With very high coefficient 1 training doesn't go anywhere -
+  both train and val accuracy get capped at about 16% and don't get higher. So λ=1 is too
+  large. Same (but slightly higher accuracy) for λ=4.64e-2 in [[./10_reg_coeff=0.0464_causes_underfit]].
+- [[./20_reg_coeff=2.15e-3_causes_too_slow_training_or_underfit]] - with λ=2.15e-3, either training
+  is going too slowly, or the model is underfitting a lot like in experiments with larger λ.
+- [[./30_reg_coeff=1e-4_causes_overfit_val_acc=0.4_but_not_sure]] - with λa=1e-4, either it
+  overfits much more than with very small λ, or something else happens. Anyway, I get bad
+  validation accuracy during 300000 iterations.
+- [[./40_best_experiments]] - here you can see all the best experiments (with val accuracy ≥
+  43%). They all have very small λ and lr of magnitude 1e-5 - 1e-4.
+- [[./50_lr=1.47e-5_this_is_the_best_lr]] - here I take the best lr, which is λ=1.47e-5, and look
+  at results with different regularization coefficients λ. It seems that λ≥1e-4 is too large,
+  but for λ≤1e-7 the exact value doesn't matter and results are the same.
+- [[./90_reg_coeff=1e-12_this_is_one_of_the_best_reg_coeffs]] - here I take the smallest
+  regularization coefficient λ=1e-12 and look at results with different learning rates. See
+  notes in [[./90_reg_coeff=1e-12_this_is_one_of_the_best_reg_coeffs/notes.org]].

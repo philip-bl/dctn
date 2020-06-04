@@ -1,0 +1,9 @@
+As I've determined earlier, in this setup regularization coefficient above smaller than 1e-7 is
+the best - it leads to less overfitting. So here I take regularization coefficient 1e-12 and
+look how learning rate affects training.
+
+It seems, lr=1.47e-5 is the best and lr=8.8e-5 is ok too. Smaller lrs train too slowly, but I can't say anything about
+their overfitting. 
+
+lrs 2.15e-4 and 1.3e-3 are too large. I know this because their training is very unstable. But
+more importantly, and very surprisingly, they overfit a lot. I don't know why this is so.
