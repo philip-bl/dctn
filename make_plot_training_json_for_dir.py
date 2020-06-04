@@ -1,14 +1,25 @@
+import os
 import os.path
-from typing import Tuple, Optional, Dict, Any, List
+from typing import Tuple, Optional, Dict, Any, List, Iterable
 from functools import reduce
+from itertools import chain
 from pprint import pformat
 
 
 import click
 
-from libcrap import load_json, traverse_files, save_json, shuffled
+from libcrap import load_json, save_json, shuffled
 
 import plot_training
+
+
+def traverse_files(source_dir: str) -> Iterable[str]:
+    """Finds all files in source_dir and its subdirectories recursively
+    and returns an iterable containing their filenames (with full paths)."""
+    return chain.from_iterable(
+        (os.path.join(directory, file) for file in files)
+        for directory, subdirs, files in os.walk(source_dir, followlinks=True)
+    )
 
 
 @click.command()
@@ -69,3 +80,7 @@ def main(
         ],
     }
     save_json(json_struct, output_json_path)
+
+
+if __name__ == "__main__":
+    main()
