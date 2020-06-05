@@ -8,13 +8,12 @@ from typing import Tuple, Any
 
 import numpy as np
 
-num_points = 10
-lrs = list(str(x) for x in np.logspace(-6, -2.5, num_points))
-reg_coeffs = list(str(x) for x in np.logspace(-12, 0, num_points))
+num_points = 7
+lrs = list(str(x) for x in np.logspace(-5.5, -2.5, num_points))
+epses_specs = ["(2,6)", "(2,12)", "(2,24)"]
 
 configs = [
-    {"--lr": lr, "--reg-coeff": reg_coeff}
-    for lr, reg_coeff in itertools.product(lrs, reg_coeffs)
+    {"--lr": lr, "--epses-specs": spec} for lr, spec in itertools.product(lrs, epses_specs)
 ]
 
 
@@ -24,13 +23,11 @@ common_args = (
     "python",
     expanduser("~/projects/dctn/new_runner.py"),
     "--experiments-dir",
-    "/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel",
+    "/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch",
     "--ds-type",
     "cifar10_ycbcr",
     "--ds-path",
     "/mnt/hdd_1tb/datasets/cifar10",
-    "--epses-specs",
-    "(3,6)",
     "--batch-size",
     "128",
     "--optimizer",
@@ -41,12 +38,14 @@ common_args = (
     "60",
     "--reg-type",
     "epses_composition",
+    "--reg-coeff",
+    "1e-12",
     "--no-es-train-acc",
     "--no-es-train-mean-ce",
     "--no-breakpoint-on-nan-loss",
     "--init-epses-composition-unit-empirical-output-std",
     "--max-num-iters",
-    "300000",
+    "600000",
     "--center-and-normalize-each-channel",
     "--add-constant-channel",
     "1.",
