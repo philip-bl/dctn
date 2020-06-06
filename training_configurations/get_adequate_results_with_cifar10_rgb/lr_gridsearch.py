@@ -9,8 +9,8 @@ from typing import Tuple, Any
 import numpy as np
 
 num_points = 7
-lrs = list(str(x) for x in np.logspace(-5.5, -2.5, num_points))
-epses_specs = ["(2,6)", "(2,12)", "(2,24)"]
+lrs = list(str(x) for x in np.logspace(-8, -2.5, num_points))
+epses_specs = ["(2,23),(2,24)", "(2,12),(2,24)", "(2,6),(2,24)"]
 
 configs = [
     {"--lr": lr, "--epses-specs": spec} for lr, spec in itertools.product(lrs, epses_specs)
@@ -23,13 +23,13 @@ common_args = (
     "python",
     expanduser("~/projects/dctn/new_runner.py"),
     "--experiments-dir",
-    "/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch",
+    "/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch",
     "--ds-type",
     "cifar10_ycbcr",
     "--ds-path",
     "/mnt/hdd_1tb/datasets/cifar10",
     "--batch-size",
-    "128",
+    "64",
     "--optimizer",
     "adam",
     "--eval-schedule",
@@ -44,11 +44,15 @@ common_args = (
     "--no-es-train-mean-ce",
     "--no-breakpoint-on-nan-loss",
     "--init-epses-composition-unit-empirical-output-std",
+    "--init-epses-composition-unit-empirical-output-std-subset-size",
+    "1024",
     "--max-num-iters",
     "600000",
     "--center-and-normalize-each-channel",
     "--add-constant-channel",
     "1.",
+    "--log-intermediate-reps-stats-batch-size",
+    "32",
 )
 
 
