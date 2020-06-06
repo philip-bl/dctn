@@ -57,3 +57,34 @@ the filenames tell you what this is about. Sometimes the HTML files containing t
 contain descriptions of what the plots show. Also, in HTML files you can see parameters passed
 to [[./new_runner.py]], which contain hyperparameters. All this is very raw and probably not very
 readable, sorry about that. I made them primarily for myself.
+
+** Notes on DCTN and CIFAR10 (from <2020-06-06>)
+
+Recently I've been trying DCTN on CIFAR10. But it overfits really bad. The observations listed
+below strongly suggest that DCTN is bad for CIFAR10 unless I think of some new tricks.
+
+*** Baseline: linear classifier
+
+A linear multinomial classifier gets 41.73% validation accuracy and 45.474% train accuracy (I did grid search using sklearn).
+
+*** DCTN using YCbCr
+
+I interpret the three channels YCbCr as the quantum dimension, normalize them (μ=0,σ=1) and add a constant channel of ones. I get:
+
+- EPS(K=3,Q=6)+linear - 43.3% val accuracy (gridsearch of lr and regularization coefficient). This model can achieve at least 60% train accuracy, don't know about more than this, because I stopped training. Best result was with very small regularization coefficient λ=1e-12. Having it between 1e-3 and 1e-4 made the model overfit more, which is surprising. Also, for some reason, high learning rate (≥ 3e-4), which led to unstable training, increased overfitting.
+- EPS(K=2,Q=24)+linear - best val acc (lr grid search) is 50.98% with lr=3.16e-4.
+- EPS(K=2,Q=12)+linear - best val acc (lr grid search) is 49.4%. Best lrs are 1e-3 and 3.16e-4. lr=3.16e-3 had unstable training and (surprisingly) overfitted a lot.
+- EPS(K=2,Q=6)+linear - best val acc is 48.3% with lr=1e-3.
+
+So, kernel size K=2 is better than K=3, probably because less parameters, hence less
+overfitting. Also, with K=2, larger quantum dimension Q is better than small.
+
+See notes and plots in
+[[./small_experiments/plots/10_cifar10_ycbcr_const_channel_zeromeanscaling_one_eps_K=3/notes.org]] and [[./small_experiments/plots/11_cifar10_ycbcr_one_eps_K=2_gridsearch/01_notes.org]].
+
+*** DCTN using grayscale CIFAR10
+
+- EPS(K=4,Q=4)+linear gets 49.4% val accuracy, I downscale CIFAR10 to 28x28. I use initialization and multiplier ν (used in the preprocessing function φ) analagous to my best result on FashionMNIST.
+- EPS(K=4,Q=4)+EPS(K=3,Q=6)+linear gets 54.8% val accuracy. Here I use 32x32. I use initialization analagous to my best result on FashionMNIST but choose ν a little smaller. Here at least 98.4% train accuracy can be achieved.
+
+See notes and plots in [[./small_experiments/plots/08_cifar10/]] and [[./small_experiments/plots/09_cifar10_28vs32/]].
