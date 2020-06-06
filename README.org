@@ -87,4 +87,4 @@ See notes and plots in
 - EPS(K=4,Q=4)+linear gets 49.4% val accuracy, I downscale CIFAR10 to 28x28. I use initialization and multiplier ν (used in the preprocessing function φ) analagous to my best result on FashionMNIST.
 - EPS(K=4,Q=4)+EPS(K=3,Q=6)+linear gets 54.8% val accuracy. Here I use 32x32. I use initialization analagous to my best result on FashionMNIST but choose ν a little smaller. Here at least 98.4% train accuracy can be achieved.
 
-See notes and plots in [[./small_experiments/plots/08_cifar10/]] and [[./small_experiments/plots/09_cifar10_28vs32/]].
+See plots in [[./small_experiments/plots/08_cifar10/]] and [[./small_experiments/plots/09_cifar10_28vs32/]].
