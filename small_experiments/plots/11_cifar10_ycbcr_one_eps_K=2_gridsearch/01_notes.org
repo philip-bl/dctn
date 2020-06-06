@@ -7,10 +7,10 @@ epses_specs = ["(2,6)", "(2,12)", "(2,24)"]
 See [[file:all_experiments.html][plots of all experiments]].
 
 I got:
-- For K=24 :: best val acc is 50.98% with lr=3.16e-4.
-- For K=12 :: best val acc is 49.4%. Best lrs are 1e-3 and 3.16e-4. lr=3.16e-3 had unstable
+- For Q=24 :: best val acc is 50.98% with lr=3.16e-4.
+- For Q=12 :: best val acc is 49.4%. Best lrs are 1e-3 and 3.16e-4. lr=3.16e-3 had unstable
   training and (surprisingly) overfitted a lot.
-- For K=6 :: best val acc is 48.3% with lr=1e-3.
+- For Q=6 :: best val acc is 48.3% with lr=1e-3.
 
 All this is much
 better than [[file:~/projects/dctn/small_experiments/plots/10_cifar10_ycbcr_const_channel_zeromeanscaling_one_eps_K=3/][with K=3,Q=6]]. So, K=2 is better than K=3 on CIFAR10, and Q=24 is better than Q=12
