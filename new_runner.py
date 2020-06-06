@@ -179,6 +179,15 @@ def parse_epses_specs(s: str) -> Tuple[Tuple[int, int], ...]:
     help="'empirical unit std of intermediate representations initialization', as it's called in the article",
 )
 @click.option(
+    "--init-epses-composition-unit-empirical-output-std-subset-size",
+    type=int,
+    default=10880,
+    help="""How many samples to use for estimation of stds and scaling of EPSes when
+'empirical unit std of intermediate representations initialization' is used.
+More is better because of accuracy of estimate, but you might run out of RAM.
+Also, this will be used for logging statistics of intermediate representations.""",
+)
+@click.option(
     "--dropout-p",
     type=float,
     default=1.0,
@@ -251,6 +260,13 @@ where x is this parameters value.""",
     multiple=True,
     help="""The EPS with this index will be frozen and won't be trained.""",
 )
+@click.option(
+    "--log-intermediate-reps-stats-batch-size",
+    type=int,
+    help="""Batch size to use when logging statistics of the intermediate representations X_0, W_0, X_1, W_1, ...
+The main consideration is speed (bigger is faster) and RAM used (bigger might not fit).
+By default this is set to `batch_size // 2`.""",
+)
 def main(**kwargs) -> None:
     kwargs["output_dir"] = join(kwargs["experiments_dir"], get_now_as_str(False, True, True))
     assert not os.path.exists(kwargs["output_dir"])
@@ -303,6 +319,9 @@ def main(**kwargs) -> None:
         kwargs["add_constant_channel"] is not None,
         kwargs["ds_type"] in ("cifar10_rgb", "cifar10_YCbCr"),
     )
+
+    if kwargs["log_intermediate_reps_stats_batch_size"] is None:
+        kwargs["log_intermediate_reps_stats_batch_size"] = kwargs["batch_size"] // 2
 
     os.mkdir(kwargs["output_dir"])
     save_json(
@@ -359,7 +378,12 @@ def main(**kwargs) -> None:
     # create the model and initialize its parameters
     set_random_seeds(dev, kwargs["seed"])
     if kwargs["init_epses_composition_unit_empirical_output_std"]:
-        initialization = UnitEmpiricalOutputStd(train_dl.dataset.x[:, :10880].to(dev))
+        initialization = UnitEmpiricalOutputStd(
+            train_dl.dataset.x[
+                :, : kwargs["init_epses_composition_unit_empirical_output_std_subset_size"]
+            ].to(dev),
+            kwargs["batch_size"],
+        )
     elif kwargs["init_epses_composition_unit_theoretical_output_std"]:
         initialization = UnitTheoreticalOutputStd()
     elif initialization_chosen_per_param:
@@ -409,7 +433,12 @@ def main(**kwargs) -> None:
         model.load_state_dict(torch.load(kwargs["load_model_state"], dev))
     logger.info(f"{epses_composition.inner_product(model.epses, model.epses)=:.4e}")
 
-    model.log_intermediate_reps_stats(train_dl.dataset.x[:, :10880].to(dev))
+    model.log_intermediate_reps_stats(
+        train_dl.dataset.x[
+            :, : kwargs["init_epses_composition_unit_empirical_output_std_subset_size"]
+        ].to(dev),
+        kwargs["log_intermediate_reps_stats_batch_size"],
+    )
 
     for eps_index in kwargs["freeze_eps"]:
         model.epses[eps_index].requires_grad = False
