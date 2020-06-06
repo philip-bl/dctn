@@ -1,0 +1,110 @@
+{
+  "common_description": "{'add_constant_channel': 1.0,\n'batch_size': 128,\n'breakpoint_on_nan_loss': False,\n'center_and_normalize_each_channel': True,\n'commit': '27ff9dae24ed39f5c186b1e24902da3ec251fcb4 Modify gridsearch config '\n          'for one eps K=2',\n'device': 'cuda',\n'dropout_p': 1.0,\n'ds_path': '/mnt/hdd_1tb/datasets/cifar10',\n'ds_type': 'cifar10_YCbCr',\n'es_train_acc': False,\n'es_train_mean_ce': False,\n'es_val_acc': True,\n'es_val_mean_ce': True,\n'eval_schedule': [[10, 2],\n                 [20, 3],\n                 [40, 8],\n                 [200, 20],\n                 [500, 100],\n                 [2000, 200],\n                 [6000, 500],\n                 [None, 2000]],\n'experiments_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch',\n'freeze_eps': [],\n'init_eps_from_file': [],\n'init_eps_zero_centered_normal_std': [],\n'init_epses_composition_unit_empirical_output_std': True,\n'init_epses_composition_unit_theoretical_output_std': False,\n'init_linear_bias_zero_centered_uniform': None,\n'init_linear_weight_zero_centered_normal_std': None,\n'init_linear_weight_zero_centered_uniform': None,\n'keep_last_models': 10,\n'load_model_state': None,\n'max_num_iters': 600000,\n'nu_per_channel': [],\n'optimizer': 'adam',\n'patience': 60,\n'phi_multiplier': None,\n'reg_coeff': 1e-12,\n'reg_type': 'epses_composition',\n'tb_batches': False,\n'verbosity': 20,\n'wd': 0.0}",
+  "experiments": [
+    {
+      "description": "{'epses_specs': [[2, 6]], 'lr': 0.0001, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T18:21:28', 'seed': 63397}",
+      "name": "{'epses_specs': [[2, 6]], 'lr': 0.0001}",
+      "rel_dir": "2020-06-05T18:21:28"
+    },
+    {
+      "description": "{'epses_specs': [[2, 24]], 'lr': 3.162277660168379e-06, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T13:18:43', 'seed': 57377}",
+      "name": "{'epses_specs': [[2, 24]], 'lr': 3.162277660168379e-06}",
+      "rel_dir": "2020-06-05T13:18:43"
+    },
+    {
+      "description": "{'epses_specs': [[2, 24]], 'lr': 3.1622776601683795e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-06T00:01:41', 'seed': 54745}",
+      "name": "{'epses_specs': [[2, 24]], 'lr': 3.1622776601683795e-05}",
+      "rel_dir": "2020-06-06T00:01:41"
+    },
+    {
+      "description": "{'epses_specs': [[2, 12]], 'lr': 3.1622776601683795e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T16:46:31', 'seed': 8028}",
+      "name": "{'epses_specs': [[2, 12]], 'lr': 3.1622776601683795e-05}",
+      "rel_dir": "2020-06-05T16:46:31"
+    },
+    {
+      "description": "{'epses_specs': [[2, 24]], 'lr': 0.00031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T14:19:39', 'seed': 46259}",
+      "name": "{'epses_specs': [[2, 24]], 'lr': 0.00031622776601683794}",
+      "rel_dir": "2020-06-05T14:19:39"
+    },
+    {
+      "description": "{'epses_specs': [[2, 6]], 'lr': 0.00031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T22:36:51', 'seed': 42126}",
+      "name": "{'epses_specs': [[2, 6]], 'lr': 0.00031622776601683794}",
+      "rel_dir": "2020-06-05T22:36:51"
+    },
+    {
+      "description": "{'epses_specs': [[2, 24]], 'lr': 0.0031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T23:14:36', 'seed': 7318}",
+      "name": "{'epses_specs': [[2, 24]], 'lr': 0.0031622776601683794}",
+      "rel_dir": "2020-06-05T23:14:36"
+    },
+    {
+      "description": "{'epses_specs': [[2, 6]], 'lr': 0.0031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-06T01:13:16', 'seed': 48263}",
+      "name": "{'epses_specs': [[2, 6]], 'lr': 0.0031622776601683794}",
+      "rel_dir": "2020-06-06T01:13:16"
+    },
+    {
+      "description": "{'epses_specs': [[2, 12]], 'lr': 0.001, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T22:55:03', 'seed': 62680}",
+      "name": "{'epses_specs': [[2, 12]], 'lr': 0.001}",
+      "rel_dir": "2020-06-05T22:55:03"
+    },
+    {
+      "description": "{'epses_specs': [[2, 12]], 'lr': 0.0001, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T21:26:14', 'seed': 32283}",
+      "name": "{'epses_specs': [[2, 12]], 'lr': 0.0001}",
+      "rel_dir": "2020-06-05T21:26:14"
+    },
+    {
+      "description": "{'epses_specs': [[2, 24]], 'lr': 0.0001, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T18:21:39', 'seed': 11007}",
+      "name": "{'epses_specs': [[2, 24]], 'lr': 0.0001}",
+      "rel_dir": "2020-06-05T18:21:39"
+    },
+    {
+      "description": "{'epses_specs': [[2, 6]], 'lr': 3.1622776601683795e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-06T01:38:39', 'seed': 19098}",
+      "name": "{'epses_specs': [[2, 6]], 'lr': 3.1622776601683795e-05}",
+      "rel_dir": "2020-06-06T01:38:39"
+    },
+    {
+      "description": "{'epses_specs': [[2, 6]], 'lr': 3.162277660168379e-06, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T20:03:39', 'seed': 16724}",
+      "name": "{'epses_specs': [[2, 6]], 'lr': 3.162277660168379e-06}",
+      "rel_dir": "2020-06-05T20:03:39"
+    },
+    {
+      "description": "{'epses_specs': [[2, 12]], 'lr': 3.162277660168379e-06, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T15:36:15', 'seed': 6972}",
+      "name": "{'epses_specs': [[2, 12]], 'lr': 3.162277660168379e-06}",
+      "rel_dir": "2020-06-05T15:36:15"
+    },
+    {
+      "description": "{'epses_specs': [[2, 12]], 'lr': 0.0031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T21:49:57', 'seed': 20987}",
+      "name": "{'epses_specs': [[2, 12]], 'lr': 0.0031622776601683794}",
+      "rel_dir": "2020-06-05T21:49:57"
+    },
+    {
+      "description": "{'epses_specs': [[2, 24]], 'lr': 1e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T15:13:53', 'seed': 41147}",
+      "name": "{'epses_specs': [[2, 24]], 'lr': 1e-05}",
+      "rel_dir": "2020-06-05T15:13:53"
+    },
+    {
+      "description": "{'epses_specs': [[2, 6]], 'lr': 0.001, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T13:18:44', 'seed': 23757}",
+      "name": "{'epses_specs': [[2, 6]], 'lr': 0.001}",
+      "rel_dir": "2020-06-05T13:18:44"
+    },
+    {
+      "description": "{'epses_specs': [[2, 12]], 'lr': 0.00031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T19:15:54', 'seed': 29943}",
+      "name": "{'epses_specs': [[2, 12]], 'lr': 0.00031622776601683794}",
+      "rel_dir": "2020-06-05T19:15:54"
+    },
+    {
+      "description": "{'epses_specs': [[2, 6]], 'lr': 1e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T19:37:26', 'seed': 46459}",
+      "name": "{'epses_specs': [[2, 6]], 'lr': 1e-05}",
+      "rel_dir": "2020-06-05T19:37:26"
+    },
+    {
+      "description": "{'epses_specs': [[2, 12]], 'lr': 1e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-06T00:01:39', 'seed': 11358}",
+      "name": "{'epses_specs': [[2, 12]], 'lr': 1e-05}",
+      "rel_dir": "2020-06-06T00:01:39"
+    },
+    {
+      "description": "{'epses_specs': [[2, 24]], 'lr': 0.001, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_one_eps_K=2_gridsearch/2020-06-05T17:39:04', 'seed': 29674}",
+      "name": "{'epses_specs': [[2, 24]], 'lr': 0.001}",
+      "rel_dir": "2020-06-05T17:39:04"
+    }
+  ]
+}
