@@ -1,0 +1,90 @@
+{
+  "common_description": "{'add_constant_channel': 1.0,\n'batch_size': 64,\n'breakpoint_on_nan_loss': False,\n'center_and_normalize_each_channel': True,\n'device': 'cuda',\n'dropout_p': 1.0,\n'ds_path': '/mnt/hdd_1tb/datasets/cifar10',\n'ds_type': 'cifar10_YCbCr',\n'es_train_acc': False,\n'es_train_mean_ce': False,\n'es_val_acc': True,\n'es_val_mean_ce': True,\n'eval_schedule': [[10, 2],\n                 [20, 3],\n                 [40, 8],\n                 [200, 20],\n                 [500, 100],\n                 [2000, 200],\n                 [6000, 500],\n                 [None, 2000]],\n'experiments_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch',\n'freeze_eps': [],\n'init_eps_from_file': [],\n'init_eps_zero_centered_normal_std': [],\n'init_epses_composition_unit_empirical_output_std': True,\n'init_epses_composition_unit_empirical_output_std_subset_size': 1024,\n'init_epses_composition_unit_theoretical_output_std': False,\n'init_linear_bias_zero_centered_uniform': None,\n'init_linear_weight_zero_centered_normal_std': None,\n'init_linear_weight_zero_centered_uniform': None,\n'keep_last_models': 10,\n'load_model_state': None,\n'log_intermediate_reps_stats_batch_size': 32,\n'max_num_iters': 600000,\n'nu_per_channel': [],\n'optimizer': 'adam',\n'patience': 60,\n'phi_multiplier': None,\n'reg_coeff': 1e-12,\n'reg_type': 'epses_composition',\n'tb_batches': False,\n'verbosity': 20,\n'wd': 0.0}",
+  "experiments": [
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 6], [2, 24]], 'lr': 0.0031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-12T23:31:54', 'seed': 6823}",
+      "name": "{'epses_specs': [[2, 6], [2, 24]], 'lr': 0.0031622776601683794}",
+      "rel_dir": "2020-06-12T23:31:54"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 12], [2, 24]], 'lr': 4.641588833612772e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-12T10:40:44', 'seed': 18792}",
+      "name": "{'epses_specs': [[2, 12], [2, 24]], 'lr': 4.641588833612772e-05}",
+      "rel_dir": "2020-06-12T10:40:44"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 23], [2, 24]], 'lr': 0.0031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-08T09:57:53', 'seed': 7290}",
+      "name": "{'epses_specs': [[2, 23], [2, 24]], 'lr': 0.0031622776601683794}",
+      "rel_dir": "2020-06-08T09:57:53"
+    },
+    {
+      "description": "{'commit': '856f267aa35e20394093f800e5e4c9cb0266f169 Modify lr gridsearch to do gridsearch for 2 EPSes on YCbCr CIFAR10', 'epses_specs': [[2, 23], [2, 24]], 'lr': 8.25404185268019e-08, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-06T18:56:54', 'seed': 28934}",
+      "name": "{'epses_specs': [[2, 23], [2, 24]], 'lr': 8.25404185268019e-08}",
+      "rel_dir": "2020-06-06T18:56:54"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 6], [2, 24]], 'lr': 6.812920690579608e-07, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-11T03:24:12', 'seed': 2730}",
+      "name": "{'epses_specs': [[2, 6], [2, 24]], 'lr': 6.812920690579608e-07}",
+      "rel_dir": "2020-06-11T03:24:12"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 23], [2, 24]], 'lr': 4.641588833612772e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-13T01:58:02', 'seed': 5186}",
+      "name": "{'epses_specs': [[2, 23], [2, 24]], 'lr': 4.641588833612772e-05}",
+      "rel_dir": "2020-06-13T01:58:02"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 12], [2, 24]], 'lr': 8.25404185268019e-08, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-11T21:03:40', 'seed': 22986}",
+      "name": "{'epses_specs': [[2, 12], [2, 24]], 'lr': 8.25404185268019e-08}",
+      "rel_dir": "2020-06-11T21:03:40"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 23], [2, 24]], 'lr': 5.623413251903491e-06, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-12T08:19:54', 'seed': 5926}",
+      "name": "{'epses_specs': [[2, 23], [2, 24]], 'lr': 5.623413251903491e-06}",
+      "rel_dir": "2020-06-12T08:19:54"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 12], [2, 24]], 'lr': 0.00038311868495572853, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-08T04:38:27', 'seed': 50719}",
+      "name": "{'epses_specs': [[2, 12], [2, 24]], 'lr': 0.00038311868495572853}",
+      "rel_dir": "2020-06-08T04:38:27"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 12], [2, 24]], 'lr': 6.812920690579608e-07, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-15T09:17:29', 'seed': 46183}",
+      "name": "{'epses_specs': [[2, 12], [2, 24]], 'lr': 6.812920690579608e-07}",
+      "rel_dir": "2020-06-15T09:17:29"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 6], [2, 24]], 'lr': 1e-08, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-11T17:14:27', 'seed': 61818}",
+      "name": "{'epses_specs': [[2, 6], [2, 24]], 'lr': 1e-08}",
+      "rel_dir": "2020-06-11T17:14:27"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 12], [2, 24]], 'lr': 1e-08, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-12T09:55:30', 'seed': 62998}",
+      "name": "{'epses_specs': [[2, 12], [2, 24]], 'lr': 1e-08}",
+      "rel_dir": "2020-06-12T09:55:30"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 6], [2, 24]], 'lr': 4.641588833612772e-05, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-12T20:57:05', 'seed': 40308}",
+      "name": "{'epses_specs': [[2, 6], [2, 24]], 'lr': 4.641588833612772e-05}",
+      "rel_dir": "2020-06-12T20:57:05"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 12], [2, 24]], 'lr': 0.0031622776601683794, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-11T07:12:25', 'seed': 41045}",
+      "name": "{'epses_specs': [[2, 12], [2, 24]], 'lr': 0.0031622776601683794}",
+      "rel_dir": "2020-06-11T07:12:25"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 6], [2, 24]], 'lr': 0.00038311868495572853, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-11T14:25:27', 'seed': 49629}",
+      "name": "{'epses_specs': [[2, 6], [2, 24]], 'lr': 0.00038311868495572853}",
+      "rel_dir": "2020-06-11T14:25:27"
+    },
+    {
+      "description": "{'commit': '856f267aa35e20394093f800e5e4c9cb0266f169 Modify lr gridsearch to do gridsearch for 2 EPSes on YCbCr CIFAR10', 'epses_specs': [[2, 23], [2, 24]], 'lr': 0.00038311868495572853, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-06T18:56:53', 'seed': 63711}",
+      "name": "{'epses_specs': [[2, 23], [2, 24]], 'lr': 0.00038311868495572853}",
+      "rel_dir": "2020-06-06T18:56:53"
+    },
+    {
+      "description": "{'commit': '4da8672d8005a1443b76f941dcef1b77ae009343 Fix a small mistake', 'epses_specs': [[2, 23], [2, 24]], 'lr': 1e-08, 'output_dir': '/mnt/important/experiments/cifar10/ycbcr_plus_constant_channel_two_epses_K=2_gridsearch/2020-06-10T21:07:33', 'seed': 44324}",
+      "name": "{'epses_specs': [[2, 23], [2, 24]], 'lr': 1e-08}",
+      "rel_dir": "2020-06-10T21:07:33"
+    }
+  ]
+}

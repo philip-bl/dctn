@@ -8,8 +8,8 @@ from typing import Tuple, Any
 
 import numpy as np
 
-num_points = 7
-lrs = list(str(x) for x in np.logspace(-8, -2.5, num_points))
+num_points = 5
+lrs = list(str(x) for x in np.logspace(-5.1, -3.6, num_points))
 epses_specs = ["(2,23),(2,24)", "(2,12),(2,24)", "(2,6),(2,24)"]
 
 configs = [

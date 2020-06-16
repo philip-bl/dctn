@@ -1,0 +1,23 @@
+I ran gridsearch with 2 EPSes. The gridsearch was over:
+- EPSes specs. There were 3 options: (2,23),(2,24), (2,12),(2,24), and (2,6),(2,24)
+- Learning rate. There were 7 options distributed uniformly in logspace from 1e-8 to 3.16e-3:
+  =np.logspace(-8, -2.5, num_points)=.
+
+I got the best results with lr=4.64e-5. With this lr, larger quantum dimension led to better
+generalization.
+
+The only experiment with lr=5.62e-6 I performed (because I didn't have time to finish the
+gridsearch) was okayish .
+
+With lr=3.83e-4, the training was very unstable. With epses_specs=(2,12),(2,24) and with
+epses_specs=(2,23),(2,24), the model failed to train even to 20% train accuracy.
+However, with epses_specs=(2,6), the model reached 40.2% train accuracy and 35.5% val
+accuracy. This is by no means good, but if we look at the val accuracy by train accuracy plot,
+it seems this model's tendency to overfit was less than that of the 3 models with lr=4.64e-5. I
+don't know why this is so. Maybe it's another example of high lr leading to less overfit. This
+model failed to train further, but maybe something can be done to alleviate that, e.g. change
+the learning rate schedule somehow.
+
+Overall, it seems that the best learning rate for all 3 epses specs is larger than 5.62e-6 and
+smaller than 3.83e-4. So, if I ever decide to continue figuring out the effect of
+hyperparameters in this setting, I should continue the gridsearch in this range only.
