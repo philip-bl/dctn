@@ -1,4 +1,4 @@
-I performed gridsearch with Q=2 and
+I performed gridsearch with K=2 and
 #+BEGIN_SRC
 lrs = np.logspace(-5.5, -2.5, 7)
 epses_specs = ["(2,6)", "(2,12)", "(2,24)"]
